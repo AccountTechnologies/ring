@@ -7,8 +7,8 @@ Ring brings order into the messy world of developing and debugging a cloud-ready
 Ring consists of the following part:
 
 * Service launcher and monitor (a global dotnet tool)
-* Visual Studio Extension (2017, 2019)
-* Visual Studio Code Extension (coming soon)
+* [Visual Studio Extension]((https://marketplace.visualstudio.com/items?itemName=account-technologies.ring-vsix)) (2017, 2019)
+* [Visual Studio Code Extension]((https://marketplace.visualstudio.com/items?itemName=account-technologies.ring-vscode)) (early preview)
 
 # How it works
 
@@ -26,7 +26,7 @@ Ring groups *runnables* (mostly services but not only) into *workspaces*. Worksp
 
 ## Ring dotnet tool
 ```
-dotnet tool install --global ATech.Ring.DotNet.Cli --version 1.1.3-beta
+dotnet tool install --global ATech.Ring.DotNet.Cli --version 1.1.6
 ```
 
 ## Visual Studio Extension
@@ -37,7 +37,7 @@ Download here [ring! for Visual Studio](https://marketplace.visualstudio.com/ite
 
 ## Visual Studio Code Extension
 
-Coming soon
+Download an [early preview](https://marketplace.visualstudio.com/items?itemName=account-technologies.ring-vscode)
 
 ## Troubleshooting 
 
@@ -53,6 +53,7 @@ ring run -w .\path\to\your\workspace.toml -d
     * `iisexpress` - WCF and other services hosted in IIS Express
     * `aspnetcore` - .NET Core apps running in console
     * `netexe` - full .NET Framework console apps (like TopShelf)
+    * `dockercompose` - docker-compose files
 
 * *workspace* - a logical grouping of runnables defined in TOML file(s). Workspaces can be composed of other workspaces using the `import` tag. Ring can only run a single workspace at a time. Example workspace:
 ```toml
@@ -99,6 +100,12 @@ csproj = "path/to/your/project.csproj"
 csproj = "/path/to/your/project.csproj"
 ```
 
+*Runs Docker Compose file*
+```toml
+[[dockercompose]]
+path = "path/to/docker-compose.yml"
+```
+
 *Comments*
 
 ```toml
@@ -111,3 +118,10 @@ If the same service is declared multiple times in imported workspaces they will 
 
 # How to contribute
 Coming soon
+
+# Release notes
+
+## 1.1.6
+
+* Added support for docker-compose files
+* Fixed a bug on capturing output of exited processes
