@@ -26,7 +26,7 @@ Ring groups *runnables* (mostly services but not only) into *workspaces*. Worksp
 
 ## Ring dotnet tool
 ```
-dotnet tool install --global ATech.Ring.DotNet.Cli --version 1.1.6
+dotnet tool install --global ATech.Ring.DotNet.Cli --version 1.1.7
 ```
 
 ## Visual Studio Extension
@@ -120,6 +120,11 @@ If the same service is declared multiple times in imported workspaces they will 
 Coming soon
 
 # Release notes
+
+## 1.1.7
+
+* Fixed swallowing exceptions if one of the base tasks fails. 
+* Fixed Microsoft.AspNetCore.WebSockets reference.
 
 ## 1.1.6
 
