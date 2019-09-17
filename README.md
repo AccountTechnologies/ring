@@ -7,8 +7,8 @@ Ring brings order into the messy world of developing and debugging a cloud-ready
 Ring consists of the following part:
 
 * Service launcher and monitor (a global dotnet tool)
-* [Visual Studio Extension]((https://marketplace.visualstudio.com/items?itemName=account-technologies.ring-vsix)) (2017, 2019)
-* [Visual Studio Code Extension]((https://marketplace.visualstudio.com/items?itemName=account-technologies.ring-vscode)) (early preview)
+* [Visual Studio Extension](https://marketplace.visualstudio.com/items?itemName=account-technologies.ring-vsix) (2017, 2019)
+* [Visual Studio Code Extension](https://marketplace.visualstudio.com/items?itemName=account-technologies.ring-vscode) (early preview)
 
 # How it works
 
