@@ -26,7 +26,7 @@ Ring groups *runnables* (mostly services but not only) into *workspaces*. Worksp
 
 ## Ring dotnet tool
 ```
-dotnet tool install --global ATech.Ring.DotNet.Cli --version 1.1.9
+dotnet tool install --global ATech.Ring.DotNet.Cli --version 1.1.10
 ```
 
 ## Visual Studio Extension
@@ -120,6 +120,13 @@ If the same service is declared multiple times in imported workspaces they will 
 Coming soon
 
 # Release notes
+
+## 1.1.10
+
+* IISExpress Runnable: enable retrieval of custom binding information from csproj files
+
+Ring uses `/Project/ProjectExtensions/VisualStudio/FlavorProperties/WebProjectProperties` to determine how to run a particular project.
+So far it used `DevelopmentServerPort` and assume `localhost`. From now on it will use the URL specified at `IISUrl` instead.
 
 ## 1.1.9
 
