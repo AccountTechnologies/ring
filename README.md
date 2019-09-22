@@ -128,6 +128,8 @@ Coming soon
 Ring uses `/Project/ProjectExtensions/VisualStudio/FlavorProperties/WebProjectProperties` to determine how to run a particular project.
 So far it used `DevelopmentServerPort` and assume `localhost`. From now on it will use the URL specified at `IISUrl` instead.
 
+* Bugfixes
+
 ## 1.1.9
 
 * Logging improvements.

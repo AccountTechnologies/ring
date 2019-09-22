@@ -26,7 +26,7 @@ IIS Express runnable expects the following XML elements exist in csproj file:
 </Project>
 ```
 
-Ring before 1.1.10 only uses `DevelopmentServerPort` to and assumes `localhost` when running IIS Express.
+Ring before 1.1.10 only uses `DevelopmentServerPort` and assumes `localhost` when running IIS Express.
 Version 1.1.10 and later versions support non-localhost bindings by utilising `IISUrl` first and falling back to `DevelopmentServerPort` if `IISUrl` is not found.
 
 ## Health check
