@@ -26,7 +26,7 @@ Ring groups *runnables* (mostly services but not only) into *workspaces*. Worksp
 
 ## Ring dotnet tool
 ```
-dotnet tool install --global ATech.Ring.DotNet.Cli --version 2.0.0
+dotnet tool install --global ATech.Ring.DotNet.Cli --version 2.2.0-pre
 ```
 
 ## Visual Studio Extension
@@ -50,8 +50,9 @@ ring run -w .\path\to\your\workspace.toml -d
 # Vocabulary
 
 * *runnable* - usually a service. Currently the following types are supported:
-    * [iisexpress](docs/runnables/iisexpress.md) - WCF and other services hosted in IIS Express
-    * `aspnetcore` - .NET Core apps running in console
+    * [iisexpress](docs/runnables/iisexpress.md) - WCF and other .NET Framework services hosted in IIS Express
+    * `iisxcore` - ASP.NET Core apps in IIS Express
+    * `aspnetcore` - .NET Core apps running in console (like ASP.NET Core in Kestrel)
     * `netexe` - full .NET Framework console apps (like TopShelf)
     * `dockercompose` - docker-compose files
 
@@ -85,6 +86,14 @@ path = "path/to/another/workspace.toml"
 [[iisexpress]]
 csproj = "path/to/your/project.csproj"
 ```
+
+*Runs IIS Express hosted ASP.NET Core app*
+
+```toml
+[[iisxcore]]
+csproj = "path/to/your/project.csproj"
+```
+
 
 *Runs full .NET Framework executable project*
 
