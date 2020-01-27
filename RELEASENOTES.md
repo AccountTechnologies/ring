@@ -1,5 +1,15 @@
 # Release notes
 
+## 2.2.0-pre
+
+* Added IISXCore runnable (ASP.NET Core on IIS Express)
+
+## 2.1.0-pre
+
+* Upgraded to .NET Core 3.1
+* Fixed iisexpress temp dir creation if does not exist
+* Fixed pulling re-tagged Docker images (like latest)
+
 ## 2.0.0
 
 Upgraded to NET Core 3
