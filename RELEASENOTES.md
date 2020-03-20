@@ -1,5 +1,13 @@
 # Release notes
 
+## 2.3.0-pre
+
+* Enabled cloning aspnetcore runnables source code from git.
+
+## 2.2.1-pre
+
+* Fixed CsProj-based runnables trying to read from paths relative to the root working dir rather than the absolute ones. It was happening only if imported workspaces were in different folders.
+
 ## 2.2.0-pre
 
 * Added IISXCore runnable (ASP.NET Core on IIS Express)
