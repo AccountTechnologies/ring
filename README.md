@@ -52,7 +52,7 @@ ring run -w .\path\to\your\workspace.toml -d
 * *runnable* - usually a service. Currently the following types are supported:
     * [iisexpress](docs/runnables/iisexpress.md) - WCF and other .NET Framework services hosted in IIS Express
     * `iisxcore` - ASP.NET Core apps in IIS Express
-    * [aspnetcore]((docs/runnables/aspnetcore.md)) - .NET Core apps running in console (like ASP.NET Core in Kestrel)
+    * [aspnetcore](docs/runnables/aspnetcore.md) - .NET Core apps running in console (like ASP.NET Core in Kestrel)
     * `netexe` - full .NET Framework console apps (like TopShelf)
     * `dockercompose` - docker-compose files
 
