@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "ring": {
+      "commandName": "Project",
+      "commandLineArgs": "run -w ibis.toml -d",
+      "workingDirectory": "C:\\Dev\\svn\\trunk\\ring-workspaces"
+    }
+  }
+}

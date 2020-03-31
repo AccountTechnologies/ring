@@ -1,0 +1,56 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <VersionPrefix>2.3.2-pre</VersionPrefix>
+    <PackAsTool>true</PackAsTool>
+    <IsPackable>true</IsPackable>
+    <ToolCommandName>ring</ToolCommandName>
+    <LangVersion>8.0</LangVersion>
+    <Company>Account Technologies</Company>
+    <Authors>Krzysztof Kraszewski</Authors>
+    <Configurations>Debug;Release;ReleaseVsix</Configurations>
+    <PackageType>DotNetCliTool</PackageType>
+    <PackageTags>dotnet, cli, dotnet-cli, global, tool, ring, nuget, package</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageReleaseNotes>* Enabled cloning aspnetcore runnables source code from git. Bug fix for non-git runnables.</PackageReleaseNotes>
+    <PackageIcon>ring.128.png</PackageIcon>
+    <PackageDescription>ring! service launcher and monitor</PackageDescription>
+    <AssemblyName Condition=" '$(Configuration)'=='Debug' ">ring</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.7.82" />
+    <PackageReference Include="LightInject.Microsoft.AspNetCore.Hosting" Version="2.3.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.2.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.2.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.2" />
+    <PackageReference Include="Serilog" Version="2.9.0" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="3.0.1" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="3.1.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
+    <PackageReference Include="Stateless" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ATech.Ring.Configuration\ATech.Ring.Configuration.csproj" />
+    <ProjectReference Include="..\ATech.Ring.Protocol\ATech.Ring.Protocol.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Media/ring.128.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>
