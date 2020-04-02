@@ -9,6 +9,7 @@ trigger:
 variables:
   srcPath: 'src/source/ATech.Ring.DotNet.Cli'
   pkgver: ${{ variables['Build.SourceBranchName'] }}
+  BuildConfiguration: Release
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -25,7 +26,6 @@ steps:
   displayName: 'Pack'
   inputs:
     command: 'pack'
-    arguments: '-c Release'
     packagesToPack: '$(srcPath)/*.csproj'
     versioningScheme: 'byEnvVar'
     versionEnvVar: PKGVER
