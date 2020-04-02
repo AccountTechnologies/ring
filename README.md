@@ -29,7 +29,7 @@ Ring groups *runnables* (mostly services but not only) into *workspaces*. Worksp
 
 ## Ring dotnet tool
 ```
-dotnet tool install --global ATech.Ring.DotNet.Cli --version 2.3.1-pre
+dotnet tool install --global ATech.Ring.DotNet.Cli --version 2.3.2-pre
 ```
 
 ## Visual Studio Extension
