@@ -1,0 +1,36 @@
+trigger:
+  branches:
+    include:
+    - 'master'
+  tags:
+    include:
+    - '*'
+
+variables:
+  srcPath: 'src/source/ATech.Ring.DotNet.Cli'
+  pkgver: ${{ variables['Build.SourceBranchName'] }}
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+# - task: DotNetCoreCLI@2
+#   displayName: 'Test'
+#   inputs:
+#     command: 'test'
+#     projects: 'tests'
+#     arguments: '$(srcPath) -c Release'
+
+- task: DotNetCoreCLI@2
+  displayName: 'Pack'
+  inputs:
+    command: 'pack'
+    packagesToPack: '$(srcPath)/*.csproj'
+    versioningScheme: 'byEnvVar'
+    versionEnvVar: PKGVER
+    verbosityPack: 'Normal'
+  condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
+
+- bash: dotnet nuget push -s  https://api.nuget.org/v3/index.json -k $(nuget-api-key) $(Build.ArtifactStagingDirectory)/*.nupkg
+  displayName: 'Push'
+  condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
