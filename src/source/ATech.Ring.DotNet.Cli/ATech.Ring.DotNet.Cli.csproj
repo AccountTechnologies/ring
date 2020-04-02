@@ -17,6 +17,7 @@
     <PackageReleaseNotes>* Enabled cloning aspnetcore runnables source code from git. Bug fix for non-git runnables.</PackageReleaseNotes>
     <PackageIcon>ring.128.png</PackageIcon>
     <PackageDescription>ring! service launcher and monitor</PackageDescription>
+    <RepositoryUrl>https://github.com/AccountTechnologies/ring</RepositoryUrl>
     <AssemblyName Condition=" '$(Configuration)'=='Debug' ">ring</AssemblyName>
   </PropertyGroup>
 
