@@ -25,6 +25,7 @@ steps:
   displayName: 'Pack'
   inputs:
     command: 'pack'
+    arguments: '-c Release'
     packagesToPack: '$(srcPath)/*.csproj'
     versioningScheme: 'byEnvVar'
     versionEnvVar: PKGVER
