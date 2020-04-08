@@ -19,24 +19,34 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Dotnet
         public string ExePath => Path.ChangeExtension(EntryAssemblyPath, "exe");
         public int ConsecutiveFailures { get; set; }
         public int TotalFailures { get; set; }
-        public static T Create<T,C>(C config) where C : IUseCsProjFile where  T : DotnetContext
+        public static T Create<T, C>(C config) where C : IUseCsProjFile where T : DotnetContext
         {
-            var ctx = (T)FormatterServices.GetUninitializedObject(typeof(T));
-            
-            if (config is IFromGit {SshRepoUrl: string _, CloneFullPath: string c})
+            var originalCsProjPath = config.CsProj;
+            try
             {
-                if (Path.IsPathRooted(config.CsProj))
+                var ctx = (T)FormatterServices.GetUninitializedObject(typeof(T));
+
+                if (config is IFromGit { SshRepoUrl: string _, CloneFullPath: string c })
                 {
-                    throw new InvalidOperationException($"If sshRepoUrl is used csProj must be a relative path but it is {config.CsProj}");
+                    if (Path.IsPathRooted(config.CsProj))
+                    {
+                        throw new InvalidOperationException($"If sshRepoUrl is used csProj must be a relative path but it is {config.CsProj}");
+                    }
+
+                    config.CsProj = Path.Combine(c, config.CsProj);
                 }
-                config.CsProj = Path.Combine(c, config.CsProj);
+
+                ctx.CsProjPath = config.CsProj;
+                (ctx.TargetFramework, ctx.TargetRuntime) = config.GetTargetFrameworkAndRuntime();
+                ctx.WorkingDir = config.GetWorkingDir();
+                var runtimePathSegment = ctx.TargetRuntime == null ? "" : $"\\{ctx.TargetRuntime}";
+                ctx.EntryAssemblyPath = Path.Combine(ctx.WorkingDir, $"bin\\Debug\\{ctx.TargetFramework}{runtimePathSegment}\\{config.GetProjName()}.dll");
+                return ctx;
             }
-            ctx.CsProjPath = config.CsProj;
-            (ctx.TargetFramework, ctx.TargetRuntime) = config.GetTargetFrameworkAndRuntime();
-            ctx.WorkingDir = config.GetWorkingDir();
-            var runtimePathSegment = ctx.TargetRuntime == null ? "" : $"\\{ctx.TargetRuntime}";
-            ctx.EntryAssemblyPath = Path.Combine(ctx.WorkingDir, $"bin\\Debug\\{ctx.TargetFramework}{runtimePathSegment}\\{config.GetProjName()}.dll");
-            return ctx;
+            finally
+            {
+                config.CsProj = originalCsProjPath;
+            }
         }
     }
 
