@@ -1,5 +1,21 @@
 # Release notes
 
+## 2.3.4
+
+* no changes vs 2.3.4-pre. Releasing as the stable release before staring work on new features.
+
+## 2.3.4-pre
+
+* Fixed https://github.com/AccountTechnologies/ring/issues/1
+
+## 2.3.2-pre
+
+* bug fixes
+
+## 2.3.1-pre
+
+* bug fixes
+
 ## 2.3.0-pre
 
 * Enabled cloning aspnetcore runnables source code from git.
