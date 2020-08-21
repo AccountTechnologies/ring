@@ -3,7 +3,7 @@
 
 Service launcher and monitor
 
-Ring brings order into the messy world of developing and debugging a cloud-ready microservice system side by side with maintaining and migrating legacy ones where you may have many different types of services (ASP.NET Core, Topshelf, WCF) hosted in many different ways (IIS Express, WindowsService, Exe) and scattered across many solutions and repositories. 
+Ring brings order into the messy world of developing and debugging a cloud-ready microservice system side by side with maintaining and migrating legacy ones where you may have many different types of services (ASP.NET Core, Topshelf, WCF, ...) hosted in many different ways (Kubernetes, Docker, IIS Express, WindowsService, Exe) and scattered across many solutions and repositories. 
 
 # What is it?
 
@@ -27,7 +27,7 @@ Ring groups *runnables* (mostly services but not only) into *workspaces*. Worksp
 
 # Supported runnables
 
-* `kustomize` - Kubernetes apps managed by [Kustomize](https://kustomize.io/)
+* [kustomize](docs/runnables/kustomize.md) - Kubernetes apps managed by [Kustomize](https://kustomize.io/)
 * `dockercompose` - docker-compose files
 * [aspnetcore](docs/runnables/aspnetcore.md) - .NET Core apps running in console (like ASP.NET Core in Kestrel)
 * `iisxcore` - ASP.NET Core apps in IIS Express
