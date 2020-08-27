@@ -31,14 +31,15 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
                                                                IDictionary<string, string> envVars = null,
                                                                Action<string> onErrorData = null)
         {
+            var procUid = Guid.NewGuid().ToString("n").Remove(10);
             try
-            {
+            {               
                 var allArgs = string.Join(" ", (tool.DefaultArgs ?? new object[] { }).Concat(args.Select(x => x.ToString())));
                 var sb = new StringBuilder();
                 void OnData(object _, DataReceivedEventArgs x) => sb.AppendLine(x.Data);
                 void OnError(object _, DataReceivedEventArgs x)
                 {
-                    tool.Logger.LogDebug(x.Data);
+                    tool.Logger.LogDebug("{procUid} - {data}", procUid, x.Data);
                     onErrorData?.Invoke(x.Data);
                 }
 
@@ -64,7 +65,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
                 if (workingDirectory != null) s.WorkingDirectory = workingDirectory;
                 var ringWorkingDir = Directory.GetCurrentDirectory();
 
-                tool.Logger.LogDebug("Starting process: {Tool} {Args} ({ProcessWorkingDir})", tool.ExePath, allArgs, workingDirectory ?? ringWorkingDir);
+                tool.Logger.LogDebug("{procUid} - Starting process: {Tool} {Args} ({ProcessWorkingDir})", procUid, tool.ExePath, allArgs, workingDirectory ?? ringWorkingDir);
 
 
                 var title = Console.Title;
@@ -72,7 +73,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
 
                 if (p == null)
                 {
-                    tool.Logger.LogError("Process failed: {Tool} {Args} ({ProcessWorkingDir})", tool.ExePath, allArgs, workingDirectory ?? ringWorkingDir);
+                    tool.Logger.LogError("{procUid} - Process failed: {Tool} {Args} ({ProcessWorkingDir})", procUid, tool.ExePath, allArgs, workingDirectory ?? ringWorkingDir);
                     return new ExecutionInfo();
                 }
 
@@ -85,7 +86,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
                 p.BeginOutputReadLine();
                 p.BeginErrorReadLine();
 
-                tool.Logger.LogDebug("Process started: {Pid}", p.Id);
+                tool.Logger.LogDebug("{procUid} - Process started: {Pid}",procUid, p.Id);
 
                 var tcs = new TaskCompletionSource<ExecutionInfo>();
 
@@ -119,7 +120,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
             }
             catch (Exception ex)
             {
-                tool.Logger.LogCritical(ex, "Unhandled error when starting process");
+                tool.Logger.LogCritical(ex, "{procUid} - Unhandled error when starting process", procUid);
                 return new ExecutionInfo();
             }
         }

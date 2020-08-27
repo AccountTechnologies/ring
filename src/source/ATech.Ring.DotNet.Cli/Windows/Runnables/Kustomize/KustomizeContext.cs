@@ -5,15 +5,14 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Kustomize
     public class KustomizeContext : ITrackRetries
     {
         public string KustomizationDir { get; set; }
-        public PodInfo[] Pods {get;set;} = new PodInfo[]{};
+        public Namespace[] Namespaces {get;set;} = new Namespace[]{};
         public int ConsecutiveFailures { get; set; }
         public int TotalFailures { get; set; }
     }
 
-    public class PodInfo 
+    public class Namespace 
     {
-          public PodInfo(string ns, string podName) => (Ns, PodName) = (ns, podName); 
-          public string Ns {get;}
-          public string PodName {get;}
+        public string Name {get; set;}
+        public string[] Pods { get; set; } = new string[]{};
     }
 }
