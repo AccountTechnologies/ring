@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,6 +12,8 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Kustomize
 {
     public class KustomizeRunnable : Runnable<KustomizeContext, Configuration.Runnables.Kustomize>
     {
+        private const string NamespacesPath = "{range .items[?(@.kind=='Namespace')]}{.metadata.name}{'\\n'}{end}";
+        private const string PodStatusRunning = "Running";
         private readonly ILogger<Runnable<KustomizeContext, Configuration.Runnables.Kustomize>> _logger;
         private readonly Tools.KubectlBundle _kubectl;
 
@@ -35,14 +36,14 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Kustomize
             AddDetail(DetailsKeys.KustomizationDir, kustomizationDir);
             var ctx = new KustomizeContext { KustomizationDir = kustomizationDir };
 
-            var namespacesPath = "{range .items[?(@.kind=='Namespace')]}{.metadata.name}{'\\n'}{end}";
-
-            var result = await _kubectl.ApplyKJsonPathAsync(ctx.KustomizationDir, namespacesPath);
             
+
+            var result = await _kubectl.ApplyKJsonPathAsync(ctx.KustomizationDir, NamespacesPath);
+
             _logger.LogDebug(result.Output);
             var namespaces = result.Output.Split("\n");
-          
-            ctx.Namespaces = namespaces.Select(n => new Namespace{Name = n}).ToArray();
+
+            ctx.Namespaces = namespaces.Select(n => new Namespace { Name = n }).ToArray();
             return ctx;
         }
 
@@ -50,30 +51,29 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Kustomize
 
         protected override async Task<HealthStatus> CheckHealthAsync(KustomizeContext ctx, CancellationToken token)
         {
-          var podsHealthy = await Task.WhenAll(
-            ctx.Namespaces.Select(async n => {
+            var podsHealthy = await Task.WhenAll(
+              ctx.Namespaces.Select(async n =>
+              {
 
-              async Task<string[]> GetPodsAsync() {
-                var infos = await _kubectl.GetResources("pod", n.Name);
-                _logger.LogDebug("Pods: {pods}", infos.Output);
-                return infos.Output.Split("\n");
-              }
+                  async Task<string[]> GetPodsAsync()
+                  {
+                      var infos = await _kubectl.GetResources("pod", n.Name);
+                      _logger.LogDebug("Pods: {pods}", infos.Output);
+                      return infos.Output.Split("\n");
+                  }
 
-              n.Pods = n.Pods.Any() ? n.Pods : await GetPodsAsync();  
+                  n.Pods = n.Pods.Any() ? n.Pods : await GetPodsAsync();
 
-              return (await Task.WhenAll(n.Pods.Select(async p => {
-                   var result = await _kubectl.GetPodStatus(p, n.Name);
-                   return result.Output == "Running";
-                }))).All(x => x);
+                  return (await Task.WhenAll(n.Pods.Select(async p =>
+                  {
+                      var result = await _kubectl.GetPodStatus(p, n.Name);
+                      return result.Output == PodStatusRunning;
+                  }))).All(x => x);
               }));
-          return podsHealthy.All(x => x) ? HealthStatus.Ok : HealthStatus.Unhealthy;
+            return podsHealthy.All(x => x) ? HealthStatus.Ok : HealthStatus.Unhealthy;
         }
 
         protected override Task StopAsync(KustomizeContext ctx, CancellationToken token) => Task.CompletedTask;
-
-        protected override async Task DestroyAsync(KustomizeContext ctx, CancellationToken token)
-        {
-          await _kubectl.DeleteKAsync(ctx.KustomizationDir);
-        }
+        protected override async Task DestroyAsync(KustomizeContext ctx, CancellationToken token) => await _kubectl.DeleteKAsync(ctx.KustomizationDir);
     }
 }

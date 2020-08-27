@@ -21,7 +21,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
         public static Task<ExecutionInfo> RunProcessAsync(this ITool tool, string workingDirectory, IDictionary<string, string> envVars, params object[] args)
             => tool.RunProcessCoreAsync(args, envVars: envVars, workingDirectory: workingDirectory);
 
-        public static Task<ExecutionInfo> RunProcessAsync(this ITool tool, Action<string> onErrorData, IDictionary<string,string> envVars, params object[] args)
+        public static Task<ExecutionInfo> RunProcessAsync(this ITool tool, Action<string> onErrorData, IDictionary<string, string> envVars, params object[] args)
             => tool.RunProcessCoreAsync(args: args, onErrorData: onErrorData, envVars: envVars);
 
         private static async Task<ExecutionInfo> RunProcessCoreAsync(this ITool tool,
@@ -33,7 +33,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
         {
             var procUid = Guid.NewGuid().ToString("n").Remove(10);
             try
-            {               
+            {
                 var allArgs = string.Join(" ", (tool.DefaultArgs ?? new object[] { }).Concat(args.Select(x => x.ToString())));
                 var sb = new StringBuilder();
                 void OnData(object _, DataReceivedEventArgs x) => sb.AppendLine(x.Data);
@@ -86,7 +86,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
                 p.BeginOutputReadLine();
                 p.BeginErrorReadLine();
 
-                tool.Logger.LogDebug("{procUid} - Process started: {Pid}",procUid, p.Id);
+                tool.Logger.LogDebug("{procUid} - Process started: {Pid}", procUid, p.Id);
 
                 var tcs = new TaskCompletionSource<ExecutionInfo>();
 
@@ -96,7 +96,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
                     e.OutputDataReceived -= OnData;
                     e.ErrorDataReceived -= OnError;
                     e.Exited -= OnExit;
-                    tcs.SetResult(new ExecutionInfo {Pid = e.Id, Output = sb.ToString().Trim('\r', '\n', ' ', '\t'), ExitCode = e.ExitCode});
+                    tcs.SetResult(new ExecutionInfo { Pid = e.Id, Output = sb.ToString().Trim('\r', '\n', ' ', '\t'), ExitCode = e.ExitCode });
                     e.Dispose();
                 }
 
@@ -111,7 +111,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
                 }
                 else
                 {
-                    result = new ExecutionInfo {Pid = p.Id, Output = sb.ToString().Trim('\r', '\n', ' ', '\t')};
+                    result = new ExecutionInfo { Pid = p.Id, Output = sb.ToString().Trim('\r', '\n', ' ', '\t') };
                 }
 
                 Console.Title = title;

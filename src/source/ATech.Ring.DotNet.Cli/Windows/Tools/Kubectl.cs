@@ -29,7 +29,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
 
         public async Task<ExecutionInfo> DeleteKAsync(string kustomizeDir)
         {
-            return await this.RunProcessWaitAsync("kustomize", "build", $"\"{kustomizeDir}\"", "|", "kubectl", "delete","-o", "name", "-f", "-");
+            return await this.RunProcessWaitAsync("kustomize", "build", $"\"{kustomizeDir}\"", "|", "kubectl", "delete", "-o", "name", "-f", "-");
         }
     }
 }
