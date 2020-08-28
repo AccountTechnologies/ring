@@ -25,20 +25,11 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
         }
 
         public async Task<ExecutionInfo> RunAsync(DotnetContext ctx, string[] urls = null)
-        {
-            if (Environment.GetEnvironmentVariable("ASPNETCORE_URLS") == null)
-            {
-                DefaultEnvVars.Add("ASPNETCORE_URLS", string.Join(';', urls));
-            }
-            else
-            {
-                Environment.SetEnvironmentVariable("ASPNETCORE_URLS", string.Join(';', urls));
-            }
-            
+        {          
+            HandleUrls();
             if (File.Exists(ctx.ExePath))
             {
                 _exeRunner.ExePath = ctx.ExePath;
-               
                 return await _exeRunner.RunProcessAsync(ctx.WorkingDir, DefaultEnvVars);
             }
             if (File.Exists(ctx.EntryAssemblyPath))
@@ -47,6 +38,19 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
                 return await this.RunProcessAsync(ctx.WorkingDir, DefaultEnvVars, "exec", $"\"{ctx.EntryAssemblyPath}\"");
             }
             throw new InvalidOperationException($"Neither Exe path nor Dll path specified. {ctx.CsProjPath}");
+
+            void HandleUrls()
+            {
+                if (urls == null) return;
+                if (Environment.GetEnvironmentVariable("ASPNETCORE_URLS") == null)
+                {
+                    DefaultEnvVars.TryAdd("ASPNETCORE_URLS", string.Join(';', urls));
+                }
+                else
+                {
+                    Environment.SetEnvironmentVariable("ASPNETCORE_URLS", string.Join(';', urls));
+                }
+            }
         }
 
         public async Task<ExecutionInfo> BuildAsync(string csProjFile)
