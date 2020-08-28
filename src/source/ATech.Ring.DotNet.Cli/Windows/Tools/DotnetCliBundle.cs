@@ -57,6 +57,6 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
         public async Task<ExecutionInfo> BuildAsync(string csProjFile)
             => await this.RunProcessWaitAsync("build", csProjFile, "-v:q", "/nologo", "/nodereuse:false");
 
-        public Task<ExecutionInfo> GitCloneAsync(IFromGit gitSource) => _gitClone.CloneAsync(gitSource);
+        public Task<ExecutionInfo> GitCloneOrPullAsync(IFromGit gitSource) => _gitClone.CloneOrPullAsync(gitSource);
     }
 }

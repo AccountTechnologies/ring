@@ -16,7 +16,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
         public ILogger<ITool> Logger { get; }
         public GitClone(ILogger<GitClone> logger) => Logger = logger;
 
-        public async Task<ExecutionInfo> CloneAsync(IFromGit gitCfg)
+        public async Task<ExecutionInfo> CloneOrPullAsync(IFromGit gitCfg)
         {
             using var _ = Logger.WithScope(gitCfg.SshRepoUrl, Phase.GIT);
             if (gitCfg?.SshRepoUrl == null)

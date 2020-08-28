@@ -72,7 +72,7 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
 
                 foreach (var gitCfg in gitConfigs)
                 {
-                    var output = await gitTool.CloneAsync(gitCfg);
+                    var output = await gitTool.CloneOrPullAsync(gitCfg);
                     if (output.IsSuccess) continue;
                     break;
                 }
