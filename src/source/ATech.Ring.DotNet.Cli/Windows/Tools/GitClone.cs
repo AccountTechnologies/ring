@@ -32,9 +32,31 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
             pathChunks.AddRange(inRepoPath);
             gitCfg.CloneFullPath ??= Path.Combine(pathChunks.ToArray());
 
-            return Directory.Exists(gitCfg.CloneFullPath) ?
-                await this.RunProcessWaitAsync("-C", gitCfg.CloneFullPath, "pull") :
-                await this.RunProcessWaitAsync("clone", gitCfg.SshRepoUrl, gitCfg.CloneFullPath);
+            if (Directory.Exists(gitCfg.CloneFullPath)) 
+            {
+                var output = await this.RunProcessWaitAsync("-C", gitCfg.CloneFullPath, "status");
+                if (output.IsSuccess) {
+                    return await this.RunProcessWaitAsync("-C", gitCfg.CloneFullPath, "pull");
+                } 
+                else 
+                {
+                    var tryLeft = 2;
+                    while (Directory.Exists(gitCfg.CloneFullPath) && tryLeft > 0) 
+                    {
+                        try
+                        {
+                            Directory.Delete(gitCfg.CloneFullPath, true);
+                            break;
+                        } catch(Exception ex)
+                        {
+                            Logger.LogError(ex, "Could not delete {CloneFullPath}", gitCfg.CloneFullPath);
+                            await Task.Delay(4000);
+                            tryLeft--;
+                        }
+                    }
+                }
+            }
+            return await this.RunProcessWaitAsync("clone", gitCfg.SshRepoUrl, gitCfg.CloneFullPath);                
         }
     }
 }
