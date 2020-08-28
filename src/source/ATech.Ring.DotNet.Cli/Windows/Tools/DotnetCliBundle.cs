@@ -11,13 +11,14 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
 {
     public class DotnetCliBundle : ITool
     {
+        private const string UrlsEnvVar = "ASPNETCORE_URLS";
         private readonly ExeRunner _exeRunner;
         private readonly GitClone _gitClone;
         public ILogger<ITool> Logger { get; }
         public string ExePath { get; set; } = "dotnet.exe";
         public string[] DefaultArgs { get; set; } = { };
         public Dictionary<string, string> DefaultEnvVars = new Dictionary<string, string> {["ASPNETCORE_ENVIRONMENT"] = "Development"};
-
+        
         public DotnetCliBundle(ExeRunner exeRunner, GitClone gitClone, ILogger<DotnetCliBundle> logger)
         {
             _exeRunner = exeRunner;
@@ -42,13 +43,13 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
             void HandleUrls()
             {
                 if (urls == null) return;
-                if (Environment.GetEnvironmentVariable("ASPNETCORE_URLS") == null)
+                if (Environment.GetEnvironmentVariable(UrlsEnvVar) == null)
                 {
-                    DefaultEnvVars.TryAdd("ASPNETCORE_URLS", string.Join(';', urls));
+                    DefaultEnvVars.TryAdd(UrlsEnvVar, string.Join(';', urls));
                 }
                 else
                 {
-                    Environment.SetEnvironmentVariable("ASPNETCORE_URLS", string.Join(';', urls));
+                    Environment.SetEnvironmentVariable(UrlsEnvVar, string.Join(';', urls));
                 }
             }
         }
