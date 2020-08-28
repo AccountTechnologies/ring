@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <VersionPrefix>2.3.4</VersionPrefix>
+    <VersionPrefix>2.5.0</VersionPrefix>
     <PackAsTool>true</PackAsTool>
     <IsPackable>true</IsPackable>
     <ToolCommandName>ring</ToolCommandName>
@@ -14,7 +14,7 @@
     <PackageType>DotNetCliTool</PackageType>
     <PackageTags>dotnet, cli, dotnet-cli, global, tool, ring, nuget, package</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <PackageReleaseNotes>* Fixed https://github.com/AccountTechnologies/ring/issues/1</PackageReleaseNotes>
+    <PackageReleaseNotes>Feature: clone repos from workspaces</PackageReleaseNotes>
     <PackageIcon>ring.128.png</PackageIcon>
     <PackageDescription>ring! service launcher and monitor</PackageDescription>
     <RepositoryUrl>https://github.com/AccountTechnologies/ring</RepositoryUrl>

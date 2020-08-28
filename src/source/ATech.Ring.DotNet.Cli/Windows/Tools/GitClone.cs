@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using ATech.Ring.Configuration.Interfaces;
 using ATech.Ring.DotNet.Cli.Abstractions.Tools;
+using ATech.Ring.DotNet.Cli.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace ATech.Ring.DotNet.Cli.Windows.Tools
@@ -17,6 +18,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
 
         public async Task<ExecutionInfo> CloneAsync(IFromGit gitCfg)
         {
+            using var _ = Logger.WithScope(gitCfg.SshRepoUrl, Phase.GIT);
             if (gitCfg?.SshRepoUrl == null)
             {
                 throw new ArgumentNullException(nameof(gitCfg));
@@ -32,28 +34,36 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
             pathChunks.AddRange(inRepoPath);
             gitCfg.CloneFullPath ??= Path.Combine(pathChunks.ToArray());
 
-            if (Directory.Exists(gitCfg.CloneFullPath)) 
+            if (!Directory.Exists(gitCfg.CloneFullPath))
             {
-                var output = await this.RunProcessWaitAsync("-C", gitCfg.CloneFullPath, "status");
-                if (output.IsSuccess) {
-                    return await this.RunProcessWaitAsync("-C", gitCfg.CloneFullPath, "pull");
-                } 
-                else 
+                Logger.LogInformation("Cloning to {OutputPath}", gitCfg.CloneFullPath);
+                var result = await this.RunProcessWaitAsync("clone", gitCfg.SshRepoUrl, gitCfg.CloneFullPath);
+                Logger.LogInformation(result.IsSuccess ? PhaseStatus.OK : PhaseStatus.FAILED);
+                return result;
+            }
+
+            var output = await this.RunProcessWaitAsync("-C", gitCfg.CloneFullPath, "status");
+            if (output.IsSuccess)
+            {
+                Logger.LogInformation("Pulling at {OutputPath}", gitCfg.CloneFullPath);
+                var result = await this.RunProcessWaitAsync("-C", gitCfg.CloneFullPath, "pull");
+                Logger.LogInformation(result.IsSuccess ? PhaseStatus.OK : PhaseStatus.FAILED);
+                return result;
+            }
+
+            var tryLeft = 2;
+            while (Directory.Exists(gitCfg.CloneFullPath) && tryLeft > 0) 
+            {
+                try
                 {
-                    var tryLeft = 2;
-                    while (Directory.Exists(gitCfg.CloneFullPath) && tryLeft > 0) 
-                    {
-                        try
-                        {
-                            Directory.Delete(gitCfg.CloneFullPath, true);
-                            break;
-                        } catch(Exception ex)
-                        {
-                            Logger.LogError(ex, "Could not delete {CloneFullPath}", gitCfg.CloneFullPath);
-                            await Task.Delay(4000);
-                            tryLeft--;
-                        }
-                    }
+                    Logger.LogInformation("Deleting an invalid clone at {OutputPath}", gitCfg.CloneFullPath);
+                    Directory.Delete(gitCfg.CloneFullPath, true);
+                    break;
+                } catch(Exception ex)
+                {
+                    Logger.LogError(ex, "Could not delete {CloneFullPath}", gitCfg.CloneFullPath);
+                    await Task.Delay(4000);
+                    tryLeft--;
                 }
             }
             return await this.RunProcessWaitAsync("clone", gitCfg.SshRepoUrl, gitCfg.CloneFullPath);                

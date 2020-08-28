@@ -2,7 +2,7 @@
   "profiles": {
     "ring": {
       "commandName": "Project",
-      "commandLineArgs": "headless -d"
+      "commandLineArgs": " -d"
     }
   }
 }

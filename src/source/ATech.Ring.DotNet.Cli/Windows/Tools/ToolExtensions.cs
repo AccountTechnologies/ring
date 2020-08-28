@@ -38,7 +38,8 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
                 void OnData(object _, DataReceivedEventArgs x) => sb.AppendLine(x.Data);
                 void OnError(object _, DataReceivedEventArgs x)
                 {
-                    tool.Logger.LogDebug(x.Data);
+                    if (string.IsNullOrWhiteSpace(x.Data)) return;
+                    tool.Logger.LogError(x.Data);
                     onErrorData?.Invoke(x.Data);
                 }
 
