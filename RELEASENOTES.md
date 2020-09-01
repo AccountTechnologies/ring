@@ -1,5 +1,9 @@
 # Release notes
 
+## 2.4.0-pre
+
+* Support for Kustomize apps
+
 ## 2.3.4
 
 * no changes vs 2.3.4-pre. Releasing as the stable release before staring work on new features.

@@ -3,7 +3,7 @@
 
 Service launcher and monitor
 
-Ring brings order into the messy world of developing and debugging a cloud-ready microservice system side by side with maintaining and migrating legacy ones where you may have many different types of services (ASP.NET Core, Topshelf, WCF) hosted in many different ways (IIS Express, WindowsService, Exe) and scattered across many solutions and repositories. 
+Ring brings order into the messy world of developing and debugging a cloud-ready microservice system side by side with maintaining and migrating legacy ones where you may have many different types of services (ASP.NET Core, Topshelf, WCF, ...) hosted in many different ways (Kubernetes, Docker, IIS Express, WindowsService, Exe) and scattered across many solutions and repositories. 
 
 # What is it?
 
@@ -24,6 +24,15 @@ Ring groups *runnables* (mostly services but not only) into *workspaces*. Worksp
 * Ring is meant to keep your workspace running even if you quit Visual Studio
 * You can also run Ring in a stand-alone mode which just keeps your workspace running
 * Ring exposes a web socket interface on port 7999
+
+# Supported runnables
+
+* [kustomize](docs/runnables/kustomize.md) - Kubernetes apps managed by [Kustomize](https://kustomize.io/)
+* `dockercompose` - docker-compose files
+* [aspnetcore](docs/runnables/aspnetcore.md) - .NET Core apps running in console (like ASP.NET Core in Kestrel)
+* `iisxcore` - ASP.NET Core apps in IIS Express
+* [iisexpress](docs/runnables/iisexpress.md) - WCF and other .NET Framework services hosted in IIS Express
+* `netexe` - full .NET Framework console apps (like TopShelf)
 
 # Installation 
 
@@ -52,13 +61,7 @@ ring run -w .\path\to\your\workspace.toml -d
 
 # Vocabulary
 
-* *runnable* - usually a service. Currently the following types are supported:
-    * [iisexpress](docs/runnables/iisexpress.md) - WCF and other .NET Framework services hosted in IIS Express
-    * `iisxcore` - ASP.NET Core apps in IIS Express
-    * [aspnetcore](docs/runnables/aspnetcore.md) - .NET Core apps running in console (like ASP.NET Core in Kestrel)
-    * `netexe` - full .NET Framework console apps (like TopShelf)
-    * `dockercompose` - docker-compose files
-
+* *runnable* - a service/process ring manages.
 * *workspace* - a logical grouping of runnables defined in TOML file(s). Workspaces can be composed of other workspaces using the `import` tag. Ring can only run a single workspace at a time. Example workspace:
 ```toml
 # your workspace.toml
@@ -115,6 +118,12 @@ csproj = "/path/to/your/project.csproj"
 ```toml
 [[dockercompose]]
 path = "path/to/docker-compose.yml"
+```
+
+*Runs Kustomize app*
+```toml
+[[kustomize]]
+path = "path/to/app"
 ```
 
 *Comments*
