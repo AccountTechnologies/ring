@@ -13,19 +13,21 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.IISExpress
     {
         private readonly IISExpressExe _iisExpress;
         private readonly ILogger<IISXCoreRunnable> _logger;
+        private readonly GitClone _gitClone;
 
         public IISXCoreRunnable(IISExpressExe iisExpress,
             ILogger<IISXCoreRunnable> logger,
-            ISender<IRingEvent> eventQ) : base(logger, eventQ)
+            ISender<IRingEvent> eventQ, GitClone gitClone) : base(logger, eventQ)
         {
             _iisExpress = iisExpress;
             _logger = logger;
+            _gitClone = gitClone;
         }
 
         protected override IISXCoreContext CreateContext()
         {
             AddDetail(DetailsKeys.CsProjPath, Config.FullPath);
-            var ctx = IISXCoreContext.Create(Config);
+            var ctx = IISXCoreContext.Create(Config, c => _gitClone.ResolveFullClonePath(c));
             AddDetail(DetailsKeys.WorkDir, ctx.WorkingDir);
             AddDetail(DetailsKeys.ProcessId, ctx.ProcessId);
             AddDetail(DetailsKeys.Uri, ctx.Uri);

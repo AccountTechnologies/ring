@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using ATech.Ring.Configuration.Interfaces;
 using ATech.Ring.DotNet.Cli.Abstractions.Tools;
 using ATech.Ring.DotNet.Cli.Windows.Runnables.Dotnet;
 using Microsoft.Extensions.Logging;
@@ -13,16 +12,15 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
     {
         private const string UrlsEnvVar = "ASPNETCORE_URLS";
         private readonly ExeRunner _exeRunner;
-        private readonly GitClone _gitClone;
         public ILogger<ITool> Logger { get; }
         public string ExePath { get; set; } = "dotnet.exe";
         public string[] DefaultArgs { get; set; } = { };
         public Dictionary<string, string> DefaultEnvVars = new Dictionary<string, string> {["ASPNETCORE_ENVIRONMENT"] = "Development"};
         
-        public DotnetCliBundle(ExeRunner exeRunner, GitClone gitClone, ILogger<DotnetCliBundle> logger)
+        public DotnetCliBundle(ExeRunner exeRunner, ILogger<DotnetCliBundle> logger)
         {
             _exeRunner = exeRunner;
-            (_gitClone, Logger) = (gitClone, logger);
+            Logger = logger;
         }
 
         public async Task<ExecutionInfo> RunAsync(DotnetContext ctx, string[] urls = null)
@@ -56,7 +54,5 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
 
         public async Task<ExecutionInfo> BuildAsync(string csProjFile)
             => await this.RunProcessWaitAsync("build", csProjFile, "-v:q", "/nologo", "/nodereuse:false");
-
-        public Task<ExecutionInfo> GitCloneOrPullAsync(IFromGit gitSource) => _gitClone.CloneOrPullAsync(gitSource);
     }
 }

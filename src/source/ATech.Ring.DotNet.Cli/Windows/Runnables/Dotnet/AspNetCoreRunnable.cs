@@ -12,7 +12,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Dotnet
     public class AspNetCoreRunnable : DotnetRunnableBase<AspNetCoreContext, AspNetCore>
     {
 
-        public AspNetCoreRunnable(DotnetCliBundle dotnet, ILogger<AspNetCoreRunnable> logger, ISender<IRingEvent> sender) : base(dotnet, logger, sender)
+        public AspNetCoreRunnable(DotnetCliBundle dotnet, ILogger<AspNetCoreRunnable> logger, ISender<IRingEvent> sender, GitClone gitClone) : base(dotnet, logger, sender, gitClone)
         {
         }
 
