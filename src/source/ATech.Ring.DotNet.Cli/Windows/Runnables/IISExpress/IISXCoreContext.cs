@@ -10,9 +10,9 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.IISExpress
     {
         public string TempAppHostConfigPath { get; set; }
         public Uri Uri { get; set; }
-        public static IISXCoreContext Create<C>(C config) where C : IUseCsProjFile
+        public static IISXCoreContext Create<C>(C config, Func<IFromGit,string> resolveFullClonePath) where C : IUseCsProjFile
         {
-            var ctx = Create<IISXCoreContext, C>(config);
+            var ctx = Create<IISXCoreContext, C>(config, resolveFullClonePath);
             ctx.Uri = config.GetIISUrl();
             return ctx;
         }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -28,8 +27,7 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
     public class Startup
     {
         public static readonly string OriginalWorkingDir = Directory.GetCurrentDirectory();
-        public static readonly string RingDllPath = Process.GetCurrentProcess().Modules.Cast<ProcessModule>()
-                                                           .Single(x => x.ModuleName == typeof(RingWebHostBuilder).Module.Name).FileName;
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -41,6 +39,8 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
         {
             var clients = new ConcurrentDictionary<Uri, HttpClient>();
             services.AddSingleton<Func<Uri, HttpClient>>(s => uri => clients.GetOrAdd(uri, new HttpClient {BaseAddress = uri, MaxResponseContentBufferSize = 1}));
+            services.AddOptions();
+            services.Configure<RingConfiguration>(Configuration.GetSection("ring"));
             services.AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true));
             services.AddSingleton<IServer, Server>();
             services.AddSingleton<WebsocketsHandler>();
@@ -48,6 +48,7 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
             services.AddSingleton<IConfigurationLoader, ConfigurationLoader>();
             services.AddSingleton<IConfigurator, Configurator>();
             services.AddSingleton<IWorkspaceLauncher, WorkspaceLauncher>();
+            services.AddSingleton<ICloneMaker, CloneMaker>();
             services.AddSingleton<Protocol.Queue<IRingEvent>>();
             services.AddSingleton<ISender<IRingEvent>>(f => f.GetService<Protocol.Queue<IRingEvent>>());
             services.AddSingleton<IReceiver<IRingEvent>>(f => f.GetService<Protocol.Queue<IRingEvent>>());

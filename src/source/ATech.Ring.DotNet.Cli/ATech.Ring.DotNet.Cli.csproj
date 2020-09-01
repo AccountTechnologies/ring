@@ -14,7 +14,8 @@
     <PackageType>DotNetCliTool</PackageType>
     <PackageTags>dotnet, cli, dotnet-cli, global, tool, ring, nuget, package</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <PackageReleaseNotes>Add Kustomize runnable</PackageReleaseNotes>
+    <PackageReleaseNotes>Feature: clone repos from workspaces
+                         Feature: Add Kustomize runnable</PackageReleaseNotes>
     <PackageIcon>ring.128.png</PackageIcon>
     <PackageDescription>ring! service launcher and monitor</PackageDescription>
     <RepositoryUrl>https://github.com/AccountTechnologies/ring</RepositoryUrl>

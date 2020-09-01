@@ -10,6 +10,7 @@ namespace ATech.Ring.DotNet.Cli.Logging
         STOP = 4,
         DESTROY = 5,
         EXCLUDE = 6,
-        CONFIG = 7
+        CONFIG = 7,
+        GIT = 8
     }
 }

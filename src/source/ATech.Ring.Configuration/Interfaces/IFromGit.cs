@@ -3,6 +3,5 @@
     public interface IFromGit
     {
         string SshRepoUrl { get; }
-        string CloneFullPath { get; set; }
     }
 }
