@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -27,6 +28,8 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
     public class Startup
     {
         public static readonly string OriginalWorkingDir = Directory.GetCurrentDirectory();
+        public static readonly string RingBinPath = Path.GetDirectoryName(Process.GetCurrentProcess().Modules.Cast<ProcessModule>()
+                                                           .Single(x => x.ModuleName == typeof(RingWebHostBuilder).Module.Name).FileName);
 
         public Startup(IConfiguration configuration)
         {

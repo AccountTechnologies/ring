@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using ATech.Ring.Configuration;
 using ATech.Ring.DotNet.Cli.Workspace;
 using CommandLine;
 using LightInject;
@@ -22,7 +21,7 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
         {
             Container.ScopeManagerProvider = new PerLogicalCallContextScopeManagerProvider();
             BaseOptions options = new ConsoleOptions { IsDebug = false };
-            Parser.Default.ParseArguments<ConsoleOptions, HeadlessOptions, CloneOptions>(args)
+            Parser.Default.ParseArguments<ConsoleOptions, HeadlessOptions, CloneOptions, ShowConfigOptions>(args)
                           .WithParsed<ConsoleOptions>(opts =>
                           {
                               opts.WorkspacePath = Path.GetFullPath(opts.WorkspacePath, Startup.OriginalWorkingDir);
@@ -33,6 +32,12 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
                           {
                               opts.WorkspacePath = Path.GetFullPath(opts.WorkspacePath, Startup.OriginalWorkingDir);
                               options = opts;
+                          })
+                          .WithParsed<ShowConfigOptions>(opts =>
+                          {
+                              options = opts;
+                              Console.WriteLine(Path.Combine(Startup.RingBinPath, "appsettings.json"));
+                              Environment.Exit(0);
                           })
                           .WithNotParsed(x => Environment.Exit(-1));
 
@@ -59,8 +64,7 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
             var opts = w.Services.GetRequiredService<BaseOptions>();
             if (opts is CloneOptions c)
             {
-                await w.Services.GetRequiredService<ICloneMaker>()
-                    .CloneWorkspaceRepos(c.WorkspacePath, c.OutputDir);
+                await w.Services.GetRequiredService<ICloneMaker>().CloneWorkspaceRepos(c.WorkspacePath, c.OutputDir);
                 await w.StopAsync();
                 return;
             }
