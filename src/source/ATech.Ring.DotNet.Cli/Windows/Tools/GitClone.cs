@@ -49,7 +49,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
 
             if (!Directory.Exists(cloneFullPath))
             {
-                Logger.LogInformation("Cloning to {OutputPath}", cloneFullPath);
+                Logger.LogDebug("Cloning to {OutputPath}", cloneFullPath);
                 var result = await this.RunProcessWaitAsync("clone", gitCfg.SshRepoUrl, cloneFullPath);
                 Logger.LogInformation(result.IsSuccess ? PhaseStatus.OK : PhaseStatus.FAILED);
                 return result;
