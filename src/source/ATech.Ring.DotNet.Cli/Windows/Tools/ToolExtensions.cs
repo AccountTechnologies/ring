@@ -40,7 +40,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
                 void OnError(object _, DataReceivedEventArgs x)
                 {
                     if (string.IsNullOrWhiteSpace(x.Data)) return;
-                    tool.Logger.LogError(x.Data);
+                    tool.Logger.LogInformation(x.Data);
                     onErrorData?.Invoke(x.Data);
                 }
 
