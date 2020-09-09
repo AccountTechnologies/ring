@@ -47,24 +47,35 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
 
             var cloneFullPath = ResolveFullClonePath(gitCfg, rootPathOverride);
 
-            if (!Directory.Exists(cloneFullPath))
+            async Task<ExecutionInfo> CloneAsync()
             {
                 Logger.LogDebug("Cloning to {OutputPath}", cloneFullPath);
-                var result = await this.RunProcessWaitAsync("clone", gitCfg.SshRepoUrl, cloneFullPath);
-                Logger.LogInformation(result.IsSuccess ? PhaseStatus.OK : PhaseStatus.FAILED);
-                return result;
+
+                return await this.TryAsync(3, TimeSpan.FromSeconds(10),
+                    async t =>
+                    {
+                        var result = await t.RunProcessWaitAsync("clone", gitCfg.SshRepoUrl, cloneFullPath);
+                        Logger.LogInformation(result.IsSuccess ? PhaseStatus.OK : PhaseStatus.FAILED);
+                        return result;
+                    });
             }
+
+            if (!Directory.Exists(cloneFullPath)) return await CloneAsync();
 
             var output = await this.RunProcessWaitAsync("-C", cloneFullPath, "status");
             if (output.IsSuccess)
             {
                 Logger.LogInformation("Pulling at {OutputPath}", cloneFullPath);
-                var result = await this.RunProcessWaitAsync("-C", cloneFullPath, "pull");
-                Logger.LogInformation(result.IsSuccess ? PhaseStatus.OK : PhaseStatus.FAILED);
-                return result;
+                return await this.TryAsync(3, TimeSpan.FromSeconds(10),
+                    async t =>
+                    {
+                        var result = await t.RunProcessWaitAsync("-C", cloneFullPath, "pull");
+                        Logger.LogInformation(result.IsSuccess ? PhaseStatus.OK : PhaseStatus.FAILED);
+                        return result;
+                    });
             }
 
-            var tryLeft = 2;
+            var tryLeft = 3;
             while (Directory.Exists(cloneFullPath) && tryLeft > 0)
             {
                 try
@@ -76,11 +87,11 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
                 catch (Exception ex)
                 {
                     Logger.LogError(ex, "Could not delete {CloneFullPath}", cloneFullPath);
-                    await Task.Delay(4000);
+                    await Task.Delay(TimeSpan.FromSeconds(10));
                     tryLeft--;
                 }
             }
-            return await this.RunProcessWaitAsync("clone", gitCfg.SshRepoUrl, cloneFullPath);
+            return await CloneAsync();
         }
     }
 }

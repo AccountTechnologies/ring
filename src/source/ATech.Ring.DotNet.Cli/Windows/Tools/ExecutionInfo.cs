@@ -6,6 +6,5 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
         public int? ExitCode { get; set; }
         public string Output { get; set; }
         public bool IsSuccess => ExitCode == 0;
-        public bool IsTerminated => ExitCode.HasValue;
     }
 }

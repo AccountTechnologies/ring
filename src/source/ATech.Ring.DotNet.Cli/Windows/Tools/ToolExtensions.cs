@@ -12,6 +12,21 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
 {
     public static class ToolExtensions
     {
+        public static async Task<ExecutionInfo> TryAsync(this ITool t, int times, TimeSpan backOffInterval, Func<ITool, Task<ExecutionInfo>> func)
+        {
+            var result = new ExecutionInfo();
+            var triesLeft = times;
+            while (triesLeft > 0)
+            {
+                result = await func(t);
+                if (result.IsSuccess) return result;
+                await Task.Delay(backOffInterval);
+                triesLeft--;
+            } 
+
+            return result;
+        }
+
         public static Task<ExecutionInfo> RunProcessWaitAsync(this ITool tool, params object[] args)
             => tool.RunProcessCoreAsync(args: args, wait: true);
 
@@ -68,8 +83,6 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
 
                 tool.Logger.LogDebug("{procUid} - Starting process: {Tool} {Args} ({ProcessWorkingDir})", procUid, tool.ExePath, allArgs, workingDirectory ?? ringWorkingDir);
 
-
-                var title = Console.Title;
                 var p = Process.Start(s);
 
                 if (p == null)
@@ -107,15 +120,12 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
 
                 if (wait)
                 {
-                    p.WaitForExit();
                     result = await tcs.Task;
                 }
                 else
                 {
                     result = new ExecutionInfo { Pid = p.Id, Output = sb.ToString().Trim('\r', '\n', ' ', '\t') };
                 }
-
-                Console.Title = title;
 
                 return result;
             }
