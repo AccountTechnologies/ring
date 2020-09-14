@@ -119,12 +119,12 @@ namespace ATech.Ring.DotNet.Cli.Workspace
                     var runnableState = runnable switch
                     {
                         { State: State.Zero } => RunnableState.ZERO,
-                        { State: State.Ready } => RunnableState.INITIATED,
-                        { State: State.CheckingHealth } => RunnableState.HEALTH_CHECK,
+                        { State: State.Idle } => RunnableState.INITIATED,
+                        { State: State.ProbingHealth } => RunnableState.HEALTH_CHECK,
                         { State: State.Healthy } => RunnableState.HEALTHY,
                         { State: State.Dead } => RunnableState.DEAD,
                         { State: State.Recovering } => RunnableState.RECOVERING,
-                        { State: State.Started } => RunnableState.STARTED,
+                        { State: State.Pending } => RunnableState.STARTED,
                         _ => RunnableState.ZERO
                     };
 
@@ -177,7 +177,7 @@ namespace ATech.Ring.DotNet.Cli.Workspace
         {
             var state = serverState == ServerState.IDLE ? WorkspaceState.NONE :
                         !_runnables.Any() ? WorkspaceState.IDLE :
-                        _runnables.Values.All(r => r.State == State.CheckingHealth || r.State == State.Healthy) ? WorkspaceState.HEALTHY :
+                        _runnables.Values.All(r => r.State == State.ProbingHealth || r.State == State.Healthy) ? WorkspaceState.HEALTHY :
                         WorkspaceState.DEGRADED;
 
             if (!force && state == CurrentStatus) return;

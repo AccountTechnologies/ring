@@ -19,7 +19,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
     {
         private readonly ILogger<Runnable<TContext, TConfig>> _logger;
         private readonly Fsm _fsm = new Fsm();
-        private TContext _context { get; set; }
+        private TContext _context;
         protected readonly ISender<IRingEvent> Sender;
         protected virtual TimeSpan HealthCheckPeriod { get; } = TimeSpan.FromSeconds(5);
         protected virtual int MaxConsecutiveFailuresUntilDead { get; } = 2;
@@ -64,32 +64,32 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
                 .Ignore(Trigger.NoOp)
                 .Ignore(Trigger.HcOk)
                 .Ignore(Trigger.HcUnhealthy)
-                .Permit(Trigger.Init, State.Ready);
+                .Permit(Trigger.Init, State.Idle);
 
-            _fsm.Configure(State.Ready)
+            _fsm.Configure(State.Idle)
                 .OnEntryFromAsync(Trigger.Init, () => InitCoreAsync(token))
                 .OnEntryFromAsync(Trigger.Stop, () => StopCoreAsync(_context, token))
-                .Permit(Trigger.Start, State.Started)
-                .Permit(Trigger.StartBypass, State.Started)
+                .Permit(Trigger.Start, State.Pending)
+                .Permit(Trigger.InitFailure, State.Pending)
                 .Permit(Trigger.Destroy, State.Zero)
                 .Ignore(Trigger.HcUnhealthy)
                 .Ignore(Trigger.NoOp)
                 .Ignore(Trigger.HcOk)
                 .Ignore(Trigger.Stop);
 
-            _fsm.Configure(State.Started)
+            _fsm.Configure(State.Pending)
                 .OnEntryFromAsync(Trigger.Start,
                     async () =>
                     {
                         await StartCoreAsync(_context, token);
                         await QueueHealthCheckAsync(token);
                     })
-                .OnEntryFromAsync(Trigger.StartBypass, () => QueueHealthCheckAsync(token))
-                .Permit(Trigger.StartHealthCheck, State.CheckingHealth)
-                .Permit(Trigger.Stop, State.Ready);
+                .OnEntryFromAsync(Trigger.InitFailure, () => QueueHealthCheckAsync(token))
+                .Permit(Trigger.HealthLoop, State.ProbingHealth)
+                .Permit(Trigger.Stop, State.Idle);
 
-            _fsm.Configure(State.CheckingHealth)
-                .OnEntryFromAsync(Trigger.StartHealthCheck,
+            _fsm.Configure(State.ProbingHealth)
+                .OnEntryFromAsync(Trigger.HealthLoop,
                     async () =>
                     {
                         Sender.Enqueue(RunnableEvent.New<RunnableHealthCheck>(this));
@@ -107,7 +107,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
                 .Permit(Trigger.HcOk, State.Healthy)
                 .Permit(Trigger.HcDead, State.Dead)
                 .Permit(Trigger.HcUnhealthy, State.Recovering)
-                .Permit(Trigger.Stop, State.Ready)
+                .Permit(Trigger.Stop, State.Idle)
                 .Ignore(Trigger.NoOp);
 
             _fsm.Configure(State.Healthy)
@@ -116,9 +116,8 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
                     Sender.Enqueue(RunnableEvent.New<RunnableHealthy>(this));
                     await QueueHealthCheckAsync(token);
                 })
-                .Permit(Trigger.StartHealthCheck, State.CheckingHealth)
-                .Permit(Trigger.Stop, State.Ready);
-
+                .Permit(Trigger.HealthLoop, State.ProbingHealth)
+                .Permit(Trigger.Stop, State.Idle);
 
             _fsm.Configure(State.Dead)
                 .OnEntryFromAsync(Trigger.HcDead, () =>
@@ -126,7 +125,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
                     Sender.Enqueue(RunnableEvent.New<RunnableDead>(this));
                     return Task.CompletedTask;
                 })
-                .Permit(Trigger.Stop, State.Ready);
+                .Permit(Trigger.Stop, State.Idle);
 
             _fsm.Configure(State.Recovering)
                 .OnEntryFromAsync(Trigger.HcUnhealthy,
@@ -135,10 +134,9 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
                             Sender.Enqueue(RunnableEvent.New<RunnableRecovering>(this));
                             await RecoverCoreAsync(_context, token);
                         })
-                .Permit(Trigger.Stop, State.Ready);
+                .Permit(Trigger.Stop, State.Idle);
 
             _fsm.OnTransitioned(t => _logger.LogDebug($"{t.Source} -> {t.Trigger} -> {t.Destination}"));
-
 
             await _fsm.ActivateAsync();
             return _fsm;
@@ -152,7 +150,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
                     await delay.ConfigureAwait(false);
                     delay.Dispose();
                     if (CancellationSource.IsCancellationRequested) return;
-                    await _fsm.FireAsync(Trigger.StartHealthCheck);
+                    await _fsm.FireAsync(Trigger.HealthLoop);
                 }
                 catch (OperationCanceledException)
                 {
@@ -194,7 +192,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
             {
                 _logger.LogError(ex, "Initialization failed");
                 _context = (TContext)FormatterServices.GetUninitializedObject(typeof(TContext));
-                await _fsm.FireAsync(Trigger.StartBypass);
+                await _fsm.FireAsync(Trigger.InitFailure);
             }
         }
         protected async Task StartCoreAsync(TContext ctx, CancellationToken token)
@@ -296,12 +294,10 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
 
         private class Fsm : Stateless.StateMachine<State, Trigger>
         {
-            public Fsm() : base(State.Zero)
-            {
-            }
+            public Fsm() : base(State.Zero) { }
         }
     }
 
-    public enum State { Zero, Ready, Started, CheckingHealth, Healthy, Recovering, Dead }
-    public enum Trigger { NoOp, Invalid, Create, Init, StartBypass, Start, Stop, Destroy, StartHealthCheck, HcUnhealthy, HcOk, HcDead }
+    public enum State { Zero, Idle, Pending, ProbingHealth, Healthy, Recovering, Dead }
+    public enum Trigger { NoOp, Invalid, Init, InitFailure, Start, Stop, Destroy, HealthLoop, HcUnhealthy, HcOk, HcDead }
 }
