@@ -51,6 +51,7 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
             services.AddSingleton<IConfigurationLoader, ConfigurationLoader>();
             services.AddSingleton<IConfigurator, Configurator>();
             services.AddSingleton<IWorkspaceLauncher, WorkspaceLauncher>();
+            services.AddSingleton<IWorkspaceInitHook, WorkspaceInitHook>();
             services.AddSingleton<ICloneMaker, CloneMaker>();
             services.AddSingleton<Protocol.Queue<IRingEvent>>();
             services.AddSingleton<ISender<IRingEvent>>(f => f.GetService<Protocol.Queue<IRingEvent>>());

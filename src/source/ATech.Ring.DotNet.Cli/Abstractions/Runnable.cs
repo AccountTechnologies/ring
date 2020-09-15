@@ -30,6 +30,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
         protected readonly CancellationTokenSource CancellationSource = new CancellationTokenSource();
 
         public event EventHandler OnHealthCheckCompleted;
+        public event EventHandler OnInitiated;
         public IReadOnlyDictionary<string, object> Details => _details;
         private readonly Dictionary<string, object> _details = new Dictionary<string, object>();
         /// <summary>
@@ -186,6 +187,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
                 _logger.LogContextDebug(_context);
                 _logger.LogDebug(PhaseStatus.OK);
                 Sender.Enqueue(RunnableEvent.New<RunnableInitiated>(this));
+                OnInitiated?.Invoke(this, EventArgs.Empty);
                 await _fsm.FireAsync(Trigger.Start);
             }
             catch (Exception ex)

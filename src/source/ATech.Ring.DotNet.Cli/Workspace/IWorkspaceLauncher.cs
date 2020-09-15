@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using ATech.Ring.Configuration;
 using ATech.Ring.DotNet.Cli.Dtos;
@@ -16,5 +17,6 @@ namespace ATech.Ring.DotNet.Cli.Workspace
         Task<IncludeResult> IncludeAsync(string id, CancellationToken token);
         string WorkspacePath { get; }
         void PublishStatus(ServerState serverState);
+        event EventHandler OnInitiated;
     }
 }
