@@ -26,7 +26,9 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
                  .UseConfiguration(new ConfigurationBuilder()
                     .AddJsonFile("appsettings.json", optional: false)
                     .AddInMemoryCollection(new Dictionary<string, string> { ["ring:port"] = options.Port.ToString() })
-                    .AddEnvironmentVariables().Build())
+                    .AddUserSettingsFile()
+                    .AddEnvironmentVariables()
+                    .Build())
                  .UseKestrel((ctx, opts) =>
                  {
                      opts.ListenLocalhost(ctx.Configuration.GetValue<int>("ring:port"));
