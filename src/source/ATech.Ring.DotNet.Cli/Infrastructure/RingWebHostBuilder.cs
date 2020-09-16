@@ -31,7 +31,7 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
                     .Build())
                  .UseKestrel((ctx, opts) =>
                  {
-                     opts.ListenLocalhost(ctx.Configuration.GetValue<int>("ring:port"));
+                     opts.ListenAnyIP(ctx.Configuration.GetValue<int>("ring:port"));
                  })
                  .SuppressStatusMessages(true)
                  .ConfigureServices(s => s.AddSingleton(f => options))
