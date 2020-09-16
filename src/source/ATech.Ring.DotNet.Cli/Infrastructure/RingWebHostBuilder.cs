@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using ATech.Ring.DotNet.Cli.Infrastructure.Cli;
 using ATech.Ring.DotNet.Cli.Workspace;
-using CommandLine;
 using LightInject;
 using LightInject.Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting;
@@ -20,26 +18,8 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
         public static IWebHostBuilder ForRing(this IWebHostBuilder hostBuilder, string[] args)
         {
             Container.ScopeManagerProvider = new PerLogicalCallContextScopeManagerProvider();
-            BaseOptions options = new ConsoleOptions { IsDebug = false };
-            Parser.Default.ParseArguments<ConsoleOptions, HeadlessOptions, CloneOptions, ShowConfigOptions>(args)
-                          .WithParsed<ConsoleOptions>(opts =>
-                          {
-                              opts.WorkspacePath = Path.GetFullPath(opts.WorkspacePath, Startup.OriginalWorkingDir);
-                              options = opts;
-                          })
-                          .WithParsed<HeadlessOptions>(opts => options = opts)
-                          .WithParsed<CloneOptions>(opts =>
-                          {
-                              opts.WorkspacePath = Path.GetFullPath(opts.WorkspacePath, Startup.OriginalWorkingDir);
-                              options = opts;
-                          })
-                          .WithParsed<ShowConfigOptions>(opts =>
-                          {
-                              options = opts;
-                              Console.WriteLine(Path.Combine(Startup.RingBinPath, "appsettings.json"));
-                              Environment.Exit(0);
-                          })
-                          .WithNotParsed(x => Environment.Exit(-1));
+
+            var options = CliParser.GetOptions(args);
 
             hostBuilder
                  .UseStartup<Startup>()

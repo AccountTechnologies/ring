@@ -1,6 +1,6 @@
 ﻿using CommandLine;
 
-namespace ATech.Ring.DotNet.Cli.Infrastructure
+namespace ATech.Ring.DotNet.Cli.Infrastructure.Cli
 {
     public class BaseOptions
     {

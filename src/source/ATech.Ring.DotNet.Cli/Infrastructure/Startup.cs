@@ -11,6 +11,7 @@ using ATech.Ring.Configuration;
 using ATech.Ring.Configuration.Interfaces;
 using ATech.Ring.DotNet.Cli.Abstractions;
 using ATech.Ring.DotNet.Cli.Abstractions.Tools;
+using ATech.Ring.DotNet.Cli.Infrastructure.Cli;
 using ATech.Ring.DotNet.Cli.Logging;
 using ATech.Ring.DotNet.Cli.Workspace;
 using ATech.Ring.Protocol;
