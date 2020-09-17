@@ -30,7 +30,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
         protected readonly CancellationTokenSource CancellationSource = new CancellationTokenSource();
 
         public event EventHandler OnHealthCheckCompleted;
-        public event EventHandler OnInitiated;
+        public event EventHandler OnInitExecuted;
         public IReadOnlyDictionary<string, object> Details => _details;
         private readonly Dictionary<string, object> _details = new Dictionary<string, object>();
         /// <summary>
@@ -187,14 +187,17 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
                 _logger.LogContextDebug(_context);
                 _logger.LogDebug(PhaseStatus.OK);
                 Sender.Enqueue(RunnableEvent.New<RunnableInitiated>(this));
-                OnInitiated?.Invoke(this, EventArgs.Empty);
                 await _fsm.FireAsync(Trigger.Start);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Initialization failed");
-                _context = (TContext)FormatterServices.GetUninitializedObject(typeof(TContext));
+                _context = (TContext) FormatterServices.GetUninitializedObject(typeof(TContext));
                 await _fsm.FireAsync(Trigger.InitFailure);
+            }
+            finally
+            {
+                OnInitExecuted?.Invoke(this, EventArgs.Empty);
             }
         }
         protected async Task StartCoreAsync(TContext ctx, CancellationToken token)

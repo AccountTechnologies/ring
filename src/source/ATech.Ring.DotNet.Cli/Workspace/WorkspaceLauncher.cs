@@ -158,7 +158,7 @@ namespace ATech.Ring.DotNet.Cli.Workspace
 
             var runnable = _createRunnable(cfg);
             runnable.OnHealthCheckCompleted += OnPublishStatus;
-            runnable.OnInitiated += OnRunnableInitiated;
+            runnable.OnInitExecuted += OnRunnableInitExecuted;
             _runnables.TryAdd(id, runnable);
 
             await await Task.Factory.StartNew(() => runnable.RunAsync(cfg, _cts.Token), token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
@@ -170,7 +170,7 @@ namespace ATech.Ring.DotNet.Cli.Workspace
 
             Interlocked.Decrement(ref _initCounter);
             r.OnHealthCheckCompleted -= OnPublishStatus;
-            r.OnInitiated -= OnRunnableInitiated;
+            r.OnInitExecuted -= OnRunnableInitExecuted;
 
             _tasks.TryRemove(key, out var task);
 
@@ -189,7 +189,7 @@ namespace ATech.Ring.DotNet.Cli.Workspace
             await completed;
         }
 
-        private void OnRunnableInitiated(object sender, EventArgs e)
+        private void OnRunnableInitExecuted(object sender, EventArgs e)
         {
             if (_runnables.Count != Interlocked.Increment(ref _initCounter)) return;
             using var _ = _logger.WithHostScope(Phase.INIT);
