@@ -1,6 +1,6 @@
 # Configuration
 
-Ring as a .NET Core application is configured via a standard `appsettings.json` file. It is shipped with a defualt configutation. You can override the defaults by copying the default config file to the right location in AppData:
+Ring as a .NET Core application is configured via a standard `appsettings.json` file. It is shipped with a defualt configuration. You can override the defaults by copying the default config file to the right location in AppData:
 
 ```powershell
 cat "$(ring show-config -n)" > "$($env:APPDATA)\ATech\ring\appsettings.json"
