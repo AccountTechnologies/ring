@@ -22,6 +22,7 @@ namespace ATech.Ring.Configuration
         public IISXCore[] iisxcore { get; set; } = { };
         public NetExe[] netexe { get; set; } = { };
         public DockerCompose[] dockercompose { get; set; } = { };
+        public Kustomize[] kustomize { get; set; } = { };
         public WorkspaceConfig[] import { get; set; } = { };
     }
 }

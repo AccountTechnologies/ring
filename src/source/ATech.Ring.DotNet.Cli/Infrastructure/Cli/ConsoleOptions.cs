@@ -1,6 +1,6 @@
 ﻿using CommandLine;
 
-namespace ATech.Ring.DotNet.Cli.Infrastructure
+namespace ATech.Ring.DotNet.Cli.Infrastructure.Cli
 {
     [Verb("run", HelpText = "Runs a stand-alone ring! server instance")]
     public class ConsoleOptions : BaseOptions

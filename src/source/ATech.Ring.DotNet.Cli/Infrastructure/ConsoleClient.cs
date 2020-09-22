@@ -2,6 +2,7 @@
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using ATech.Ring.DotNet.Cli.Infrastructure.Cli;
 using ATech.Ring.Protocol;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

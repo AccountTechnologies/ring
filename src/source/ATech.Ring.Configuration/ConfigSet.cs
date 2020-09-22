@@ -8,7 +8,7 @@ namespace ATech.Ring.Configuration
         public string Path { get; }
         public ConfigSet(string path, Dictionary<string, IRunnableConfig> bareConfigs)
         {
-            foreach (var c in bareConfigs) Add(c.Key, c.Value);
+            foreach (var (key, value) in bareConfigs) Add(key, value);
             Path = path;
         }
         public ConfigSet() { }

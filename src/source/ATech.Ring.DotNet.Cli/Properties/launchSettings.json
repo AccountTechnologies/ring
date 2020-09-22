@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "ring": {
-      "commandName": "Project",
-      "commandLineArgs": "headless -d"
-    }
-  }
-}

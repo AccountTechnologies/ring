@@ -19,21 +19,21 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Dotnet
         public string ExePath => Path.ChangeExtension(EntryAssemblyPath, "exe");
         public int ConsecutiveFailures { get; set; }
         public int TotalFailures { get; set; }
-        public static T Create<T, C>(C config) where C : IUseCsProjFile where T : DotnetContext
+        public static T Create<T, C>(C config, Func<IFromGit,string> resolveFullClonePath) where C : IUseCsProjFile where T : DotnetContext
         {
             var originalCsProjPath = config.CsProj;
             try
             {
                 var ctx = (T)FormatterServices.GetUninitializedObject(typeof(T));
 
-                if (config is IFromGit { SshRepoUrl: string _, CloneFullPath: string c })
+                if (config is IFromGit { SshRepoUrl: string _ } fromGit)
                 {
                     if (Path.IsPathRooted(config.CsProj))
                     {
                         throw new InvalidOperationException($"If sshRepoUrl is used csProj must be a relative path but it is {config.CsProj}");
                     }
 
-                    config.CsProj = Path.Combine(c, config.CsProj);
+                    config.CsProj = Path.Combine(resolveFullClonePath(fromGit), config.CsProj);
                 }
 
                 ctx.CsProjPath = config.CsProj;

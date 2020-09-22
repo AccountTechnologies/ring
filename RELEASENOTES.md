@@ -1,5 +1,11 @@
 # Release notes
 
+## 2.4.0
+
+* Support for Kustomize apps
+* Ring clone command
+* Added support for user configuration
+
 ## 2.3.4
 
 * no changes vs 2.3.4-pre. Releasing as the stable release before staring work on new features.

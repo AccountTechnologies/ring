@@ -13,6 +13,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
         string UniqueId { get; }
         State State { get; }
         event EventHandler OnHealthCheckCompleted;
+        event EventHandler OnInitExecuted;
         IReadOnlyDictionary<string,object> Details { get; }
     }
 }

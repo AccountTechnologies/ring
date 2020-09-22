@@ -116,7 +116,7 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
 
         public async Task<Ack> IncludeAsync(string id, CancellationToken token)
         {
-            _fsm.Fire(T.Include);
+            await _fsm.FireAsync(T.Include);
             return await _launcher.IncludeAsync(id, token) == IncludeResult.UnknownRunnable ? Ack.NotFound : Ack.Ok;
         }
 
@@ -135,7 +135,7 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
 
         public async Task<Ack> ExcludeAsync(string id, CancellationToken token)
         {
-            _fsm.Fire(T.Exclude);
+            await _fsm.FireAsync(T.Exclude);
             return await _launcher.ExcludeAsync(id, token) == ExcludeResult.UnknownRunnable ? Ack.NotFound : Ack.Ok;
         }
 
