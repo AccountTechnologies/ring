@@ -59,6 +59,13 @@ If ring does not work as expected you can use `--debug` or `-d` switch to enable
 ring run -w .\path\to\your\workspace.toml -d
 ```
 
+# CLI commands
+
+* `run` - runs a specified workspace in a stand-alone mode.
+* `headless` - starts and awaits clients (VS Code / VS extension) connections. Once connected a client can load a workspace and interact with it.
+* `clone` - loads a workspace and clones configured repos for each runnable. The runnables must have the `sshRepoUrl` parameter configured otherwise they'll be skipped.
+* `show-config` - displays the path of the default [configuration file](./docs/configuration.md)
+
 # Vocabulary
 
 * *runnable* - a service/process ring manages.
