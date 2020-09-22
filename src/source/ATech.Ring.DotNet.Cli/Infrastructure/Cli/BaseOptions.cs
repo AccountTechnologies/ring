@@ -9,5 +9,8 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure.Cli
 
         [Option('d', "debug", Required = false, HelpText = "Runs debug mode")]
         public bool IsDebug { get; set; }
+
+        [Option('n', "no-logo", Required = false, HelpText = "Hides the startup logo")]
+        public bool NoLogo { get; set; }
     }
 }

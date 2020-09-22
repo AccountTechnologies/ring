@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Infrastructure.Cli;
 using ATech.Ring.DotNet.Cli.Workspace;
@@ -13,6 +15,7 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
 {
     public static class RingWebHostBuilder
     {
+        private static string Ring(string ver) => $"       _ _\n     *'   '*\n    * .*'*. 3\n   '  @   a  ;     ring! v{ver}\n    * '*.*' *\n     *. _ .*\n";
         private static readonly IServiceContainer Container = new ServiceContainer(new ContainerOptions { EnablePropertyInjection = false, EnableVariance = false });
 
         public static IWebHostBuilder ForRing(this IWebHostBuilder hostBuilder, string[] args)
@@ -20,6 +23,12 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
             Container.ScopeManagerProvider = new PerLogicalCallContextScopeManagerProvider();
 
             var options = CliParser.GetOptions(args);
+
+            if (!options.NoLogo)
+            {
+                var version = Assembly.GetExecutingAssembly().GetName().Version;
+                Console.WriteLine(Ring(version.ToString()));
+            }
 
             hostBuilder
                  .UseStartup<Startup>()
