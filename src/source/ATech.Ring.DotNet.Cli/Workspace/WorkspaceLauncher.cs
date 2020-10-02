@@ -175,7 +175,7 @@ namespace ATech.Ring.DotNet.Cli.Workspace
             _tasks.TryRemove(key, out var task);
 
             await r.TerminateAsync(token);
-            await task;
+            if (task != null) await task;
 
             return true;
         }
