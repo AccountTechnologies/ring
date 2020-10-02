@@ -39,13 +39,13 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
 
                     var all = _clients.ToList();
 
-                    foreach (var (id,task) in all)
+                    foreach (var (id, task) in all)
                     {
                         var ws = await task;
                         if (ws.State == WebSocketState.Open) continue;
                         await TryRemoveAsync(id);
                     }
-                        
+
                     await Task.WhenAll(_clients.Values.Select(async t =>
                     {
                         var ws = await t;
@@ -69,6 +69,10 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
             catch (Exception ex)
             {
                 _logger.LogError("Exception: {exception}", ex);
+            }
+            finally
+            {
+                await _server.TerminateAsync(default);
             }
         }
 

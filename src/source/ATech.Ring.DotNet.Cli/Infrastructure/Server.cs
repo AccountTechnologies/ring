@@ -32,8 +32,6 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
             _logger = logger;
             _launcher = launcher;
             _appLifetime = appLifetime;
-            _appLifetime.ApplicationStopping.Register(async () => await TerminateAsync(_appLifetime.ApplicationStopped));
-
             _sender = sender;
             _fsm = new ServerFsm();
         }

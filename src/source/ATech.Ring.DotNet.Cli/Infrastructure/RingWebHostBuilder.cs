@@ -60,8 +60,7 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
                 return;
             }
 
-            var wshTask = w.Services.GetRequiredService<WebsocketsHandler>().InitializeAsync(w.Services.GetRequiredService<IHostApplicationLifetime>().ApplicationStopping);
-            await await Task.WhenAny(wshTask, runTask);
+            await runTask;
         }
     }
 }

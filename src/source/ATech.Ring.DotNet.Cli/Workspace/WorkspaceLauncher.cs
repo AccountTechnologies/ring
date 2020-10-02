@@ -214,7 +214,6 @@ namespace ATech.Ring.DotNet.Cli.Workspace
 
         public void Dispose()
         {
-            _workspaceTask?.Dispose();
             _cts?.Dispose();
         }
     }
