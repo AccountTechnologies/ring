@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Logging;
 using ATech.Ring.Protocol;
 using ATech.Ring.Protocol.Events;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace ATech.Ring.DotNet.Cli.Infrastructure
@@ -14,12 +15,14 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
     public class WebsocketsHandler
     {
         private readonly ConcurrentDictionary<Guid, Task<WebSocket>> _clients = new ConcurrentDictionary<Guid, Task<WebSocket>>();
+        private readonly IHostApplicationLifetime _appLifetime;
         private readonly IReceiver<IRingEvent> _queue;
         private readonly IServer _server;
         private readonly ILogger<WebsocketsHandler> _logger;
 
-        public WebsocketsHandler(IReceiver<IRingEvent> queue, IServer server, ILogger<WebsocketsHandler> logger)
+        public WebsocketsHandler(IHostApplicationLifetime appLifetime, IReceiver<IRingEvent> queue, IServer server, ILogger<WebsocketsHandler> logger)
         {
+            _appLifetime = appLifetime;
             _queue = queue;
             _server = server;
             _logger = logger;
@@ -31,48 +34,63 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
             {
                 using var _ = _logger.WithProtocolScope(PhaseStatus.OK);
                 await _server.InitializeAsync(token);
-                while (!token.IsCancellationRequested)
+                var messageLoop = Task.Run(async () =>
                 {
-                    await Task.Delay(25, token);
-                    if (!_queue.TryDequeue(out var @event)) continue;
-                    var m = @event.AsMessage();
-
-                    var all = _clients.ToList();
-
-                    foreach (var (id, task) in all)
+                    while (true)
                     {
-                        var ws = await task;
-                        if (ws.State == WebSocketState.Open) continue;
-                        await TryRemoveAsync(id);
-                    }
-
-                    await Task.WhenAll(_clients.Values.Select(async t =>
-                    {
-                        var ws = await t;
                         try
                         {
-                            _logger.LogDebug($"{m}");
-                            await ws.SendMessageAsync(m, token);
+                            var @event = await _queue.WaitForNextAsync(_appLifetime.ApplicationStopping);
 
+                            var m = @event.AsMessage();
+
+                            var all = _clients.ToList();
+
+                            foreach (var (id, task) in all)
+                            {
+                                var ws = await task;
+                                if (ws.State == WebSocketState.Open) continue;
+                                await TryRemoveAsync(id);
+                            }
+
+                            await Task.WhenAll(_clients.Values.Select(async t =>
+                            {
+                                var ws = await t;
+                                try
+                                {
+                                    _logger.LogDebug($"{m}");
+                                    await ws.SendMessageAsync(m, default);
+
+                                }
+                                catch (WebSocketException wse)
+                                {
+                                    _logger.LogDebug("Exception {exception}", wse);
+                                }
+                            }));
                         }
-                        catch (WebSocketException wse)
+                        catch (OperationCanceledException)
                         {
-                            _logger.LogDebug("Exception {exception}", wse);
+                            break;
                         }
-                    }));
-                }
+                    }
+                }, _appLifetime.ApplicationStopping);
+
+                _appLifetime.ApplicationStopping.Register(() =>
+                {
+                    // blocking calls here to force server terminate before Kestrel Websockets die 
+                    _server.TerminateAsync(default).GetAwaiter().GetResult();
+                    messageLoop.GetAwaiter().GetResult();
+                }, true);
+                await messageLoop;
             }
             catch (OperationCanceledException)
             {
-                _logger.LogDebug("Shutting down");
+                using var _ = _logger.WithHostScope(Phase.DESTROY);
+                _logger.LogInformation("Shutting down");
             }
             catch (Exception ex)
             {
                 _logger.LogError("Exception: {exception}", ex);
-            }
-            finally
-            {
-                await _server.TerminateAsync(default);
             }
         }
 
