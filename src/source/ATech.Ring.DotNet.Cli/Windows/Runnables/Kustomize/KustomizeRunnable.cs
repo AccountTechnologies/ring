@@ -61,8 +61,9 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Kustomize
                       _logger.LogDebug("Pods: {pods}", infos.Output);
                       return infos.Output.Split("\n");
                   }
-
-                  n.Pods = n.Pods.Any() ? n.Pods : await GetPodsAsync();
+                  var podsNow = await GetPodsAsync();
+                  if (n.Pods.Any() && !podsNow.Any()) return false;
+                  n.Pods = podsNow;
 
                   return (await Task.WhenAll(n.Pods.Select(async p =>
                   {
