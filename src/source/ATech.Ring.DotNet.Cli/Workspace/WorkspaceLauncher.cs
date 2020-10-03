@@ -31,6 +31,7 @@ namespace ATech.Ring.DotNet.Cli.Workspace
         private WorkspaceInfo CurrentInfo { get; set; }
         private WorkspaceState CurrentStatus { get; set; }
         private int _initCounter;
+        private readonly Random _rnd = new Random();
 
         public event EventHandler OnInitiated;
         public string WorkspacePath => _configurator.Current.Path;
@@ -109,10 +110,11 @@ namespace ATech.Ring.DotNet.Cli.Workspace
                 var deletions = _runnables.Keys.Except(configs.Keys).ToArray();
                 var deletionsTask = ForEachParallel(deletions, token, RemoveAsync);
                 var additions = configs.Keys.Except(_runnables.Keys).ToArray();
-                var additionsTask = ForEachParallel(additions, token, (key, t) =>
+                var additionsTask = ForEachParallel(additions, token, async (key, t) =>
                 {
                     var cfg = configs[key];
-                    return AddAsync(key, cfg, t);
+                    await AddRandomDelay(t);
+                    await AddAsync(key, cfg, t);
                 });
 
                 await Task.WhenAll(deletionsTask, additionsTask);
@@ -121,6 +123,17 @@ namespace ATech.Ring.DotNet.Cli.Workspace
             {
                 _logger.LogError(ex, "Error");
             }
+        }
+
+        private async Task AddRandomDelay(CancellationToken t)
+        {
+            int delayMs;
+            lock (_rnd)
+            {
+                delayMs = _rnd.Next(0, 60000);
+            }
+            if (delayMs == 0) return;
+            await Task.Delay(TimeSpan.FromMilliseconds(delayMs), t);
         }
 
         private WorkspaceInfo Create(WorkspaceState state, ServerState serverState)
