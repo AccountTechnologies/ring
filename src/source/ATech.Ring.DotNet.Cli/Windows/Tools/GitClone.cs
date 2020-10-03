@@ -81,7 +81,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
                 try
                 {
                     Logger.LogInformation("Deleting an invalid clone at {OutputPath}", cloneFullPath);
-                    Directory.Delete(cloneFullPath, true);
+                    SafeDelete(cloneFullPath);
                     break;
                 }
                 catch (Exception ex)
@@ -92,6 +92,25 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
                 }
             }
             return await CloneAsync();
+        }
+
+        // Git process does the same thing as libgit2sharp https://github.com/libgit2/libgit2sharp/issues/1354
+        private static void SafeDelete(string dir)
+        {
+            foreach (var subdirectory in Directory.EnumerateDirectories(dir))
+            {
+                SafeDelete(subdirectory);
+            }
+
+            foreach (var fileName in Directory.EnumerateFiles(dir))
+            {
+                var fileInfo = new FileInfo(fileName)
+                {
+                    Attributes = FileAttributes.Normal
+                };
+                fileInfo.Delete();
+            }
+            Directory.Delete(dir);
         }
     }
 }

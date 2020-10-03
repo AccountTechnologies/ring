@@ -49,18 +49,17 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
             return hostBuilder;
         }
 
-        public static async Task RunRingAsync(this IWebHost w)
+        public static async Task RunRingAsync(this IWebHost host)
         {
-            var runTask = w.RunAsync();
-            var opts = w.Services.GetRequiredService<BaseOptions>();
+            var opts = host.Services.GetRequiredService<BaseOptions>();
             if (opts is CloneOptions c)
             {
-                await w.Services.GetRequiredService<ICloneMaker>().CloneWorkspaceRepos(c.WorkspacePath, c.OutputDir);
-                await w.StopAsync();
-                return;
+                await host.Services.GetRequiredService<ICloneMaker>().CloneWorkspaceRepos(c.WorkspacePath, c.OutputDir);
             }
-
-            await runTask;
+            else
+            {
+                await host.RunAsync();
+            }
         }
     }
 }
