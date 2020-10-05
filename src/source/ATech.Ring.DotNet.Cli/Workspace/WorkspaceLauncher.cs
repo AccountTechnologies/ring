@@ -119,6 +119,10 @@ namespace ATech.Ring.DotNet.Cli.Workspace
 
                 await Task.WhenAll(deletionsTask, additionsTask);
             }
+            catch (OperationCanceledException)
+            {
+                _logger.LogDebug("Workspace cancelled");
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error");
@@ -128,9 +132,10 @@ namespace ATech.Ring.DotNet.Cli.Workspace
         private async Task AddRandomDelay(CancellationToken t)
         {
             int delayMs;
+            const int spreadFactorMillis = 1_500;
             lock (_rnd)
             {
-                delayMs = _rnd.Next(0, 60000);
+                delayMs = _rnd.Next(0, _configurator.Current.Count * spreadFactorMillis);
             }
             if (delayMs == 0) return;
             await Task.Delay(TimeSpan.FromMilliseconds(delayMs), t);
