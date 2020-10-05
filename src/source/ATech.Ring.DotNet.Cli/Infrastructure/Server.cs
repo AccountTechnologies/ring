@@ -104,11 +104,11 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
 
         public async Task<Ack> TerminateAsync(CancellationToken token)
         {
+            using var _ = _logger.WithHostScope(Phase.DESTROY);
+            _logger.LogInformation("Server terminating");
             await UnloadAsync(token);
 
             _scope?.Dispose();
-            using var _ = _logger.WithHostScope(Phase.DESTROY);
-            _logger.LogDebug("Server terminating");
             if (!_appLifetime.ApplicationStopping.IsCancellationRequested) _appLifetime.StopApplication();
             return Ack.Ok;
         }
