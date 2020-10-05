@@ -13,7 +13,7 @@ namespace ATech.Ring.Protocol
         public async Task<T> WaitForNextAsync(CancellationToken token)
         {
             T item;
-            var shutdownTimeoutMillis = 15_000;
+            var shutdownTimeoutMillis = 5_000;
             const int resolutionMillis = 100;
             while (!_queue.TryDequeue(out item))
             {

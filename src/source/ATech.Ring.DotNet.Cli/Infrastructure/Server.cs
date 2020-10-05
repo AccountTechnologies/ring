@@ -107,7 +107,7 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
             using var _ = _logger.WithHostScope(Phase.DESTROY);
             _logger.LogInformation("Server terminating");
             await UnloadAsync(token);
-
+            await _launcher.DisposeAsync();
             _scope?.Dispose();
             if (!_appLifetime.ApplicationStopping.IsCancellationRequested) _appLifetime.StopApplication();
             return Ack.Ok;
