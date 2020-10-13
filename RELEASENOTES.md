@@ -4,7 +4,7 @@
 
 * Awaiting runnables to terminate on server shutdown
 * Deleting corrupted git repos no longer fails with access denied errors
-* Kustomize runnable health check correcly reacts on pods deletion/recreation
+* Kustomize runnable health check correctly reacts on pods deletion/recreation
 
 ## 2.4.0
 
