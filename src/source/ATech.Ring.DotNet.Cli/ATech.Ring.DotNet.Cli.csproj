@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <VersionPrefix>2.4.0</VersionPrefix>
+    <VersionPrefix>2.4.1</VersionPrefix>
     <PackAsTool>true</PackAsTool>
     <IsPackable>true</IsPackable>
     <ToolCommandName>ring</ToolCommandName>
@@ -14,8 +14,7 @@
     <PackageType>DotNetCliTool</PackageType>
     <PackageTags>dotnet, cli, dotnet-cli, global, tool, ring, nuget, package</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <PackageReleaseNotes>Feature: clone repos from workspaces
-Feature: Add Kustomize runnable</PackageReleaseNotes>
+    <PackageReleaseNotes>https://github.com/AccountTechnologies/ring/blob/master/RELEASENOTES.md</PackageReleaseNotes>
     <PackageIcon>ring.128.png</PackageIcon>
     <PackageDescription>ring! service launcher and monitor</PackageDescription>
     <RepositoryUrl>https://github.com/AccountTechnologies/ring</RepositoryUrl>
@@ -24,7 +23,7 @@ Feature: Add Kustomize runnable</PackageReleaseNotes>
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.8.0" />
-    <PackageReference Include="LightInject.Microsoft.AspNetCore.Hosting" Version="2.3.1" />
+    <PackageReference Include="LightInject.Microsoft.AspNetCore.Hosting" Version="2.3.2" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.2.7" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.2.1" />

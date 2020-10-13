@@ -3,13 +3,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using ATech.Ring.Configuration;
 using ATech.Ring.DotNet.Cli.Dtos;
+using ATech.Ring.DotNet.Cli.Logging;
 using ATech.Ring.DotNet.Cli.Workspace;
 using ATech.Ring.Protocol;
 using ATech.Ring.Protocol.Events;
-using LightInject;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Stateless;
+using Scope = LightInject.Scope;
 
 namespace ATech.Ring.DotNet.Cli.Infrastructure
 {
@@ -25,15 +26,12 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
         private readonly ISender<IRingEvent> _sender;
         private readonly ServerFsm _fsm;
         private Scope _scope;
-
         public Server(Func<Scope> getScope, ILogger<Server> logger, IWorkspaceLauncher launcher, IHostApplicationLifetime appLifetime, ISender<IRingEvent> sender)
         {
             _getScope = getScope;
             _logger = logger;
             _launcher = launcher;
             _appLifetime = appLifetime;
-            _appLifetime.ApplicationStopping.Register(async () => await TerminateAsync(_appLifetime.ApplicationStopped));
-
             _sender = sender;
             _fsm = new ServerFsm();
         }
@@ -106,11 +104,12 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
 
         public async Task<Ack> TerminateAsync(CancellationToken token)
         {
+            using var _ = _logger.WithHostScope(Phase.DESTROY);
+            _logger.LogInformation("Server terminating");
+            await UnloadAsync(token);
+            await _launcher.DisposeAsync();
             _scope?.Dispose();
-            if (_fsm.CanFire(T.Stop)) await _launcher.StopAsync(token);
-            if (_fsm.CanFire(T.Unload)) await _launcher.UnloadAsync(token);
-            _appLifetime.StopApplication();
-
+            if (!_appLifetime.ApplicationStopping.IsCancellationRequested) _appLifetime.StopApplication();
             return Ack.Ok;
         }
 

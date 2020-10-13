@@ -58,6 +58,7 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
             services.AddSingleton<ISender<IRingEvent>>(f => f.GetService<Protocol.Queue<IRingEvent>>());
             services.AddSingleton<IReceiver<IRingEvent>>(f => f.GetService<Protocol.Queue<IRingEvent>>());
             services.AddHostedService<ConsoleClient>();
+            services.AddHostedService<WebsocketsInitializer>();
             foreach (var type in GetAllTypesOf<ITool, Startup>()) services.AddTransient(type.AsType());
         }
 

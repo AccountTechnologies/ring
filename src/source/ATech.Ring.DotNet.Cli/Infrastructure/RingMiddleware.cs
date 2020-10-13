@@ -3,6 +3,7 @@ using System.Net.WebSockets;
 using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Logging;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace ATech.Ring.DotNet.Cli.Infrastructure
@@ -44,7 +45,7 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
                 using (log.WithProtocolScope(PhaseStatus.OK))
                 {
                     log.LogInformation($"Client {clientId} connected");
-                    await _socketManager.ListenAsync(clientId, () => context.WebSockets.AcceptWebSocketAsync(), context.RequestAborted);
+                    await _socketManager.ListenAsync(clientId, () => context.WebSockets.AcceptWebSocketAsync(), context.Get<IHostApplicationLifetime>().ApplicationStopped);
                 }
             }
             catch (OperationCanceledException)

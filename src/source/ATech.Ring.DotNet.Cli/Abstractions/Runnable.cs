@@ -27,8 +27,6 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
         public TConfig Config { get; private set; }
         public abstract string UniqueId { get; }
         public State State => _fsm.State;
-        protected readonly CancellationTokenSource CancellationSource = new CancellationTokenSource();
-
         public event EventHandler OnHealthCheckCompleted;
         public event EventHandler OnInitExecuted;
         public IReadOnlyDictionary<string, object> Details => _details;
@@ -146,11 +144,11 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
             {
                 try
                 {
-                    if (CancellationSource.IsCancellationRequested) return;
+                    if (t.IsCancellationRequested) return;
                     var delay = Task.Delay(HealthCheckPeriod, t);
                     await delay.ConfigureAwait(false);
                     delay.Dispose();
-                    if (CancellationSource.IsCancellationRequested) return;
+                    if (t.IsCancellationRequested) return;
                     await _fsm.FireAsync(Trigger.HealthLoop);
                 }
                 catch (OperationCanceledException)
@@ -164,15 +162,14 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
         {
             Config = (TConfig)config;
             using var _ = _logger.BeginScope(this.ToScope());
-            var fsm = await InitFsm(CancellationSource.Token);
+            var fsm = await InitFsm(token);
 
             await fsm.FireAsync(Trigger.Init);
         }
 
-        public async Task TerminateAsync(CancellationToken token)
+        public async Task TerminateAsync()
         {
             using var _ = _logger.BeginScope(this.ToScope());
-            CancellationSource.Cancel();
             await _fsm.FireAsync(Trigger.Stop);
             await _fsm.FireAsync(Trigger.Destroy);
         }
@@ -214,13 +211,13 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
             try
             {
                 using var _ = _logger.BeginScope(Scope.Phase(Phase.HEALTH));
-                if (CancellationSource.IsCancellationRequested) return HealthStatus.Ignore;
+                if (token.IsCancellationRequested) return HealthStatus.Ignore;
                 _logger.LogDebug(PhaseStatus.PENDING);
                 HealthStatus result;
                 try
                 {
                     result = await CheckHealthAsync(ctx, token);
-                    if (CancellationSource.IsCancellationRequested) return HealthStatus.Ignore;
+                    if (token.IsCancellationRequested) return HealthStatus.Ignore;
                 }
                 catch (Exception ex)
                 {

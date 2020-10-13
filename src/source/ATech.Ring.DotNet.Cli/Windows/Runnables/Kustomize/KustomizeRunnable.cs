@@ -41,7 +41,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Kustomize
             var result = await _kubectl.ApplyKJsonPathAsync(ctx.KustomizationDir, NamespacesPath);
 
             _logger.LogDebug(result.Output);
-            var namespaces = result.Output.Split("\n");
+            var namespaces = result.Output.Split(Environment.NewLine);
 
             ctx.Namespaces = namespaces.Select(n => new Namespace { Name = n }).ToArray();
             return ctx;
@@ -59,10 +59,11 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Kustomize
                   {
                       var infos = await _kubectl.GetResources("pod", n.Name);
                       _logger.LogDebug("Pods: {pods}", infos.Output);
-                      return infos.Output.Split("\n");
+                      return infos.Output.Split(Environment.NewLine);
                   }
-
-                  n.Pods = n.Pods.Any() ? n.Pods : await GetPodsAsync();
+                  var podsNow = await GetPodsAsync();
+                  if (n.Pods.Any() && !podsNow.Any()) return false;
+                  n.Pods = podsNow;
 
                   return (await Task.WhenAll(n.Pods.Select(async p =>
                   {

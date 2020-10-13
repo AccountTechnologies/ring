@@ -7,7 +7,7 @@ using ATech.Ring.Protocol.Events;
 
 namespace ATech.Ring.DotNet.Cli.Workspace
 {
-    public interface IWorkspaceLauncher
+    public interface IWorkspaceLauncher : IAsyncDisposable
     {
         Task LoadAsync(ConfiguratorPaths paths, CancellationToken token);
         Task StartAsync(CancellationToken token);
