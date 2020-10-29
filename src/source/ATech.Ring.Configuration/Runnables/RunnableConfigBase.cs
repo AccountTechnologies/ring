@@ -8,6 +8,10 @@ namespace ATech.Ring.Configuration.Runnables
     {
         public abstract string Id { get; }
         public HashSet<string> DeclaredPaths { get; set; } = new HashSet<string>();
-        public static string GetFullPath(string workDir, string path) => Path.IsPathRooted(path) ? path : Path.GetFullPath(Path.Combine(workDir, path));
+        public static string GetFullPath(string workDir, string path) {
+
+          path = path.Replace("file://", "");
+          return Path.IsPathRooted(path) ? path : Path.GetFullPath(Path.Combine(workDir, path));
+        }
     }
 }
