@@ -97,7 +97,7 @@ namespace ATech.Ring.DotNet.Cli.Workspace
         public async Task<IncludeResult> IncludeAsync(string id, CancellationToken token)
         {
             if (!_configurator.TryGet(id, out var cfg)) return IncludeResult.UnknownRunnable;
-            await AddAsync(id, cfg, _cts.Token);
+            await AddAsync(id, cfg, TimeSpan.Zero ,_cts.Token);
             return IncludeResult.Ok;
         }
 
@@ -110,7 +110,7 @@ namespace ATech.Ring.DotNet.Cli.Workspace
                 var deletions = _runnables.Keys.Except(configs.Keys).ToArray();
                 var deletionsTask = deletions.Select(RemoveAsync);
                 var additions = configs.Keys.Except(_runnables.Keys).ToArray();
-                var additionsTask = additions.Select(key => AddAsync(key, configs[key], token));
+                var additionsTask = additions.Select(key => AddAsync(key, configs[key], CaclulateDelay(additions.Length), token));
 
                 await Task.WhenAll(additionsTask.Concat(deletionsTask));
             }
@@ -124,12 +124,12 @@ namespace ATech.Ring.DotNet.Cli.Workspace
             }
         }
 
-        private TimeSpan CaclulateDelay()
+        private TimeSpan CaclulateDelay(int runnablesCount)
         {
             const int spreadFactorMillis = 1_500;
             lock (_rnd)
             {
-                return TimeSpan.FromMilliseconds(_rnd.Next(0, _configurator.Current.Count * spreadFactorMillis));
+                return TimeSpan.FromMilliseconds(_rnd.Next(0, runnablesCount * spreadFactorMillis));
             }
         }
 
@@ -162,10 +162,10 @@ namespace ATech.Ring.DotNet.Cli.Workspace
                 }).OrderBy(x => x.Id).ToArray(), serverState, state);
         }
 
-        private async Task AddAsync(string id, IRunnableConfig cfg, CancellationToken token)
+        private async Task AddAsync(string id, IRunnableConfig cfg, TimeSpan delay, CancellationToken token)
         {
             if (_runnables.ContainsKey(id)) return;
-            var container = await RunnableContainer.CreateAsync(cfg, _createRunnable, CaclulateDelay(), token);
+            var container = await RunnableContainer.CreateAsync(cfg, _createRunnable, delay, token);
             _runnables.TryAdd(id, container);
             container.Runnable.OnHealthCheckCompleted += OnPublishStatus;
             container.Runnable.OnInitExecuted += OnRunnableInitExecuted;
