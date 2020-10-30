@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ATech.Ring.DotNet.Cli": {
+      "commandName": "Project",
+      "commandLineArgs": "headless -d"
+    }
+  }
+}
