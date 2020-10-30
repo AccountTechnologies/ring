@@ -36,10 +36,7 @@ namespace ATech.Ring.DotNet.Cli.Workspace
             return container;
         }
         
-        public void Start()
-        {
-            Task = Runnable.RunAsync(_aggregateCts.Token);
-        }
+        public void Start() => Task = Runnable.RunAsync(_aggregateCts.Token);
 
         public void Dispose()
         {
