@@ -7,19 +7,22 @@ using ATech.Ring.DotNet.Cli.Dtos;
 using ATech.Ring.Protocol;
 using ATech.Ring.Protocol.Events;
 using Microsoft.Extensions.Logging;
+using KustomizeConfig = ATech.Ring.Configuration.Runnables.Kustomize;
 
 namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Kustomize
 {
-    public class KustomizeRunnable : Runnable<KustomizeContext, Configuration.Runnables.Kustomize>
+    public class KustomizeRunnable : Runnable<KustomizeContext, KustomizeConfig>
     {
         private const string NamespacesPath = "{range .items[?(@.kind=='Namespace')]}{.metadata.name}{'\\n'}{end}";
         private const string PodStatusRunning = "Running";
-        private readonly ILogger<Runnable<KustomizeContext, Configuration.Runnables.Kustomize>> _logger;
+        private readonly ILogger<Runnable<KustomizeContext, KustomizeConfig>> _logger;
         private readonly Tools.KubectlBundle _kubectl;
 
-        public KustomizeRunnable(ILogger<Runnable<KustomizeContext, Configuration.Runnables.Kustomize>> logger,
+        public KustomizeRunnable(
+            KustomizeConfig config,
+            ILogger<Runnable<KustomizeContext, KustomizeConfig>> logger,
             ISender<IRingEvent> sender,
-            Tools.KubectlBundle kubectlBundle) : base(logger, sender)
+            Tools.KubectlBundle kubectlBundle) : base(config, logger, sender)
         {
             _logger = logger;
             _kubectl = kubectlBundle;

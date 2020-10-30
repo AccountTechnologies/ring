@@ -97,7 +97,7 @@ namespace ATech.Ring.DotNet.Cli.Workspace
         public async Task<IncludeResult> IncludeAsync(string id, CancellationToken token)
         {
             if (!_configurator.TryGet(id, out var cfg)) return IncludeResult.UnknownRunnable;
-            await AddAsync(id, cfg, TimeSpan.Zero ,_cts.Token);
+            await AddAsync(id, cfg, TimeSpan.Zero, _cts.Token);
             return IncludeResult.Ok;
         }
 
@@ -129,7 +129,7 @@ namespace ATech.Ring.DotNet.Cli.Workspace
             const int spreadFactorMillis = 1_500;
             lock (_rnd)
             {
-                return TimeSpan.FromMilliseconds(_rnd.Next(0, runnablesCount * spreadFactorMillis));
+                return TimeSpan.FromMilliseconds(_rnd.Next(0, Math.Max(runnablesCount - 1, 0) * spreadFactorMillis));
             }
         }
 
@@ -166,26 +166,30 @@ namespace ATech.Ring.DotNet.Cli.Workspace
         {
             if (_runnables.ContainsKey(id)) return;
             var container = await RunnableContainer.CreateAsync(cfg, _createRunnable, delay, token);
-            _runnables.TryAdd(id, container);
+
             container.Runnable.OnHealthCheckCompleted += OnPublishStatus;
             container.Runnable.OnInitExecuted += OnRunnableInitExecuted;
+            
+            _runnables.TryAdd(id, container);
+
+            container.Start();
         }
 
         private async Task<bool> RemoveAsync(string key)
         {
-            if (!_runnables.TryRemove(key, out var r)) return false;
+            if (!_runnables.TryRemove(key, out var container)) return false;
 
             Interlocked.Decrement(ref _initCounter);
-            r.Runnable.OnHealthCheckCompleted -= OnPublishStatus;
-            r.Runnable.OnInitExecuted -= OnRunnableInitExecuted;
-            await r.CancelAsync();
-            r.Dispose();
+            container.Runnable.OnHealthCheckCompleted -= OnPublishStatus;
+            container.Runnable.OnInitExecuted -= OnRunnableInitExecuted;
+            await container.CancelAsync();
+            container.Dispose();
             return true;
         }
 
         private void OnRunnableInitExecuted(object sender, EventArgs e)
         {
-            if (_runnables.Count != Interlocked.Increment(ref _initCounter)) return;
+            if (_configurator.Current.Count != Interlocked.Increment(ref _initCounter)) return;
             using var _ = _logger.WithHostScope(Phase.INIT);
             OnInitiated?.Invoke(this, EventArgs.Empty);
         }

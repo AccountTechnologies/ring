@@ -18,11 +18,12 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Dotnet
         private readonly ILogger<DotnetRunnableBase<TContext, TConfig>> _logger;
         private readonly GitClone _gitClone;
 
-        protected DotnetRunnableBase(DotnetCliBundle dotnet,
+        protected DotnetRunnableBase(TConfig config,
+                                     DotnetCliBundle dotnet,
                                      ILogger<DotnetRunnableBase<TContext, TConfig>> logger, 
                                      ISender<IRingEvent> eventQ,
                                      GitClone gitClone
-                                     ) : base(logger, eventQ)
+                                     ) : base(config, logger, eventQ)
         {
             Dotnet = dotnet;
             _logger = logger;

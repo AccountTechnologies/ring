@@ -13,20 +13,22 @@ using ATech.Ring.DotNet.Cli.Windows.Tools;
 using ATech.Ring.Protocol;
 using ATech.Ring.Protocol.Events;
 using Microsoft.Extensions.Logging;
+using IISExpressConfig = ATech.Ring.Configuration.Runnables.IISExpress;
 
 namespace ATech.Ring.DotNet.Cli.Windows.Runnables.IISExpress
 {
-    public class IISExpressRunnable : CsProjRunnable<IISExpressContext, Configuration.Runnables.IISExpress>
+    public class IISExpressRunnable : CsProjRunnable<IISExpressContext, IISExpressConfig>
     {
         private readonly IISExpressExe _iisExpress;
         private readonly ILogger<IISExpressRunnable> _logger;
         private readonly Func<Uri, HttpClient> _clientFactory;
         private readonly List<string> _wcfServices = new List<string>();
 
-        public IISExpressRunnable(IISExpressExe iisExpress,
+        public IISExpressRunnable(IISExpressConfig config,
+                                  IISExpressExe iisExpress,
                                   ILogger<IISExpressRunnable> logger,
                                   ISender<IRingEvent> eventQ,
-                                  Func<Uri, HttpClient> clientFactory) : base(logger, eventQ)
+                                  Func<Uri, HttpClient> clientFactory) : base(config, logger, eventQ)
         {
             _iisExpress = iisExpress;
             _logger = logger;

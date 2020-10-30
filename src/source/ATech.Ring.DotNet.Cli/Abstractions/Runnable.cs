@@ -38,8 +38,9 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
         /// <param name="value"></param>
         protected void AddDetail(string key, object value) => _details.TryAdd(key, value);
 
-        protected Runnable(ILogger<Runnable<TContext, TConfig>> logger, ISender<IRingEvent> sender)
+        protected Runnable(TConfig config, ILogger<Runnable<TContext, TConfig>> logger, ISender<IRingEvent> sender)
         {
+            Config = config;
             _logger = logger;
             Sender = sender;
         }
@@ -158,9 +159,8 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
             }
         }
 
-        public async Task RunAsync(IRunnableConfig config, CancellationToken token)
+        public async Task RunAsync(CancellationToken token)
         {
-            Config = (TConfig)config;
             using var _ = _logger.BeginScope(this.ToScope());
             var fsm = await InitFsm(token);
 
