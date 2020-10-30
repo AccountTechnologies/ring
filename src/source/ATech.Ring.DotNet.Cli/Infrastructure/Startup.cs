@@ -76,11 +76,11 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
             container.Register<IRunnableConfig, IRunnable>((factory, cfg) =>
             {
                 var ct = configMap[cfg.GetType()];
-                var ctror = ct.GetConstructors().Single();
-                var args = ctror.GetParameters().Select(x =>
+                var ctor = ct.GetConstructors().Single();
+                var args = ctor.GetParameters().Select(x =>
                    typeof(IRunnableConfig).IsAssignableFrom(x.ParameterType) ? cfg : factory.GetInstance(x.ParameterType)).ToArray();
 
-                return (IRunnable) ctror.Invoke(args);
+                return (IRunnable) ctor.Invoke(args);
             });
 
             container.Register(f => TomlSettings.Create(cfg =>
