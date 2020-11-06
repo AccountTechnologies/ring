@@ -14,9 +14,10 @@ namespace ATech.Ring.DotNet.Cli.Workspace
         public IRunnable Runnable { get; private set; }
         public Task Task { get; private set; }
 
-        private void Initialise(IRunnable runnable, CancellationToken token)
+        private async Task InitialiseAsync(IRunnable runnable, TimeSpan delay, CancellationToken token)
         {
             _aggregateCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token, token);
+            if (delay != TimeSpan.Zero) await Task.Delay(delay, _aggregateCts.Token);
             Runnable = runnable;
         }
 
@@ -31,8 +32,7 @@ namespace ATech.Ring.DotNet.Cli.Workspace
         {
             var runnable = factory(cfg);
             var container = new RunnableContainer();
-            if (delay != TimeSpan.Zero) await Task.Delay(delay, token);
-            container.Initialise(runnable, token);
+            await container.InitialiseAsync(runnable, delay, token);
             return container;
         }
         
