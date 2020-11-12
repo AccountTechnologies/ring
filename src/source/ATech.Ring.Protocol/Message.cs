@@ -58,7 +58,8 @@ namespace ATech.Ring.Protocol
         public override string ToString()
         {
             var (type, payload) = this;
-            return $"{type}:{payload}";
+            var maybeColon = string.IsNullOrWhiteSpace(payload) ? "" : ":";
+            return $"{type}{maybeColon}{payload}";
         }
 
         private static ReadOnlySpan<byte> SliceUntilNull(ReadOnlyMemory<byte> m)
@@ -87,7 +88,7 @@ namespace ATech.Ring.Protocol
     {
         public static IRingEvent AsEvent(this Message m) => m switch
         {
-            (M.ACK, var ack) => (IRingEvent)new AckEvent(ack),
+            (M.ACK, var ack) => new AckEvent(ack),
             (M.RUNNABLE_INITIATED, var runnableId) => new RunnableInitiated { UniqueId = runnableId },
             (M.RUNNABLE_STARTED, var runnableId) => new RunnableStarted { UniqueId = runnableId },
             (M.RUNNABLE_UNRECOVERABLE, var runnableId) => new RunnableDead { UniqueId = runnableId },

@@ -71,9 +71,10 @@
         public Message AsMessage() => Message.FromString(Type, WorkspacePath);
     }
 
-    public struct AckEvent : IRingEvent
+    public readonly struct AckEvent : IRingEvent
     {
         public AckEvent(string value) => Value = (Ack)System.Enum.Parse(typeof(Ack), value);
+        public AckEvent(Ack value) => Value = value;
         public Ack Value { get; }
         public M Type => M.ACK;
         public Message AsMessage() => Message.FromString(Type, Value.ToString());

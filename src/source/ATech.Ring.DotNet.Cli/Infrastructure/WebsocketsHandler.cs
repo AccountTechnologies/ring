@@ -14,7 +14,7 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
 {
     public class WebsocketsHandler
     {
-        private readonly ConcurrentDictionary<Guid, Task<WebSocket>> _clients = new ConcurrentDictionary<Guid, Task<WebSocket>>();
+        private readonly ConcurrentDictionary<Guid, WsClient> _clients = new ConcurrentDictionary<Guid, WsClient>();
         private readonly IHostApplicationLifetime _appLifetime;
         private readonly IReceiver<IRingEvent> _queue;
         private readonly IServer _server;
@@ -34,6 +34,7 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
             {
                 using var _ = _logger.WithProtocolScope(PhaseStatus.OK);
                 await _server.InitializeAsync(token);
+
                 var messageLoop = Task.Run(async () =>
                 {
                     while (true)
@@ -41,25 +42,21 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
                         try
                         {
                             var @event = await _queue.WaitForNextAsync(_appLifetime.ApplicationStopping);
-
                             var m = @event.AsMessage();
 
-                            var all = _clients.ToList();
-
-                            foreach (var (id, task) in all)
+                            foreach (var (id, client) in _clients.ToList())
                             {
-                                var ws = await task;
-                                if (ws.State == WebSocketState.Open) continue;
+                                if (await client.IsOpenAsync()) continue;
                                 await TryRemoveAsync(id);
                             }
 
-                            await Task.WhenAll(_clients.Values.Select(async t =>
+                            await Task.WhenAll(_clients.Select(async x =>
                             {
-                                var ws = await t;
                                 try
                                 {
-                                    _logger.LogDebug($"{m}");
-                                    await ws.SendMessageAsync(m, default);
+                                    var (id, client) = x;
+                                    _logger.LogDebug($"{m} > {id}");
+                                    await (await client.Ws).SendMessageAsync(m, default);
 
                                 }
                                 catch (WebSocketException wse)
@@ -96,33 +93,12 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
 
         public async Task ListenAsync(Guid clientId, Func<Task<WebSocket>> createSocket, CancellationToken t)
         {
-            var ws = await GetOrAddAsync(clientId, createSocket);
+            var client = GetOrAddAsync(clientId, createSocket);
             await _server.ConnectAsync(t);
 
             try
             {
-                await ws.ListenAsync(async (message, token) =>
-                {
-                    try
-                    {
-                        var (type, payload) = message;
-                        using (_logger.WithProtocolScope(type))
-                        {
-                            _logger.LogDebug("{Payload}", payload);
-                            return await Dispatch(message, token);
-                        }
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        _logger.LogInformation("Listener terminating");
-                        return Ack.Terminating;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Server error");
-                        return Ack.ServerError;
-                    }
-                }, t);
+                await client.ListenAsync(Dispatch, t);
 
             }
             catch (WebSocketException wse)
@@ -150,15 +126,16 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
             };
         }
 
-        public Task<WebSocket> GetOrAddAsync(Guid key, Func<Task<WebSocket>> create)
+        public WsClient GetOrAddAsync(Guid key, Func<Task<WebSocket>> create)
         {
-            return _clients.GetOrAdd(key, k => create());
+            return _clients.GetOrAdd(key, k => new WsClient(_logger, create()));
         }
 
         public async Task<(bool isSuccess, WebSocket webSocket)> TryRemoveAsync(Guid key)
         {
-            var isRemoved = _clients.TryRemove(key, out var task);
-            return (isSuccess: isRemoved, isRemoved ? await task : null);
+            var isRemoved = _clients.TryRemove(key, out var client);
+
+            return (isSuccess: isRemoved, isRemoved ? (await client.Ws) : null);
         }
     }
 }
