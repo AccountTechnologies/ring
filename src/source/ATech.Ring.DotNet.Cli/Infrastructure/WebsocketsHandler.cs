@@ -55,7 +55,7 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
                                 try
                                 {
                                     var (id, client) = x;
-                                    _logger.LogDebug($"{m} > {id}");
+                                    if (_logger.IsEnabled(LogLevel.Debug)) _logger.LogDebug($"{m} > {id}");
                                     await (await client.Ws).SendMessageAsync(m, default);
 
                                 }
