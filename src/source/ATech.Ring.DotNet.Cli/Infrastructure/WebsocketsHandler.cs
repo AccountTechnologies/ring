@@ -134,7 +134,7 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
         public async Task<(bool isSuccess, WebSocket webSocket)> TryRemoveAsync(Guid key)
         {
             var isRemoved = _clients.TryRemove(key, out var client);
-
+            if (isRemoved) await client.DisposeAsync();
             return (isSuccess: isRemoved, isRemoved ? (await client.Ws) : null);
         }
     }
