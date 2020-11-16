@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using ATech.Ring.Protocol;
 using System.Net.WebSockets;
@@ -34,19 +35,20 @@ namespace ATech.Ring.Vsix.Client
             WebSocketReceiveResult result;
             do
             {
-                var buffers = new List<byte[]>();
                 try
                 {
+                    using var ms = new MemoryStream(Constants.MaxMessageSize);
                     do
                     {
-                        var buffer = new byte[Constants.MaxMessageSize];
-                        result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), token);
-                        buffers.Add(buffer);
+                        var buffer = new ArraySegment<byte>(new byte[Constants.MaxMessageSize]);
+                        result = await webSocket.ReceiveAsync(buffer, token);
+                        await ms.WriteAsync(buffer.Array, buffer.Offset, result.Count, token);
 
                     } while (!result.EndOfMessage);
 
-
-                    await onReceived(buffers.SelectMany(x => x).ToArray().AsMemory(), token);
+                    ms.Seek(0, SeekOrigin.Begin);
+                    await ms.FlushAsync(token);
+                    await onReceived(ms.ToArray().AsMemory(), token);
                 }
                 catch (WebSocketException)
                 {
