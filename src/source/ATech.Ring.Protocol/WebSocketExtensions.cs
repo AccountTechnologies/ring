@@ -34,6 +34,7 @@ namespace ATech.Ring.Protocol
                 if (result.MessageType == WebSocketMessageType.Close)
                 {
                     await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Requested by the client", token);
+                    return;
                 }
                 if (!result.EndOfMessage) await webSocket.SendAckAsync(Ack.ExpectedEndOfMessage, token);
 
