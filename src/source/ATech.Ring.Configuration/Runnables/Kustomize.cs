@@ -12,7 +12,7 @@ namespace ATech.Ring.Configuration.Runnables
         
         public override bool Equals(object obj) => obj is Kustomize d && d.Path == Path;
         public override int GetHashCode() => -576574704 + Path.GetHashCode();
-        public bool IsRemote() => Uri.TryCreate(Path, UriKind.RelativeOrAbsolute, out var result) && !result.IsFile;
+        public bool IsRemote() => Path.StartsWith("git@") || Path.StartsWith("ssh://");
         public string SshRepoUrl { get; set;  }
     }
 }

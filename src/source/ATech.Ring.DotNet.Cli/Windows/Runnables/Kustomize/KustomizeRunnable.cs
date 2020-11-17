@@ -28,10 +28,10 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Kustomize
             IOptions<RingConfiguration> ringCfg,
             ILogger<Runnable<KustomizeContext, KustomizeConfig>> logger,
             ISender<IRingEvent> sender,
-            Tools.KubectlBundle kubectlBundle) : base(config, logger, sender)
+            KubectlBundle bundle) : base(config, logger, sender)
         {
             _logger = logger;
-            _bundle = kubectlBundle;
+            _bundle = bundle;
             _cacheDir = ringCfg?.Value?.KustomizeCacheRootPath ?? throw new ArgumentNullException(nameof(RingConfiguration.KustomizeCacheRootPath));
         }
 
@@ -40,10 +40,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Kustomize
         protected override int MaxTotalFailuresUntilDead => 10;
         protected override int MaxConsecutiveFailuresUntilDead => 5;
 
-        private string GetCachePath(string inputDir)
-        {
-            return _cacheDir + "/" + Regex.Replace(inputDir, "[@\\.:/\\\\]", "-");
-        }
+        private string GetCachePath(string inputDir) =>  $"{_cacheDir}/{Regex.Replace(inputDir, "[@\\.:/\\\\]", "-")}.yaml";
 
         protected override async Task<KustomizeContext> InitAsync(CancellationToken token)
         {
