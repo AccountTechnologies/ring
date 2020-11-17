@@ -41,11 +41,12 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
             return Path.IsPathRooted(targetPath) ? targetPath : Path.GetFullPath(targetPath);
         }
 
-        public async Task<ExecutionInfo> CloneOrPullAsync(IFromGit gitCfg, bool shallow = false, string rootPathOverride = null)
+        public async Task<ExecutionInfo> CloneOrPullAsync(IFromGit gitCfg, bool shallow = false, bool masterOnly = false, string rootPathOverride = null)
         {
             using var _ = Logger.WithScope(gitCfg.SshRepoUrl, Phase.GIT);
             var depthArg = shallow ? "--depth=1" : "";
-
+            var branchArg = masterOnly ? "--branch=master" : "";
+            var singleBranchArg = masterOnly ? "--single-branch" : "";
             var cloneFullPath = ResolveFullClonePath(gitCfg, rootPathOverride);
 
             async Task<ExecutionInfo> CloneAsync()
@@ -55,7 +56,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
                 return await this.TryAsync(3, TimeSpan.FromSeconds(10),
                     async t =>
                     {
-                        var result = await t.RunProcessWaitAsync("clone", depthArg, "--", gitCfg.SshRepoUrl, cloneFullPath);
+                        var result = await t.RunProcessWaitAsync("clone", branchArg, singleBranchArg, depthArg, "--", gitCfg.SshRepoUrl, cloneFullPath);
                         Logger.LogInformation(result.IsSuccess ? PhaseStatus.OK : PhaseStatus.FAILED);
                         return result;
                     });
