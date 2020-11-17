@@ -3,6 +3,7 @@
     public class RingConfiguration
     {
         public string GitCloneRootPath { get; set; }
+        public string KustomizeCacheRootPath { get; set; }
         public HooksConfiguration Hooks { get; set; }
     }
 

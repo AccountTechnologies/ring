@@ -12,9 +12,14 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
         public string[] DefaultArgs { get; set; } = { };
         public ILogger<ITool> Logger { get; }
 
-        public async Task<ExecutionInfo> ApplyKJsonPathAsync(string kustomizeDir, string jsonPath)
+        public async Task<ExecutionInfo> KustomizeBuildAsync(string kustomizeDir, string outputFilePath)
         {
-            return await this.RunProcessWaitAsync("kustomize", "build", $"\"{kustomizeDir}\"", "|", "kubectl", "apply", "-o", $"jsonpath=\"{jsonPath}\"", "-f", "-");
+            return await this.RunProcessWaitAsync($"[ ! -f \"{outputFilePath}\" ]", "&&", "kustomize", "build", $"\"{kustomizeDir}\"", ">", outputFilePath);
+        }
+
+        public async Task<ExecutionInfo> ApplyJsonPathAsync(string path, string jsonPath)
+        {
+            return await this.RunProcessWaitAsync("kubectl", "apply", "-o", $"jsonpath=\"{jsonPath}\"", "-f", $"\"{path}\"");
         }
 
         public async Task<ExecutionInfo> GetResources(string kind, string nameSpace)
@@ -27,9 +32,9 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
             return await this.RunProcessWaitAsync("kubectl", "get", podName, "-o", "jsonpath='{.status.phase}'", "-n", nameSpace);
         }
 
-        public async Task<ExecutionInfo> DeleteKAsync(string kustomizeDir)
+        public async Task<ExecutionInfo> DeleteAsync(string path)
         {
-            return await this.RunProcessWaitAsync("kustomize", "build", $"\"{kustomizeDir}\"", "|", "kubectl", "delete", "-o", "name", "-f", "-");
+            return await this.RunProcessWaitAsync("kubectl", "delete", "-o", "name", "-f", $"\"{path}\"");
         }
     }
 }
