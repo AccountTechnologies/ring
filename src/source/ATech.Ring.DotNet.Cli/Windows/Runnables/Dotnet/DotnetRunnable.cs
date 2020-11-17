@@ -34,7 +34,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Dotnet
 
         protected override async Task<TContext> InitAsync(CancellationToken token)
         {
-            if (Config is IFromGit { SshRepoUrl: string _ } gitCfg) await _gitClone.CloneOrPullAsync(gitCfg);
+            if (Config is IFromGit { SshRepoUrl: string _ } gitCfg) await _gitClone.CloneOrPullAsync(gitCfg, shallow: true);
  
             var ctx = DotnetContext.Create<TContext,TConfig>(Config, c => _gitClone.ResolveFullClonePath(c));
             if (File.Exists(ctx.EntryAssemblyPath)) return ctx;
