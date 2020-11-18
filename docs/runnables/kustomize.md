@@ -17,7 +17,7 @@ Ring supports every path supported by Kustomize ([go-getter](https://github.com/
 
 ## Caching
 
-Ring caches generated manifests to speed up subsequent executions.
+Ring caches generated manifests to speed up subsequent executions. The default cache location is `/tmp/kustomize-cache` and can be [configured](../configuration.md#configuration-keys) 
 
 ## Syntax
 
