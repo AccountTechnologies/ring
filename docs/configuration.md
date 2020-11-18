@@ -9,6 +9,7 @@ cat "$(ring show-config -n)" > "$($env:APPDATA)\ATech\ring\appsettings.json"
 ## Configuration keys
 
 * `ring:gitCloneRootPath` - the path where ring clones the repos of runnables that support it
+* `ring:kustomizeCacheRootPath` - the path of kustomize cache. Defaults to: `/tmp/kustomize-cache`
 * `ring:hooks:init:command` - a command to be run on the workspace init hook event
 * `ring:hooks:init:args` - arguments to be passed to the above command
 
