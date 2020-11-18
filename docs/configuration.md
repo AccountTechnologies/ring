@@ -19,6 +19,7 @@ cat "$(ring show-config -n)" > "$($env:APPDATA)\ATech\ring\appsettings.json"
 {
   "Ring": {
     "GitCloneRootPath" : "%TEMP%\\ring\\repos",
+    "KustomizeCacheRootPath" : "/tmp/my-cache/kustomize",
     "Hooks": {
       "Init": {
         "Command": "C:\\Program Files\\PowerShell\\7-preview\\pwsh.exe",
