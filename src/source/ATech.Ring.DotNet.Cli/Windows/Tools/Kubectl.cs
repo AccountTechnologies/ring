@@ -12,9 +12,15 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
         public string[] DefaultArgs { get; set; } = { };
         public ILogger<ITool> Logger { get; }
 
+        public async Task<bool> FileExistsAsync(string filePath)
+        {
+            var result = await this.RunProcessWaitAsync($"[ -f \"{filePath}\" ] && echo \"true\" || echo \"false\"");
+            return bool.Parse(result.Output);
+        }
+
         public async Task<ExecutionInfo> KustomizeBuildAsync(string kustomizeDir, string outputFilePath)
         {
-            return await this.RunProcessWaitAsync($"[ ! -f \"{outputFilePath}\" ]", "&&", "kustomize", "build", $"\"{kustomizeDir}\"", ">", outputFilePath);
+            return await this.RunProcessWaitAsync("kustomize", "build", $"\"{kustomizeDir}\"", ">", outputFilePath);
         }
 
         public async Task<ExecutionInfo> ApplyJsonPathAsync(string path, string jsonPath)

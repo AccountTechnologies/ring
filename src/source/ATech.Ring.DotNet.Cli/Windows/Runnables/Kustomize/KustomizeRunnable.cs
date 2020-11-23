@@ -53,11 +53,21 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Kustomize
             };
 
             await _bundle.RunProcessWaitAsync("mkdir", "-p", _cacheDir);
-
-            var kustomizeResult = await _bundle.KustomizeBuildAsync(kustomizationDir, ctx.CachePath);
-            _logger.LogDebug(kustomizeResult.Output);
+            
+            if (!await _bundle.FileExistsAsync(ctx.CachePath))
+            {
+                var kustomizeResult = await _bundle.KustomizeBuildAsync(kustomizationDir, ctx.CachePath);
+                _logger.LogDebug(kustomizeResult.Output);
+            }
 
             var applyResult = await _bundle.ApplyJsonPathAsync(ctx.CachePath, NamespacesPath);
+
+            if (applyResult.ExitCode == 1)
+            {
+                var kustomizeResult = await _bundle.KustomizeBuildAsync(kustomizationDir, ctx.CachePath);
+                _logger.LogDebug(kustomizeResult.Output);
+                applyResult = await _bundle.ApplyJsonPathAsync(ctx.CachePath, NamespacesPath);
+            }
 
             _logger.LogDebug(applyResult.Output);
             var namespaces = applyResult.Output.Split(Environment.NewLine);
