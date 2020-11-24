@@ -12,6 +12,12 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
         public string[] DefaultArgs { get; set; } = { };
         public ILogger<ITool> Logger { get; }
 
+        public async Task<bool> IsValidManifestAsync(string filePath)
+        {
+            var result = await this.RunProcessWaitAsync("kubectl", "apply", "--validate=true", "--dry-run=true", "-f", $"\"{filePath}\"");
+            return result.IsSuccess;
+        }
+
         public async Task<bool> FileExistsAsync(string filePath)
         {
             var result = await this.RunProcessWaitAsync($"[ -f \"{filePath}\" ] && echo \"true\" || echo \"false\"");
@@ -40,7 +46,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
 
         public async Task<ExecutionInfo> DeleteAsync(string path)
         {
-            return await this.RunProcessWaitAsync("kubectl", "delete", "-o", "name", "-f", $"\"{path}\"");
+            return await this.RunProcessWaitAsync("kubectl", "delete", "--ignore-not-found", "-f", $"\"{path}\"");
         }
     }
 }

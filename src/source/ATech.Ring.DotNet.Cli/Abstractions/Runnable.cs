@@ -203,7 +203,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
             _logger.LogDebug(PhaseStatus.PENDING);
             await StartAsync(ctx, token);
             _logger.LogContextDebug(ctx);
-            _logger.LogDebug(PhaseStatus.OK);
+            _logger.LogInformation(PhaseStatus.OK);
             Sender.Enqueue(RunnableEvent.New<RunnableStarted>(this));
         }
         private async Task<HealthStatus> CheckHealthCoreAsync(TContext ctx, CancellationToken token)

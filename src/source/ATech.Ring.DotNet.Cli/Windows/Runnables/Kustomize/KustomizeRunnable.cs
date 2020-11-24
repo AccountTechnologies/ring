@@ -40,7 +40,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Kustomize
         protected override int MaxTotalFailuresUntilDead => 10;
         protected override int MaxConsecutiveFailuresUntilDead => 5;
 
-        private string GetCachePath(string inputDir) =>  $"{_cacheDir}/{Regex.Replace(inputDir, "[@\\.:/\\\\]", "-")}.yaml";
+        private string GetCachePath(string inputDir) => $"{_cacheDir}/{Regex.Replace(inputDir, "[@\\.:/\\\\]", "-")}.yaml";
 
         protected override async Task<KustomizeContext> InitAsync(CancellationToken token)
         {
@@ -53,21 +53,14 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Kustomize
             };
 
             await _bundle.RunProcessWaitAsync("mkdir", "-p", _cacheDir);
-            
-            if (!await _bundle.FileExistsAsync(ctx.CachePath))
+
+            if (!await _bundle.FileExistsAsync(ctx.CachePath) || !await _bundle.IsValidManifestAsync(ctx.CachePath))
             {
                 var kustomizeResult = await _bundle.KustomizeBuildAsync(kustomizationDir, ctx.CachePath);
                 _logger.LogDebug(kustomizeResult.Output);
             }
 
-            var applyResult = await _bundle.ApplyJsonPathAsync(ctx.CachePath, NamespacesPath);
-
-            if (applyResult.ExitCode == 1)
-            {
-                var kustomizeResult = await _bundle.KustomizeBuildAsync(kustomizationDir, ctx.CachePath);
-                _logger.LogDebug(kustomizeResult.Output);
-                applyResult = await _bundle.ApplyJsonPathAsync(ctx.CachePath, NamespacesPath);
-            }
+            var applyResult = await _bundle.TryAsync(10, TimeSpan.FromSeconds(2), async t => await _bundle.ApplyJsonPathAsync(ctx.CachePath, NamespacesPath));
 
             _logger.LogDebug(applyResult.Output);
             var namespaces = applyResult.Output.Split(Environment.NewLine);
@@ -83,7 +76,6 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Kustomize
             var podsHealthy = await Task.WhenAll(
               ctx.Namespaces.Select(async n =>
               {
-
                   async Task<string[]> GetPodsAsync()
                   {
                       var infos = await _bundle.GetResources("pod", n.Name);
