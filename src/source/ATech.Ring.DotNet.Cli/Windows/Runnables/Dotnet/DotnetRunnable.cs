@@ -18,11 +18,12 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Dotnet
         private readonly ILogger<DotnetRunnableBase<TContext, TConfig>> _logger;
         private readonly GitClone _gitClone;
 
-        protected DotnetRunnableBase(DotnetCliBundle dotnet,
+        protected DotnetRunnableBase(TConfig config,
+                                     DotnetCliBundle dotnet,
                                      ILogger<DotnetRunnableBase<TContext, TConfig>> logger, 
                                      ISender<IRingEvent> eventQ,
                                      GitClone gitClone
-                                     ) : base(logger, eventQ)
+                                     ) : base(config, logger, eventQ)
         {
             Dotnet = dotnet;
             _logger = logger;
@@ -33,7 +34,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Dotnet
 
         protected override async Task<TContext> InitAsync(CancellationToken token)
         {
-            if (Config is IFromGit { SshRepoUrl: string _ } gitCfg) await _gitClone.CloneOrPullAsync(gitCfg);
+            if (Config is IFromGit { SshRepoUrl: string _ } gitCfg) await _gitClone.CloneOrPullAsync(gitCfg, shallow: true, masterOnly: true);
  
             var ctx = DotnetContext.Create<TContext,TConfig>(Config, c => _gitClone.ResolveFullClonePath(c));
             if (File.Exists(ctx.EntryAssemblyPath)) return ctx;

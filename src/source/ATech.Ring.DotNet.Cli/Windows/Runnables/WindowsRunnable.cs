@@ -14,7 +14,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables
         where TContext : ITrackProcessId
         where TConfig : IRunnableConfig
     {
-        protected WindowsRunnable(ILogger<WindowsRunnable<TContext, TConfig>> logger, ISender<IRingEvent> eventQ) : base(logger, eventQ)
+        protected WindowsRunnable(TConfig config, ILogger<WindowsRunnable<TContext, TConfig>> logger, ISender<IRingEvent> eventQ) : base(config, logger, eventQ)
         {
         }
 

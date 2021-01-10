@@ -1,5 +1,10 @@
 # Release notes
 
+## 2.4.2
+
+* git-supporting runnables: use shallow single-branch (master) clones
+* kustomize runnables: enable built manifests caching 
+
 ## 2.4.1
 
 * Awaiting runnables to terminate on server shutdown

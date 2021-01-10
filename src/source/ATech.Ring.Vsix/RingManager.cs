@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading;
 using Task = System.Threading.Tasks.Task;
 using ATech.Ring.Protocol.Events;
+using ATech.Ring.Vsix.Components;
 
 namespace ATech.Ring.Vsix
 {

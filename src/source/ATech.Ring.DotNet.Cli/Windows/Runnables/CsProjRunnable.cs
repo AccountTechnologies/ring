@@ -13,7 +13,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables
         where TContext : ITrackProcessId, ICsProjContext, ITrackRetries
         where TConfig : IRunnableConfig, IUseCsProjFile
     {
-        protected CsProjRunnable(ILogger<CsProjRunnable<TContext, TConfig>> logger, ISender<IRingEvent> eventQ) : base(logger, eventQ)
+        protected CsProjRunnable(TConfig config, ILogger<CsProjRunnable<TContext, TConfig>> logger, ISender<IRingEvent> eventQ) : base(config, logger, eventQ)
         {
         }
 

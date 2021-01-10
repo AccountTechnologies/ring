@@ -6,14 +6,19 @@ using ATech.Ring.DotNet.Cli.Windows.Tools;
 using ATech.Ring.Protocol;
 using ATech.Ring.Protocol.Events;
 using Microsoft.Extensions.Logging;
+using NetExeConfig = ATech.Ring.Configuration.Runnables.NetExe;
 
 namespace ATech.Ring.DotNet.Cli.Windows.Runnables.NetExe
 {
-    public class NetExeRunnable : CsProjRunnable<NetExeContext, Configuration.Runnables.NetExe>
+    public class NetExeRunnable : CsProjRunnable<NetExeContext, NetExeConfig>
     {
         private readonly ExeRunner _exeRunner;
 
-        public NetExeRunnable(ExeRunner exeRunner, ILogger<NetExeRunnable> logger, ISender<IRingEvent> eventQ) : base(logger, eventQ)
+        public NetExeRunnable(
+            NetExeConfig config,
+            ExeRunner exeRunner, 
+            ILogger<NetExeRunnable> logger, 
+            ISender<IRingEvent> eventQ) : base(config, logger, eventQ)
         {
             _exeRunner = exeRunner;
         }

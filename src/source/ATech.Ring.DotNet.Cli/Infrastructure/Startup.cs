@@ -42,7 +42,7 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
         public void ConfigureServices(IServiceCollection services)
         {
             var clients = new ConcurrentDictionary<Uri, HttpClient>();
-            services.AddSingleton<Func<Uri, HttpClient>>(s => uri => clients.GetOrAdd(uri, new HttpClient {BaseAddress = uri, MaxResponseContentBufferSize = 1}));
+            services.AddSingleton<Func<Uri, HttpClient>>(s => uri => clients.GetOrAdd(uri, new HttpClient { BaseAddress = uri, MaxResponseContentBufferSize = 1 }));
             services.AddOptions();
             services.Configure<RingConfiguration>(Configuration.GetSection("ring"));
             services.AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true));
@@ -71,9 +71,17 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
                              where cfg != null
                              select (RunnableType: r, ConfigType: cfg.PropertyType)).ToDictionary(x => x.ConfigType, x => x.RunnableType);
 
-            foreach (var rt in configMap.Select(x => x.Value)) { container.Register(rt, rt, new PerRequestLifeTime()); }
+            foreach (var (_, rt) in configMap) { container.Register(rt, rt, new PerRequestLifeTime()); }
 
-            container.Register<IRunnableConfig, IRunnable>((factory, cfg) => (IRunnable)factory.GetInstance(configMap[cfg.GetType()]));
+            container.Register<IRunnableConfig, IRunnable>((factory, cfg) =>
+            {
+                var ct = configMap[cfg.GetType()];
+                var ctor = ct.GetConstructors().Single();
+                var args = ctor.GetParameters().Select(x =>
+                   typeof(IRunnableConfig).IsAssignableFrom(x.ParameterType) ? cfg : factory.GetInstance(x.ParameterType)).ToArray();
+
+                return (IRunnable) ctor.Invoke(args);
+            });
 
             container.Register(f => TomlSettings.Create(cfg =>
             {

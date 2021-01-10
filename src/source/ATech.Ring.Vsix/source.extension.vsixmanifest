@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="ATech.Ring.Vsix.9eb68ea9-ead6-4d3e-b111-80a96b1816df" Version="3.3.2" Language="en-US" Publisher="Account Technologies" />
+        <Identity Id="ATech.Ring.Vsix.9eb68ea9-ead6-4d3e-b111-80a96b1816df" Version="3.3.3" Language="en-US" Publisher="Account Technologies" />
         <DisplayName>ring! for Visual Studio</DisplayName>
         <Description xml:space="preserve">Visual Studio Extension for ring! by Account Technologies</Description>
         <Icon>Resources\RingWindowPackage.ico</Icon>
