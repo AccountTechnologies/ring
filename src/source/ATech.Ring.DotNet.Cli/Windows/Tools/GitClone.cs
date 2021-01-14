@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using ATech.Ring.Configuration.Interfaces;
 using ATech.Ring.DotNet.Cli.Abstractions.Tools;
@@ -41,7 +42,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
             return Path.IsPathRooted(targetPath) ? targetPath : Path.GetFullPath(targetPath);
         }
 
-        public async Task<ExecutionInfo> CloneOrPullAsync(IFromGit gitCfg, bool shallow = false, bool masterOnly = false, string rootPathOverride = null)
+        public async Task<ExecutionInfo> CloneOrPullAsync(IFromGit gitCfg, CancellationToken token, bool shallow = false, bool masterOnly = false, string rootPathOverride = null)
         {
             using var _ = Logger.WithScope(gitCfg.SshRepoUrl, Phase.GIT);
             var depthArg = shallow ? "--depth=1" : "";
@@ -59,7 +60,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
                         var result = await t.RunProcessWaitAsync("clone", branchArg, singleBranchArg, depthArg, "--", gitCfg.SshRepoUrl, cloneFullPath);
                         Logger.LogInformation(result.IsSuccess ? PhaseStatus.OK : PhaseStatus.FAILED);
                         return result;
-                    });
+                    }, token);
             }
 
             if (!Directory.Exists(cloneFullPath)) return await CloneAsync();
@@ -74,7 +75,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
                         var result = await t.RunProcessWaitAsync("-C", cloneFullPath, "pull", depthArg);
                         Logger.LogInformation(result.IsSuccess ? PhaseStatus.OK : PhaseStatus.FAILED);
                         return result;
-                    });
+                    }, token);
             }
 
             var tryLeft = 3;
@@ -89,7 +90,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
                 catch (Exception ex)
                 {
                     Logger.LogError(ex, "Could not delete {CloneFullPath}", cloneFullPath);
-                    await Task.Delay(TimeSpan.FromSeconds(10));
+                    await Task.Delay(TimeSpan.FromSeconds(10), token);
                     tryLeft--;
                 }
             }
