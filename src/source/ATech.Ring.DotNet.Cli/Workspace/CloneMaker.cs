@@ -35,7 +35,7 @@ namespace ATech.Ring.DotNet.Cli.Workspace
 
             foreach (var gitCfg in haveValidGitUrl[true].GroupBy(x => _gitClone.ResolveFullClonePath(x, outputDir)).Select(x => x.First()))
             {
-                var output = await _gitClone.CloneOrPullAsync(gitCfg, rootPathOverride: outputDir);
+                var output = await _gitClone.CloneOrPullAsync(gitCfg, token, rootPathOverride: outputDir);
                 if (output.IsSuccess) continue;
                 break;
             }

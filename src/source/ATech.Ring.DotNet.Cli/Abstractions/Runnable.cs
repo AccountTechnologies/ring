@@ -260,6 +260,11 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
                     ? result
                     : HealthStatus.Dead;
             }
+            catch (OperationCanceledException)
+            {
+                _logger.LogDebug("HealthCheck cancelled");
+                return HealthStatus.Ignore;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "HealthCheck exception");

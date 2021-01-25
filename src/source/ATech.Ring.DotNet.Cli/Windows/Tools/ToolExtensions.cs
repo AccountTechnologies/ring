@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Abstractions.Tools;
 using Microsoft.Extensions.Logging;
@@ -12,20 +13,25 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
 {
     public static class ToolExtensions
     {
-        public static async Task<ExecutionInfo> TryAsync(this ITool t, int times, TimeSpan backOffInterval, Func<ITool, Task<ExecutionInfo>> func)
+        public static async Task<T> TryAsync<T>(int times, TimeSpan backOffInterval, Func<Task<T>> func, Predicate<T> until, CancellationToken token)
+           where T: new()
         {
-            var result = new ExecutionInfo();
+            var result = new T();
             var triesLeft = times;
             while (triesLeft > 0)
             {
-                result = await func(t);
-                if (result.IsSuccess) return result;
-                await Task.Delay(backOffInterval);
+                result = await func();
+                if (until(result)) return result;
+                await Task.Delay(backOffInterval, token);
                 triesLeft--;
-            } 
+            }
 
             return result;
         }
+
+        public static async Task<ExecutionInfo> TryAsync(this ITool t, int times, TimeSpan backOffInterval,
+            Func<ITool, Task<ExecutionInfo>> func, CancellationToken token)
+            => await TryAsync(times, backOffInterval, () => func(t), r => r.IsSuccess, token); 
 
         public static Task<ExecutionInfo> RunProcessWaitAsync(this ITool tool, params object[] args)
             => tool.RunProcessCoreAsync(args: args, wait: true);
