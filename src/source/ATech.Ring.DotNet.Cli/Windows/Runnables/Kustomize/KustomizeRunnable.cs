@@ -41,7 +41,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Kustomize
         }
 
         public override string UniqueId => Config.Path;
-        protected override TimeSpan HealthCheckPeriod => TimeSpan.FromSeconds(5);
+        protected override TimeSpan HealthCheckPeriod => TimeSpan.FromSeconds(10);
         protected override int MaxTotalFailuresUntilDead => 10;
         protected override int MaxConsecutiveFailuresUntilDead => 5;
 
@@ -53,9 +53,9 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Kustomize
                 {
                     async Task<string[]> GetPodsAsync()
                     {
-                        var infos = await _bundle.GetResources("pod", n.Name);
-                        _logger.LogDebug("Pods: {pods}", infos.Output);
-                        return infos.Output.Split(Environment.NewLine);
+                        var pods = await _bundle.GetPods(n.Name);
+                        _logger.LogDebug("Pods: {pods}", new object[] { pods });
+                        return pods;
                     }
                     var podsNow = await GetPodsAsync();
                     if (n.Pods.Any() && !podsNow.Any()) return false;
@@ -64,7 +64,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Kustomize
                     return (await Task.WhenAll(n.Pods.Select(async p =>
                     {
                         var result = await _bundle.GetPodStatus(p, n.Name);
-                        return statuses.Contains(result.Output);
+                        return statuses.Contains(result);
                     }))).All(x => x);
                 }))).All(x => x);
 
@@ -86,7 +86,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Kustomize
                 _logger.LogDebug(kustomizeResult.Output);
             }
 
-            var applyResult = await _bundle.TryAsync(10, TimeSpan.FromSeconds(2), 
+            var applyResult = await _bundle.TryAsync(10, TimeSpan.FromSeconds(2),
                 async t => await _bundle.ApplyJsonPathAsync(ctx.CachePath, NamespacesPath), token);
 
             _logger.LogDebug(applyResult.Output);
@@ -104,7 +104,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Kustomize
 
         protected override async Task StartAsync(KustomizeContext ctx, CancellationToken token)
         {
-            await TryAsync(100, TimeSpan.FromSeconds(6), 
+            await TryAsync(100, TimeSpan.FromSeconds(6),
                 async () => await WaitAllPodsAsync(ctx, PodStatus.Running, PodStatus.Error), r => r, token);
         }
 
