@@ -8,5 +8,6 @@
         public const string WorkDir = "workDir";
         public const string ProcessId = "processId";
         public const string Uri = "uri";
+        public const string Pods = "kubernetesPods";
     }
 }

@@ -106,6 +106,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Kustomize
         {
             await TryAsync(100, TimeSpan.FromSeconds(6),
                 async () => await WaitAllPodsAsync(ctx, PodStatus.Running, PodStatus.Error), r => r, token);
+            AddDetail(DetailsKeys.Pods, string.Join("|", ctx.Namespaces.SelectMany(n => n.Pods.Select(p => n.Name + "/" + p))));
         }
 
         protected override async Task<HealthStatus> CheckHealthAsync(KustomizeContext ctx, CancellationToken token)
