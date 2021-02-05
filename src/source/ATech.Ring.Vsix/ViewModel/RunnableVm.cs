@@ -193,7 +193,7 @@ namespace ATech.Ring.Vsix.ViewModel
         public Visibility ShowBrowseUri => Model.Details.ContainsKey(DetailsKeys.Uri) ? Visibility.Visible : Visibility.Collapsed;
         public Visibility ShowOpenFolder => Model.Details.ContainsKey(DetailsKeys.WorkDir) ? Visibility.Visible : Visibility.Collapsed;
 
-        public override string DisplayName => Model.Id;
+        public override string DisplayName => Model.Details.ContainsKey(DetailsKeys.FriendlyName) ? (string)Model.Details[DetailsKeys.FriendlyName] : Model.Id;
 
         public bool IsInSolution
         {

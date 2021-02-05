@@ -9,5 +9,6 @@
         public const string ProcessId = "processId";
         public const string Uri = "uri";
         public const string Pods = "kubernetesPods";
+        public const string FriendlyName = "friendlyName";
     }
 }

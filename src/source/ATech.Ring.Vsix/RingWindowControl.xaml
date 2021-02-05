@@ -289,7 +289,7 @@
                     
                 </Button>
 
-                <Label VerticalAlignment="Stretch" Margin="0" Padding="5,2,5,2" FontWeight="{Binding DisplayNameFontWeight}" Content="{Binding DisplayName}" Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}">
+                <Label VerticalAlignment="Stretch" Margin="0" Padding="5,2,5,2" FontWeight="{Binding DisplayNameFontWeight}" ToolTip="{Binding UniqueId}" Content="{Binding DisplayName}" Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}">
                     <Label.ContextMenu>
                         <ContextMenu Name="RunnableContextMenu">
                             <MenuItem Name="RevealInOctant"  Header="Reveal in Octant" Visibility="{Binding ShowRevealInOctant}" Click="RevealInOctant_OnClick"/>
