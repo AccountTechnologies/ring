@@ -84,6 +84,7 @@
     <Compile Include="Components\ProcessExtensions.cs" />
     <Compile Include="Components\ProjectsProcesses.cs" />
     <Compile Include="Components\VsServicesExtensions.cs" />
+    <Compile Include="DetailsKeys.cs" />
     <Compile Include="StateMachines\Workspace\Data\WorkspaceLoadData.cs" />
     <Compile Include="ViewModel\FontAwesomeBaseIcon.cs" />
     <Compile Include="Interfaces\GetServiceAsync.cs" />

@@ -150,10 +150,11 @@
         <SolidColorBrush x:Key="Item.SelectedInactive.Border" Color="#FFDADADA"/>
         <SolidColorBrush x:Key="Item.SelectedActive.Background" Color="Transparent"/>
         <SolidColorBrush x:Key="Item.SelectedActive.Border" Color="#FF26A0DA"/>
+        <SolidColorBrush x:Key="ListViewHighlight" Color="{DynamicResource {x:Static vsshell:VsColors.AccentDarkKey}}"/>
         <!-- LISTVIEWITEM -->
         <Style TargetType="{x:Type ListViewItem}">
             <Setter Property="SnapsToDevicePixels" Value="True"/>
-            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Padding" Value="0,1,0,1"/>
             <Setter Property="HorizontalContentAlignment" Value="{Binding HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
             <Setter Property="VerticalContentAlignment" Value="{Binding VerticalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
             <Setter Property="Background" Value="Transparent"/>
@@ -190,11 +191,15 @@
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="TextElement.Foreground" TargetName="Bd" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
                             </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" TargetName="Bd" Value="{StaticResource  ListViewHighlight}"/>
+                            </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
+      
         <SolidColorBrush x:Key="ListBox.Static.Background" Color="#00FFFFFF"/>
         <SolidColorBrush x:Key="ListBox.Static.Border" Color="#00FFFFFF"/>
         <SolidColorBrush x:Key="ListBox.Disabled.Background" Color="#FFFFFFFF"/>
@@ -281,9 +286,18 @@
 
                         </fa:ImageAwesome>
                     </Button.Content>
+                    
                 </Button>
 
-                <Label VerticalAlignment="Stretch" Margin="0" Padding="5,2,5,2" FontWeight="{Binding DisplayNameFontWeight}" Content="{Binding DisplayName}" Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"/>
+                <Label VerticalAlignment="Stretch" Margin="0" Padding="5,2,5,2" FontWeight="{Binding DisplayNameFontWeight}" Content="{Binding DisplayName}" Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}">
+                    <Label.ContextMenu>
+                        <ContextMenu Name="RunnableContextMenu">
+                            <MenuItem Name="RevealInOctant"  Header="Reveal in Octant" Visibility="{Binding ShowRevealInOctant}" Click="RevealInOctant_OnClick"/>
+                            <MenuItem Name="BrowseUri" Header="Browse" Visibility="{Binding ShowBrowseUri}" Click="BrowseUri_OnClick" />
+                            <MenuItem Name="OpenInExplorer" Header="Open folder" Visibility="{Binding ShowOpenFolder}" Click="OpenFolder_OnClick" />
+                        </ContextMenu>
+                    </Label.ContextMenu>
+                </Label>
 
             </StackPanel>
         </HierarchicalDataTemplate>

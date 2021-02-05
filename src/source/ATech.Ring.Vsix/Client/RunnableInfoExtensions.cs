@@ -6,10 +6,9 @@ namespace ATech.Ring.Vsix.Client
     {
         public static bool TryGetCsProjPath(this RunnableInfo r, out string csProjPath)
         {
-            const string csProjPathKey = "csProjPath";
             csProjPath = string.Empty;
-            if (r.Details == null || !r.Details.ContainsKey(csProjPathKey)) return false;
-            csProjPath = r.Details[csProjPathKey] as string;
+            if (r.Details == null || !r.Details.ContainsKey(DetailsKeys.CsProjPath)) return false;
+            csProjPath = r.Details[DetailsKeys.CsProjPath] as string;
             return true;
         }
     }
