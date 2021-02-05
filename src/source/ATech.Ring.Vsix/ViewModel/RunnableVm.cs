@@ -189,9 +189,9 @@ namespace ATech.Ring.Vsix.ViewModel
         public string UniqueId => Model.Id;
 
         public RunnableInfo Model => (RunnableInfo)ModelRef;
-        public Visibility ShowRevealInOctant => Model.Details.ContainsKey("kubernetesPods") ? Visibility.Visible : Visibility.Collapsed;
-        public Visibility ShowBrowseUri => Model.Details.ContainsKey("uri") ? Visibility.Visible : Visibility.Collapsed;
-        public Visibility ShowOpenFolder => Model.Details.ContainsKey("workDir") ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility ShowRevealInOctant => Model.Details.ContainsKey(DetailsKeys.KubernetesPods) ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility ShowBrowseUri => Model.Details.ContainsKey(DetailsKeys.Uri) ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility ShowOpenFolder => Model.Details.ContainsKey(DetailsKeys.WorkDir) ? Visibility.Visible : Visibility.Collapsed;
 
         public override string DisplayName => Model.Id;
 
