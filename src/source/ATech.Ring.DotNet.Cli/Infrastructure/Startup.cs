@@ -13,9 +13,11 @@ using ATech.Ring.DotNet.Cli.Abstractions;
 using ATech.Ring.DotNet.Cli.Abstractions.Tools;
 using ATech.Ring.DotNet.Cli.Infrastructure.Cli;
 using ATech.Ring.DotNet.Cli.Logging;
+using ATech.Ring.DotNet.Cli.Windows.Tools;
 using ATech.Ring.DotNet.Cli.Workspace;
 using ATech.Ring.Protocol;
 using ATech.Ring.Protocol.Events;
+using k8s;
 using LightInject;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -57,6 +59,11 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
             services.AddSingleton<Protocol.Queue<IRingEvent>>();
             services.AddSingleton<ISender<IRingEvent>>(f => f.GetService<Protocol.Queue<IRingEvent>>());
             services.AddSingleton<IReceiver<IRingEvent>>(f => f.GetService<Protocol.Queue<IRingEvent>>());
+            services.AddSingleton(f =>
+            {
+                var kubeConfigPath = f.GetRequiredService<Wsl>().ResolveToWindows("~/.kube/config").GetAwaiter().GetResult();
+                return new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeConfigPath));
+            });
             services.AddHostedService<ConsoleClient>();
             services.AddHostedService<WebsocketsInitializer>();
             foreach (var type in GetAllTypesOf<ITool, Startup>()) services.AddTransient(type.AsType());

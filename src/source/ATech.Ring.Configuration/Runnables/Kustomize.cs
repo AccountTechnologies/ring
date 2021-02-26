@@ -1,5 +1,4 @@
 using ATech.Ring.Configuration.Interfaces;
-using System;
 
 namespace ATech.Ring.Configuration.Runnables
 {

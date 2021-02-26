@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using ATech.Ring.Configuration.Interfaces;
 using ATech.Ring.Configuration.Runnables;
@@ -9,12 +10,16 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
     {
         public static RunnableDetails Extract(IRunnableConfig cfg)
         {
-            static RunnableDetails New(params (string key, object value)[] details) => new RunnableDetails(details.ToDictionary(x => x.key, x => x.value));
-            return cfg switch
-                {
+            static Dictionary<string,object> New(params (string key, object value)[] details) => details.ToDictionary(x => x.key, x => x.value);
+            var details = cfg switch
+            {
                 CsProjRunnable c => New((DetailsKeys.CsProjPath, c.FullPath)),
-                _ => RunnableDetails.Empty
+                _ => new Dictionary<string,object>()
             };
+
+            if (cfg.FriendlyName != null) details.Add(DetailsKeys.FriendlyName, cfg.FriendlyName);
+
+            return new RunnableDetails(details);
         }
     }
 }

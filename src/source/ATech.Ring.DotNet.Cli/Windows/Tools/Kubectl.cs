@@ -1,12 +1,20 @@
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Abstractions.Tools;
+using k8s;
 using Microsoft.Extensions.Logging;
 
 namespace ATech.Ring.DotNet.Cli.Windows.Tools
 {
     public class KubectlBundle : ITool
     {
-        public KubectlBundle(ILogger<ITool> logger) => Logger = logger;
+        private readonly Kubernetes _client;
+        public KubectlBundle(ILogger<ITool> logger, Kubernetes client)
+        {
+            _client = client;
+            Logger = logger;
+        }
 
         public string ExePath { get; set; } = "wsl";
         public string[] DefaultArgs { get; set; } = { };
@@ -20,8 +28,8 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
 
         public async Task<bool> FileExistsAsync(string filePath)
         {
-            var result = await this.RunProcessWaitAsync($"[ -f \"{filePath}\" ] && echo \"true\" || echo \"false\"");
-            return bool.Parse(result.Output);
+            var result = await this.RunProcessWaitAsync("wslpath", "-w", filePath);
+            return result.IsSuccess && File.Exists(result.Output);
         }
 
         public async Task<ExecutionInfo> KustomizeBuildAsync(string kustomizeDir, string outputFilePath)
@@ -34,14 +42,12 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
             return await this.RunProcessWaitAsync("kubectl", "apply", "-o", $"jsonpath=\"{jsonPath}\"", "-f", $"\"{path}\"");
         }
 
-        public async Task<ExecutionInfo> GetResources(string kind, string nameSpace)
-        {
-            return await this.RunProcessWaitAsync("kubectl", "get", kind, "-o", "name", "-n", nameSpace);
-        }
+        public async Task<string[]> GetPods(string nameSpace) => (await _client.ListNamespacedPodAsync(nameSpace)).Items.Select(x => x.Metadata.Name).ToArray();
 
-        public async Task<ExecutionInfo> GetPodStatus(string podName, string nameSpace)
+        public async Task<string> GetPodStatus(string podName, string nameSpace)
         {
-            return await this.RunProcessWaitAsync("kubectl", "get", podName, "-o", "jsonpath='{.status.phase}'", "-n", nameSpace);
+            var pod = await _client.ReadNamespacedPodStatusAsync(podName, nameSpace);
+            return pod.Status.Phase;
         }
 
         public async Task<ExecutionInfo> DeleteAsync(string path)

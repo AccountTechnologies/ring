@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ATech.Ring.Configuration.Interfaces;
 using ATech.Ring.DotNet.Cli.Abstractions.Context;
+using ATech.Ring.DotNet.Cli.Dtos;
 using ATech.Ring.DotNet.Cli.Logging;
 using ATech.Ring.Protocol;
 using ATech.Ring.Protocol.Events;
@@ -41,6 +42,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
         protected Runnable(TConfig config, ILogger<Runnable<TContext, TConfig>> logger, ISender<IRingEvent> sender)
         {
             Config = config;
+            if (Config.FriendlyName != null) { _details.Add(DetailsKeys.FriendlyName, Config.FriendlyName);}
             _logger = logger;
             Sender = sender;
         }
