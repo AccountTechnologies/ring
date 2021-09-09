@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ATech.Ring.Configuration.Runnables;
@@ -23,7 +24,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Dotnet
             ctx.Urls = Config.Urls;
             AddDetail(WorkDir, ctx.WorkingDir);
             AddDetail(ProcessId, ctx.ProcessId);
-            AddDetail(Uri, ctx.Urls);
+            if (ctx.Urls.Any()) AddDetail(Uri, ctx.Urls);
             return ctx;
         }
 

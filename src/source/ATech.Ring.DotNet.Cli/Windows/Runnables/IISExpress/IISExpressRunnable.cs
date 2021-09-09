@@ -23,7 +23,6 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.IISExpress
         private readonly ILogger<IISExpressRunnable> _logger;
         private readonly Func<Uri, HttpClient> _clientFactory;
         private readonly List<string> _wcfServices = new List<string>();
-
         public IISExpressRunnable(IISExpressConfig config,
                                   IISExpressExe iisExpress,
                                   ILogger<IISExpressRunnable> logger,
@@ -79,22 +78,20 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.IISExpress
             if (processCheck != HealthStatus.Ok) return processCheck;
             try
             {
-                var healthy = await Task.WhenAll(_wcfServices.AsParallel().Select(async s =>
+                foreach (var s in _wcfServices)
                 {
-                    //when terminating we do not care about health status hence returning true 
-                    if (token.IsCancellationRequested) return true;
-
+                    if (token.IsCancellationRequested) continue;
                     var client = _clientFactory(ctx.Uri);
                     using var rq = new HttpRequestMessage(HttpMethod.Get, s);
-
                     var response = await client.SendAsync(rq, HttpCompletionOption.ResponseHeadersRead, token);
+                    var isHealthy = response != null && response.StatusCode == HttpStatusCode.OK;
+                    if (isHealthy) continue;
 
-                    if (response != null && response.StatusCode == HttpStatusCode.OK) return true;
                     _logger.LogError("Endpoint {ServiceName} failed.", s);
-                    return false;
-                }));
+                    return HealthStatus.Unhealthy;
+                }
 
-                return healthy.All(x => x) ? HealthStatus.Ok : HealthStatus.Unhealthy;
+                return HealthStatus.Ok;
             }
             catch (Exception ex)
             {

@@ -8,12 +8,16 @@ using ATech.Ring.Vsix.ViewModel;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
+using System.Diagnostics;
+using System.Runtime.Remoting.Contexts;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using ATech.Ring.Vsix.Client.Commands;
+using Newtonsoft.Json.Linq;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
+using RunnableVm = ATech.Ring.Vsix.ViewModel.RunnableVm;
 using Task = System.Threading.Tasks.Task;
 
 namespace ATech.Ring.Vsix
@@ -168,6 +172,40 @@ namespace ATech.Ring.Vsix
                 await _workspace.DetachAsync();
                 await _ringManager.ConnectAsync(DispatchAsync, _cts.Token);
             });
+        }
+
+        private static string GetDetail(object sender, string detailKey)
+        {
+            var mi = (MenuItem)sender;
+            var r = (RunnableVm)mi.DataContext;
+            var detail = r.Model.Details[detailKey];
+            if (detail is JArray arr)
+            {
+                return arr.First.Value<string>();
+            }
+            return (string)detail;
+        }
+
+        private void RevealInOctant_OnClick(object sender, RoutedEventArgs e)
+        {
+            var namespacedPods = GetDetail(sender, DetailsKeys.KubernetesPods).Split('|')[0];
+            var chunks = namespacedPods.Split('/');
+            var ns = chunks[0];
+            var pod = chunks[1];
+
+            Process.Start($"http://127.0.0.1:7777/#/overview/namespace/{ns}/workloads/pods/{pod}");
+        }
+
+        private void BrowseUri_OnClick(object sender, RoutedEventArgs e)
+        {
+            var uri = GetDetail(sender, DetailsKeys.Uri);
+            Process.Start(uri);
+        }
+
+        private void OpenFolder_OnClick(object sender, RoutedEventArgs e)
+        {
+            var workDir = GetDetail(sender, DetailsKeys.WorkDir);
+            Process.Start(workDir);
         }
     }
 }

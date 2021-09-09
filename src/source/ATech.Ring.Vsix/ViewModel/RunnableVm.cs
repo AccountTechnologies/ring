@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Windows;
 using ATech.Ring.Protocol;
 using ATech.Ring.Protocol.Events;
@@ -188,9 +189,11 @@ namespace ATech.Ring.Vsix.ViewModel
         public string UniqueId => Model.Id;
 
         public RunnableInfo Model => (RunnableInfo)ModelRef;
+        public Visibility ShowRevealInOctant => Model.Details.ContainsKey(DetailsKeys.KubernetesPods) ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility ShowBrowseUri => Model.Details.ContainsKey(DetailsKeys.Uri) ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility ShowOpenFolder => Model.Details.ContainsKey(DetailsKeys.WorkDir) ? Visibility.Visible : Visibility.Collapsed;
 
-
-        public override string DisplayName => Model.Id;
+        public override string DisplayName => Model.Details.ContainsKey(DetailsKeys.FriendlyName) ? (string)Model.Details[DetailsKeys.FriendlyName] : Model.Id;
 
         public bool IsInSolution
         {
