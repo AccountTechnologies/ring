@@ -1,5 +1,22 @@
 # Release notes
 
+## 2.4.4
+
+* Optimisations
+* Kustomize runnable: replace kubectl calls for direct API access
+* IISExpress runnable: de-parallelise health checks
+* Only add Uri detail if there are URLs
+* Kustomize runnable: expose pod details
+* RingVsix: added runnable context menu
+* Use DetailsKeys
+* Support for friendly name
+* Fixed VSToolsPath
+* Bump Vsix version
+
+## 2.4.3
+
+* KustomizeRunnable: improve init/start indication and other improvements
+
 ## 2.4.2
 
 * git-supporting runnables: use shallow single-branch (master) clones
