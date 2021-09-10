@@ -8,19 +8,22 @@ trigger:
 
 variables:
   srcPath: 'src/source/ATech.Ring.DotNet.Cli'
-  pkgver: ${{ variables['Build.SourceBranchName'] }}
+  PKGVER: ${{ variables['Build.SourceBranchName'] }}
   BuildConfiguration: Release
 
+strategy:
+  matrix:
+    linux:
+      imageName: 'ubuntu-latest'
+    mac:
+      imageName: 'macOS-latest'
+    windows:
+      imageName: 'windows-latest'
+
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: $(imageName)
 
 steps:
-# - task: DotNetCoreCLI@2
-#   displayName: 'Test'
-#   inputs:
-#     command: 'test'
-#     projects: 'tests'
-#     arguments: '$(srcPath) -c Release'
 
 - task: DotNetCoreCLI@2
   displayName: 'Pack'
@@ -30,7 +33,13 @@ steps:
     versioningScheme: 'byEnvVar'
     versionEnvVar: PKGVER
     verbosityPack: 'Normal'
-  condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
+  condition: succeeded()
+
+- bash: |-
+    dotnet tool install -g ATech.Ring.DotNet.Cli --version $PKGVER --add-source $srcPath/bin/$BuildConfiguration && \
+    ring show-config
+  displayName: 'Test'
+  condition: succeeded()
 
 - bash: dotnet nuget push -s  https://api.nuget.org/v3/index.json -k $(nuget-api-key) $(Build.ArtifactStagingDirectory)/*.nupkg
   displayName: 'Push'
