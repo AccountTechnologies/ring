@@ -33,11 +33,12 @@ steps:
   inputs:
     command: 'pack'
     packagesToPack: '$(srcPath)/*.csproj'
-    packDirectory: $(Build.ArtifactStagingDirectory)/nuget
     versioningScheme: 'byEnvVar'
     versionEnvVar: PKGVER
     verbosityPack: 'Normal'
   condition: succeeded()
+
+- task: PublishBuildArtifacts@1
 
 - bash: |-
     dotnet tool install -g ATech.Ring.DotNet.Cli --version $PKGVER --add-source $(Build.ArtifactStagingDirectory) && \
