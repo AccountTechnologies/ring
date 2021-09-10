@@ -8,8 +8,12 @@ trigger:
 
 variables:
   srcPath: 'src/source/ATech.Ring.DotNet.Cli'
-  PKGVER: ${{ variables['Build.SourceBranchName'] }}
   BuildConfiguration: Release
+
+${{ if startsWith(variables['Build.SourceBranch'], 'refs/tags/') }}:
+  PKGVER: ${{ variables['Build.SourceBranchName'] }}
+${{ if ne(startsWith(variables['Build.SourceBranch'], 'refs/tags/')) }}:
+  PKGVER: '1.999.999-dev'
 
 strategy:
   matrix:
