@@ -39,9 +39,9 @@ steps:
   condition: succeeded()
 
 - task: PowerShell@2
-  pwsh: true
   inputs:
     filePath: $(System.DefaultWorkingDirectory)/test.ps1
+    pwsh: true
   displayName: 'Test'
   condition: succeeded()
 
