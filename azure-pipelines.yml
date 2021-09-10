@@ -38,7 +38,8 @@ steps:
     verbosityPack: 'Normal'
   condition: succeeded()
 
-- pwsh:
+- task: PowerShell@2
+  pwsh: true
   inputs:
     filePath: $(System.DefaultWorkingDirectory)/test.ps1
   displayName: 'Test'
