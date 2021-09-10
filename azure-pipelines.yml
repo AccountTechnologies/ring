@@ -39,7 +39,7 @@ steps:
   condition: succeeded()
 
 - bash: |-
-    dotnet tool install -g ATech.Ring.DotNet.Cli --version $PKGVER --add-source $(pwd) && \
+    dotnet tool install -g ATech.Ring.DotNet.Cli --version $PKGVER --add-source ${{ variables['Build.ArtifactStagingDirectory'] }} && \
     ring show-config
   displayName: 'Test'
   condition: succeeded()
