@@ -33,6 +33,7 @@ steps:
   inputs:
     command: 'pack'
     packagesToPack: '$(srcPath)/*.csproj'
+    packDirectory: $(Build.ArtifactStagingDirectory)/nuget
     versioningScheme: 'byEnvVar'
     versionEnvVar: PKGVER
     verbosityPack: 'Normal'
@@ -46,4 +47,4 @@ steps:
 
 - bash: dotnet nuget push -s  https://api.nuget.org/v3/index.json -k $(nuget-api-key) $(Build.ArtifactStagingDirectory)/*.nupkg
   displayName: 'Push'
-  condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
+  condition: and(succeeded(), eq(variables['Agent.OS'], 'Linux'), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
