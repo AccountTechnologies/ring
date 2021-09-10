@@ -38,11 +38,9 @@ steps:
     verbosityPack: 'Normal'
   condition: succeeded()
 
-- task: PublishBuildArtifacts@1
-
-- bash: |-
-    dotnet tool install -g ATech.Ring.DotNet.Cli --version $PKGVER --add-source $(Build.ArtifactStagingDirectory) && \
-    ring show-config
+- pwsh:
+  inputs:
+    filePath: $(System.DefaultWorkingDirectory)/test.ps1
   displayName: 'Test'
   condition: succeeded()
 
