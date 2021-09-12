@@ -13,7 +13,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
         private const string UrlsEnvVar = "ASPNETCORE_URLS";
         private readonly ExeRunner _exeRunner;
         public ILogger<ITool> Logger { get; }
-        public string ExePath { get; set; } = "dotnet.exe";
+        public string ExePath { get; set; } = "dotnet";
         public string[] DefaultArgs { get; set; } = { };
         public Dictionary<string, string> DefaultEnvVars = new Dictionary<string, string> {["ASPNETCORE_ENVIRONMENT"] = "Development"};
         

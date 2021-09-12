@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Infrastructure.Cli;
 using ATech.Ring.DotNet.Cli.Workspace;
@@ -30,14 +31,19 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
                 Console.WriteLine(Ring(version.ToString()));
             }
 
-            hostBuilder
-                 .UseStartup<Startup>()
-                 .UseConfiguration(new ConfigurationBuilder()
+            var cfgBuilder = new ConfigurationBuilder()
                     .AddJsonFile("appsettings.json", optional: false)
                     .AddInMemoryCollection(new Dictionary<string, string> { ["ring:port"] = options.Port.ToString() })
                     .AddUserSettingsFile()
-                    .AddEnvironmentVariables()
-                    .Build())
+                    .AddEnvironmentVariables();
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
+                cfgBuilder.AddJsonFile("appsettings.Windows.json", optional: false);
+            }
+
+            hostBuilder
+                 .UseStartup<Startup>()
+                 .UseConfiguration(cfgBuilder.Build())
                  .UseKestrel((ctx, opts) =>
                  {
                      opts.ListenAnyIP(ctx.Configuration.GetValue<int>("ring:port"));
