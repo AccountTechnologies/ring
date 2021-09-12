@@ -49,5 +49,4 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Dotnet
             }
         }
     }
-
 }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -28,7 +27,7 @@ using Serilog;
 
 namespace ATech.Ring.DotNet.Cli.Infrastructure
 {
-    public class Startup
+  public class Startup
     {
         public static readonly string OriginalWorkingDir = Directory.GetCurrentDirectory();
         public Startup(IConfiguration configuration)

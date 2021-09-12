@@ -10,11 +10,11 @@ using Microsoft.Extensions.Logging;
 
 namespace ATech.Ring.DotNet.Cli.Windows.Runnables
 {
-    public abstract class WindowsRunnable<TContext, TConfig> : Runnable<TContext, TConfig>
+    public abstract class ProcessRunnable<TContext, TConfig> : Runnable<TContext, TConfig>
         where TContext : ITrackProcessId
         where TConfig : IRunnableConfig
     {
-        protected WindowsRunnable(TConfig config, ILogger<WindowsRunnable<TContext, TConfig>> logger, ISender<IRingEvent> eventQ) : base(config, logger, eventQ)
+        protected ProcessRunnable(TConfig config, ILogger<ProcessRunnable<TContext, TConfig>> logger, ISender<IRingEvent> eventQ) : base(config, logger, eventQ)
         {
         }
 
@@ -30,7 +30,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables
         {
             return ctx.ProcessId == 0 ? 
                    Task.FromResult(HealthStatus.Unhealthy) 
-                                      : Task.FromResult(ProcessExtensions.TryGetProcessById(ctx.ProcessId) ? HealthStatus.Ok : HealthStatus.Unhealthy);
+                                      : Task.FromResult(ProcessExtensions.IsProcessRunning(ctx.ProcessId) ? HealthStatus.Ok : HealthStatus.Unhealthy);
         }
 
         /// <summary>

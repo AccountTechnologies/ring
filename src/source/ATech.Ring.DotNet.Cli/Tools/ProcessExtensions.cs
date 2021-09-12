@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 
 namespace ATech.Ring.DotNet.Cli.Windows.Tools
 {
     public static class ProcessExtensions
     {
-        public static bool TryGetProcessById(int processId)
+        public static bool IsProcessRunning(int processId)
         {
             try
             {

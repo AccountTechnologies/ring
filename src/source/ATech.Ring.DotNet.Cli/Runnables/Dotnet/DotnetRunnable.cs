@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Dotnet
 {
-    public abstract class DotnetRunnableBase<TContext, TConfig> : WindowsRunnable<TContext, TConfig>
+    public abstract class DotnetRunnableBase<TContext, TConfig> : ProcessRunnable<TContext, TConfig>
         where TContext : DotnetContext
         where TConfig : IUseCsProjFile, IRunnableConfig
     {
