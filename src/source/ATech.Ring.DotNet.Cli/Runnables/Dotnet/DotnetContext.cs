@@ -39,8 +39,8 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Dotnet
                 ctx.CsProjPath = config.CsProj;
                 (ctx.TargetFramework, ctx.TargetRuntime) = config.GetTargetFrameworkAndRuntime();
                 ctx.WorkingDir = config.GetWorkingDir();
-                var runtimePathSegment = ctx.TargetRuntime == null ? "" : $"\\{ctx.TargetRuntime}";
-                ctx.EntryAssemblyPath = Path.Combine(ctx.WorkingDir, $"bin\\Debug\\{ctx.TargetFramework}{runtimePathSegment}\\{config.GetProjName()}.dll");
+                var runtimePathSegment = ctx.TargetRuntime == null ? "" : $"{Path.DirectorySeparatorChar}{ctx.TargetRuntime}";
+                ctx.EntryAssemblyPath = Path.Combine(ctx.WorkingDir, $"bin{Path.DirectorySeparatorChar}Debug{Path.DirectorySeparatorChar}{ctx.TargetFramework}{runtimePathSegment}{Path.DirectorySeparatorChar}{config.GetProjName()}.dll");
                 return ctx;
             }
             finally
@@ -49,5 +49,4 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Dotnet
             }
         }
     }
-
 }

@@ -1,4 +1,4 @@
-﻿using System.Threading;
+using System.Threading;
 using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Abstractions;
 using ATech.Ring.DotNet.Cli.Dtos;
@@ -40,7 +40,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.DockerCompose
 
         protected override Task<HealthStatus> CheckHealthAsync(DockerComposeContext ctx, CancellationToken token)
         {
-            return Task.FromResult(ProcessExtensions.TryGetProcessById(ctx.ProcessId) ? HealthStatus.Ok : HealthStatus.Dead);
+            return Task.FromResult(ProcessExtensions.IsProcessRunning(ctx.ProcessId) ? HealthStatus.Ok : HealthStatus.Dead);
         }
 
         protected override async Task StopAsync(DockerComposeContext ctx, CancellationToken token)

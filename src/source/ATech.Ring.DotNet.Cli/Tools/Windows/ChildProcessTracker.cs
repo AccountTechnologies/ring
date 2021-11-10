@@ -30,6 +30,10 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
 
         static ChildProcessTracker()
         {
+            // This feature requires Windows
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                return;
+            
             // This feature requires Windows 8 or later. To support Windows 7 requires
             //  registry settings to be added if you are using Visual Studio plus an
             //  app.manifest change.

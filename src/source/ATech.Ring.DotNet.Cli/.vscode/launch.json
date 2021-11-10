@@ -9,8 +9,8 @@
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build",
-      "program": "${workspaceFolder}/bin/Debug/ring.exe",
-      "args": ["headless", "-d"],
+      "program": "${workspaceFolder}/bin/Debug/ring",
+      "args": ["run", "-w", "./../../tests/resources/basic/netcore.toml", "-d"],
       "cwd": "${workspaceFolder}",
       "stopAtEntry": false,
       "env": {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -96,10 +97,17 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
                     tool.Logger.LogError("{procUid} - Process failed: {Tool} {Args} ({ProcessWorkingDir})", procUid, tool.ExePath, allArgs, workingDirectory ?? ringWorkingDir);
                     return new ExecutionInfo();
                 }
-
-                p.TrackAsChild();
+               
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    p.TrackAsChild();
+                }
+                else
+                {
+                    // not sure yet what can be done for Linux/Darwin to support it
+                }
+               
                 p.EnableRaisingEvents = true;
-
                 p.OutputDataReceived += OnData;
                 p.ErrorDataReceived += OnError;
 

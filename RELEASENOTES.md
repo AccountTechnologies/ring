@@ -1,5 +1,9 @@
 # Release notes
 
+## 2.5.0
+
+* Make core Ring cross-platform
+
 ## 2.4.4
 
 * Optimisations

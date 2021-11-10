@@ -1,4 +1,4 @@
-﻿using System.Threading;
+using System.Threading;
 using System.Threading.Tasks;
 using ATech.Ring.Configuration.Interfaces;
 using ATech.Ring.DotNet.Cli.Abstractions.Context;
@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ATech.Ring.DotNet.Cli.Windows.Runnables
 {
-    public abstract class CsProjRunnable<TContext, TConfig> : WindowsRunnable<TContext, TConfig>
+    public abstract class CsProjRunnable<TContext, TConfig> : ProcessRunnable<TContext, TConfig>
         where TContext : ITrackProcessId, ICsProjContext, ITrackRetries
         where TConfig : IRunnableConfig, IUseCsProjFile
     {
