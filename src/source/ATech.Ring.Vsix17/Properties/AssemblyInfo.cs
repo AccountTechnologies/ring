@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("ATech.Ring.Vsix17")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("VisualStudio Extension for ring!")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Account Technologies Software")]
 [assembly: AssemblyProduct("ATech.Ring.Vsix17")]
