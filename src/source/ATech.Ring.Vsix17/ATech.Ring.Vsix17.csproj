@@ -145,21 +145,21 @@
       <Name>ATech.Ring.StrongNamed</Name>
     </ProjectReference>
   </ItemGroup>
-	<ItemGroup>
-		<Content Include="index.html" />
-		<Content Include="Resources\RingWindowCommand.png">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-			<IncludeInVSIX>true</IncludeInVSIX>
-		</Content>
-		<Content Include="Resources\RingWindowPackage.ico">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-			<IncludeInVSIX>true</IncludeInVSIX>
-		</Content>
-		<VSCTCompile Include="RingWindowPackage.vsct">
-			<ResourceName>Menus.ctmenu</ResourceName>
-		</VSCTCompile>
-		<Content Include="stylesheet.css" />
-	</ItemGroup>
+  <ItemGroup>
+    <Content Include="index.html" />
+    <Content Include="Resources\RingWindowCommand.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Resources\RingWindowPackage.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <VSCTCompile Include="RingWindowPackage.vsct">
+      <ResourceName>Menus.ctmenu</ResourceName>
+    </VSCTCompile>
+    <Content Include="stylesheet.css" />
+  </ItemGroup>
   <ItemGroup>
     <Page Include="RingWindowControl.xaml">
       <Generator>MSBuild:Compile</Generator>
