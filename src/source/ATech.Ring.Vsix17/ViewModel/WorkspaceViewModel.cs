@@ -315,7 +315,6 @@ namespace ATech.Ring.Vsix.ViewModel
 
         private void OnLoad(WorkspaceLoadData data)
         {
-            ThreadHelper.ThrowIfNotOnUIThread();
             _commandSender.LoadWorkspace(data.FilePath);
         }
 

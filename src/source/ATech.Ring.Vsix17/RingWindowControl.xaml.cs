@@ -69,7 +69,7 @@ namespace ATech.Ring.Vsix
             ThreadHelper.JoinableTaskFactory.Run(async delegate
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                RingOutPane.OutputString($"\r\n[ring!vsix] {message}");
+                RingOutPane.OutputStringThreadSafe($"\r\n[ring!vsix] {message}");
             });
         }
 

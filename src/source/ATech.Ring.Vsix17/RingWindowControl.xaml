@@ -199,7 +199,7 @@
                 </Setter.Value>
             </Setter>
         </Style>
-      
+
         <SolidColorBrush x:Key="ListBox.Static.Background" Color="#00FFFFFF"/>
         <SolidColorBrush x:Key="ListBox.Static.Border" Color="#00FFFFFF"/>
         <SolidColorBrush x:Key="ListBox.Disabled.Background" Color="#FFFFFFFF"/>
@@ -286,7 +286,7 @@
 
                         </fa:ImageAwesome>
                     </Button.Content>
-                    
+
                 </Button>
 
                 <Label VerticalAlignment="Stretch" Margin="0" Padding="5,2,5,2" FontWeight="{Binding DisplayNameFontWeight}" ToolTip="{Binding UniqueId}" Content="{Binding DisplayName}" Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}">
