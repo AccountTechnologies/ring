@@ -1,15 +1,16 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("ATech.Ring.Vsix")]
+[assembly: AssemblyTitle("ATech.Ring.Vsix17")]
 [assembly: AssemblyDescription("VisualStudio Extension for ring!")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Account Technologies")]
-[assembly: AssemblyProduct("ATech.Ring.Vsix")]
-[assembly: AssemblyCopyright("Account Technologies 2018 - 2021")]
+[assembly: AssemblyCompany("Account Technologies Software")]
+[assembly: AssemblyProduct("ATech.Ring.Vsix17")]
+[assembly: AssemblyCopyright("Account Technologies Software 2018 - 2021")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -28,5 +29,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("3.4.0.0")]
-[assembly: AssemblyFileVersion("3.4.0.0")]
+[assembly: AssemblyVersion("4.0.0.0")]
+[assembly: AssemblyFileVersion("4.0.0.0")]
