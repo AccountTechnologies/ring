@@ -14,7 +14,7 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
 {
     public class WebsocketsHandler
     {
-        private readonly ConcurrentDictionary<Guid, WsClient> _clients = new ConcurrentDictionary<Guid, WsClient>();
+        private readonly ConcurrentDictionary<Guid, WsClient> _clients = new();
         private readonly IHostApplicationLifetime _appLifetime;
         private readonly IReceiver<IRingEvent> _queue;
         private readonly IServer _server;

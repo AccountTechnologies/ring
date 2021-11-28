@@ -120,7 +120,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
 
                 void OnExit(object sender, EventArgs _)
                 {
-                    if (!(sender is Process e)) return;
+                    if (sender is not Process e) return;
                     e.OutputDataReceived -= OnData;
                     e.ErrorDataReceived -= OnError;
                     e.Exited -= OnExit;

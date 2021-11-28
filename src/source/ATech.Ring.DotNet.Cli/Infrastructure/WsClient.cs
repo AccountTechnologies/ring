@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ATech.Ring.DotNet.Cli.Infrastructure
 {
-    public class WsClient : IAsyncDisposable
+    public sealed class WsClient : IAsyncDisposable
     {
         private readonly ILogger<WebsocketsHandler> _logger;
         public Task<WebSocket> Ws { get; }

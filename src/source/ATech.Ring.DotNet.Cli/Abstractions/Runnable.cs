@@ -19,7 +19,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
         where TConfig : IRunnableConfig
     {
         private readonly ILogger<Runnable<TContext, TConfig>> _logger;
-        private readonly Fsm _fsm = new Fsm();
+        private readonly Fsm _fsm = new();
         private TContext _context;
         protected readonly ISender<IRingEvent> Sender;
         protected virtual TimeSpan HealthCheckPeriod { get; } = TimeSpan.FromSeconds(5);
@@ -31,7 +31,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
         public event EventHandler OnHealthCheckCompleted;
         public event EventHandler OnInitExecuted;
         public IReadOnlyDictionary<string, object> Details => _details;
-        private readonly Dictionary<string, object> _details = new Dictionary<string, object>();
+        private readonly Dictionary<string, object> _details = new();
         /// <summary>
         /// Details added via this method are pushed to clients where can be used for different purposes
         /// </summary>
@@ -246,7 +246,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
                         throw new NotSupportedException($"Status '{result}' is not supported.");
                 }
 
-                if (!(ctx is ITrackRetries t)) return result;
+                if (ctx is not ITrackRetries t) return result;
 
                 if (result == HealthStatus.Ok)
                 {
