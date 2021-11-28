@@ -7,19 +7,19 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure.Cli
 {
     public static class CliParser
     {
-        public static BaseOptions GetOptions(string[] args)
+        public static BaseOptions GetOptions(string[] args, string originalWorkingDir)
         {
             BaseOptions options = new ConsoleOptions { IsDebug = false };
             Parser.Default.ParseArguments<ConsoleOptions, HeadlessOptions, CloneOptions, ShowConfigOptions>(args)
                 .WithParsed<ConsoleOptions>(opts =>
                 {
-                    opts.WorkspacePath = Path.GetFullPath(opts.WorkspacePath, Startup.OriginalWorkingDir);
+                    opts.WorkspacePath = Path.GetFullPath(opts.WorkspacePath, originalWorkingDir);
                     options = opts;
                 })
                 .WithParsed<HeadlessOptions>(opts => options = opts)
                 .WithParsed<CloneOptions>(opts =>
                 {
-                    opts.WorkspacePath = Path.GetFullPath(opts.WorkspacePath, Startup.OriginalWorkingDir);
+                    opts.WorkspacePath = Path.GetFullPath(opts.WorkspacePath, originalWorkingDir);
                     options = opts;
                 })
                 .WithParsed<ShowConfigOptions>(opts =>
