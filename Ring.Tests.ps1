@@ -14,7 +14,7 @@ Describe 'Ring' {
             "$($env:USERPROFILE)\.dotnet\tools\.store\atech.ring.dotnet.cli\$PkgVer\atech.ring.dotnet.cli\$PkgVer\tools\net6.0\any\appsettings.json"
           }
           default {
-            "$($env:USERPROFILE)/.dotnet/tools/.store/atech.ring.dotnet.cli/$PkgVer/atech.ring.dotnet.cli/$PkgVer/tools/net6.0/any/appsettings.json"
+            "$($env:HOME)/.dotnet/tools/.store/atech.ring.dotnet.cli/$PkgVer/atech.ring.dotnet.cli/$PkgVer/tools/net6.0/any/appsettings.json"
           }
         }
 
