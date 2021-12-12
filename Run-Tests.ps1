@@ -1,12 +1,13 @@
 Install-Module -Name Pester -Force
 Import-Module -Name Pester
-$Container = New-PesterContainer -Path "$PSScriptRoot/All.Tests.ps1"
+
 
 switch ($true) {
   $env:TF_BUILD {
-    Invoke-Pester -Container $Container -OutputFile ./test-results.xml -OutputFormat 'NUnitXML'
+    Invoke-Pester -Script $(System.DefaultWorkingDirectory)\Ring.test.ps1 -OutputFile $(System.DefaultWorkingDirectory)\Test-Pester.XML -OutputFormat NUnitXML
   }
   default {
+    $Container = New-PesterContainer -Path "$PSScriptRoot/Ring.test.ps1"
     Invoke-Pester -Container $Container -Output Detailed
   }
 }
