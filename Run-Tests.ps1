@@ -4,7 +4,7 @@ Import-Module -Name Pester
 
 switch ($true) {
   $env:TF_BUILD {
-    Invoke-Pester -Script "./Ring.test.ps1" -OutputFile "./Test-Pester.XML" -OutputFormat NUnitXML
+    Invoke-Pester -Path "./Ring.test.ps1" -CI -OutputFile "./Test-Pester.XML"
   }
   default {
     $Container = New-PesterContainer -Path "$PSScriptRoot/Ring.test.ps1"
