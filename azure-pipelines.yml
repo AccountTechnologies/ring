@@ -10,8 +10,8 @@ variables:
   ${{ if startsWith(variables['Build.SourceBranch'], 'refs/tags/') }}:
     PKGVER: ${{ variables['Build.SourceBranchName'] }}
   ${{ if not(startsWith(variables['Build.SourceBranch'], 'refs/tags/')) }}:
-    PKGVER: '1.999.999-dev'
-  srcPath: 'src/source/ATech.Ring.DotNet.Cli'
+    PKGVER: '0.0.0-dev'
+  SRC_PATH: 'src/ATech.Ring.DotNet.Cli'
   BuildConfiguration: Release
 
 strategy:
@@ -38,7 +38,7 @@ steps:
   displayName: 'Pack'
   inputs:
     command: 'pack'
-    packagesToPack: '$(srcPath)/*.csproj'
+    packagesToPack: '$(SRC_PATH)/*.csproj'
     versioningScheme: 'byEnvVar'
     versionEnvVar: PKGVER
     verbosityPack: 'Normal'
@@ -46,10 +46,16 @@ steps:
 
 - task: PowerShell@2
   inputs:
-    filePath: $(System.DefaultWorkingDirectory)/test.ps1
+    filePath: $(System.DefaultWorkingDirectory)/Run-Tests.ps1
     pwsh: true
   displayName: 'Test'
   condition: succeeded()
+
+- task: PublishTestResults@2
+  inputs:
+    testResultsFormat: 'NUnit'
+    testResultsFiles: './test-results.xml'
+    failTaskOnFailedTests: true
 
 - bash: dotnet nuget push -s  https://api.nuget.org/v3/index.json -k $(nuget-api-key) $(Build.ArtifactStagingDirectory)/*.nupkg
   displayName: 'Push'
