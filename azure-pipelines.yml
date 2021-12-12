@@ -54,7 +54,7 @@ steps:
 - task: PublishTestResults@2
   inputs:
     testResultsFormat: 'NUnit'
-    testResultsFiles: '$(System.DefaultWorkingDirectory)/Test-Pester.XML'
+    testResultsFiles: '$(System.DefaultWorkingDirectory)/testResults.xml'
     failTaskOnFailedTests: true
 
 - bash: dotnet nuget push -s  https://api.nuget.org/v3/index.json -k $(nuget-api-key) $(Build.ArtifactStagingDirectory)/*.nupkg
