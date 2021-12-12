@@ -137,7 +137,7 @@ try
         {
             b.AddJsonFile(Path.Combine(Assembly.GetEntryAssembly().Location, "appsettings.Windows.json"), optional: false);
         }
-        b.AddJsonFile(Path.Combine(originalWorkingDir, "appsettings.json"), optional: true);
+        b.AddJsonFile(Path.Combine(originalWorkingDir, ".ring", "appsettings.json"), optional: true);
     });
     builder.Host.UseServiceProviderFactory(new LightInjectServiceProviderFactory());
     builder.WebHost.UseLightInject(container);
