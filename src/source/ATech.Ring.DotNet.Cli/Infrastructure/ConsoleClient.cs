@@ -24,7 +24,7 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
 
         public Task StartAsync(CancellationToken token)
         {
-            if (!(_options is ConsoleOptions consoleOpts)) return Task.CompletedTask;
+            if (_options is not ConsoleOptions consoleOpts) return Task.CompletedTask;
 
             _clientTask = Task.Run(async () =>
             {
@@ -51,7 +51,7 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
             try
             {
 
-                if (!(_options is ConsoleOptions)) return;
+                if (_options is not ConsoleOptions) return;
                 await _clientTask;
                 await _clientSocket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "terminating", token);
             }

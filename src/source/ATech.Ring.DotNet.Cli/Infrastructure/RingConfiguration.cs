@@ -1,4 +1,6 @@
-﻿namespace ATech.Ring.DotNet.Cli.Infrastructure
+﻿using System;
+
+namespace ATech.Ring.DotNet.Cli.Infrastructure
 {
     public class RingConfiguration
     {
@@ -10,7 +12,7 @@
     public class InitHookConfig
     {
         public string Command { get; set; }
-        public string[] Args { get; set; } = { };
+        public string[] Args { get; set; } = Array.Empty<string>();
     }
 
     public class HooksConfiguration

@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <VersionPrefix>2.5.1</VersionPrefix>
+    <VersionPrefix>3.0.0</VersionPrefix>
     <PackAsTool>true</PackAsTool>
     <IsPackable>true</IsPackable>
     <ToolCommandName>ring</ToolCommandName>
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>preview</LangVersion>
     <Company>Account Technologies</Company>
     <Authors>Krzysztof Kraszewski</Authors>
     <Configurations>Debug;Release;ReleaseVsix</Configurations>
@@ -23,18 +23,14 @@
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.8.0" />
-    <PackageReference Include="KubernetesClient" Version="4.0.10" />
-    <PackageReference Include="LightInject.Microsoft.AspNetCore.Hosting" Version="2.3.2" />
+    <PackageReference Include="KubernetesClient" Version="6.0.25" />
+    <PackageReference Include="LightInject.Microsoft.AspNetCore.Hosting" Version="2.3.5" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.2.7" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.2.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.8" />
-    <PackageReference Include="Serilog" Version="2.10.0" />
-    <PackageReference Include="Serilog.Extensions.Logging" Version="3.0.1" />
-    <PackageReference Include="Serilog.Settings.Configuration" Version="3.1.0" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
-    <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
-    <PackageReference Include="Stateless" Version="5.1.3" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.0.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="4.1.0" />
+    <PackageReference Include="Stateless" Version="5.11.0" />
   </ItemGroup>
 
   <ItemGroup>

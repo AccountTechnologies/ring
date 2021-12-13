@@ -20,14 +20,14 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
         public ILogger<ITool> Logger { get; }
         public GitClone(ILogger<GitClone> logger, IOptions<RingConfiguration> ringCfg)
         {
-            _ringCfg = ringCfg?.Value ?? throw new ArgumentNullException(nameof(ringCfg.Value));
+            _ringCfg = ringCfg?.Value ?? throw new NullReferenceException(nameof(ringCfg.Value));
             Logger = logger;
         }
 
         public string ResolveFullClonePath(IFromGit gitCfg, string rootPathOverride = null)
         {
             if (gitCfg == null) throw new ArgumentNullException(nameof(gitCfg));
-            if (gitCfg.SshRepoUrl == null) throw new ArgumentNullException(nameof(gitCfg.SshRepoUrl));
+            if (gitCfg.SshRepoUrl == null) throw new NullReferenceException(nameof(gitCfg.SshRepoUrl));
 
             var chunks = gitCfg.SshRepoUrl.Split(":");
 

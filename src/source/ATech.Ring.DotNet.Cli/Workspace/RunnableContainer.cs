@@ -6,10 +6,10 @@ using ATech.Ring.DotNet.Cli.Abstractions;
 
 namespace ATech.Ring.DotNet.Cli.Workspace
 {
-    internal class RunnableContainer : IDisposable
+    internal sealed class RunnableContainer : IDisposable
     {
         private CancellationTokenSource _aggregateCts;
-        private readonly CancellationTokenSource _cts = new CancellationTokenSource();
+        private readonly CancellationTokenSource _cts = new();
         private RunnableContainer() { }
         public IRunnable Runnable { get; private set; }
         public Task Task { get; private set; }

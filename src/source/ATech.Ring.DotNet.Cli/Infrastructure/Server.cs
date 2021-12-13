@@ -64,14 +64,14 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
                 .Permit(T.Start, S.Running);
 
             _fsm.Configure(S.Running)
-                    .OnEntryFromAsync(T.Start, async () =>
-                    {
-                        _scope = _getScope();
-                        await _launcher.StartAsync(token);
-                    })
-                    .InternalTransition(T.Include, () => { })
-                    .InternalTransition(T.Exclude, () => { })
-                    .Permit(T.Stop, S.Loaded);
+                .OnEntryFromAsync(T.Start, async () =>
+                {
+                    _scope = _getScope();
+                    await _launcher.StartAsync(token);
+                })
+                .InternalTransition(T.Include, () => { })
+                .InternalTransition(T.Exclude, () => { })
+                .Permit(T.Stop, S.Loaded);
 
             _fsm.OnUnhandledTrigger((s, t) => _logger.LogInformation("Trigger: {trigger} is not supported in state: {state}", t, s));
             return Task.CompletedTask;
@@ -178,6 +178,6 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
 
     internal static class StateMachineExtensions
     {
-        internal static Server.ServerFsm.TriggerWithParameters<T> Of<T>(this Server.Trigger t) => new StateMachine<S, Server.Trigger>.TriggerWithParameters<T>(t);
+        internal static Server.ServerFsm.TriggerWithParameters<T> Of<T>(this Server.Trigger t) => new(t);
     }
 }

@@ -1,5 +1,13 @@
 # Release notes
 
+## 3.0.0
+
+Migrate to .NET 6
+
+## 2.5.1
+
+* Clone the default branch rather than hard-coded "master".
+
 ## 2.5.0
 
 * Make core Ring cross-platform

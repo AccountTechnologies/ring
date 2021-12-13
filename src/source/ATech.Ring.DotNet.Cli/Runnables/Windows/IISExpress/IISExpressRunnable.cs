@@ -22,7 +22,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.IISExpress
         private readonly IISExpressExe _iisExpress;
         private readonly ILogger<IISExpressRunnable> _logger;
         private readonly Func<Uri, HttpClient> _clientFactory;
-        private readonly List<string> _wcfServices = new List<string>();
+        private readonly List<string> _wcfServices = new();
         public IISExpressRunnable(IISExpressConfig config,
                                   IISExpressExe iisExpress,
                                   ILogger<IISExpressRunnable> logger,

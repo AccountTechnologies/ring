@@ -16,7 +16,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ATech.Ring.DotNet.Cli.Workspace
 {
-    public class WorkspaceLauncher : IWorkspaceLauncher, IDisposable
+    public sealed class WorkspaceLauncher : IWorkspaceLauncher, IDisposable
     {
         private readonly IConfigurator _configurator;
         private readonly ILogger<WorkspaceLauncher> _logger;
@@ -69,10 +69,11 @@ namespace ATech.Ring.DotNet.Cli.Workspace
             }
         }
 
-        public async Task StartAsync(CancellationToken token)
+        public Task StartAsync(CancellationToken token)
         {
             _cts = new CancellationTokenSource();
-            _startTask = await Task.Factory.StartNew(async () => await ApplyConfigChanges(_configurator.Current, _cts.Token), _cts.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            _startTask = Task.Factory.StartNew(async () => await ApplyConfigChanges(_configurator.Current, _cts.Token), _cts.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            return Task.CompletedTask;
         }
 
         public async Task UnloadAsync(CancellationToken token)
@@ -83,10 +84,10 @@ namespace ATech.Ring.DotNet.Cli.Workspace
         public async Task StopAsync(CancellationToken token)
         {
             _cts.Cancel();
-            await _startTask;
             if (_initHookTask != null) await _initHookTask;
             _initCounter = 0;
             _stopTask = Task.WhenAll(_runnables.Keys.Select(RemoveAsync));
+            await _startTask;
         }
 
         public async Task<ExcludeResult> ExcludeAsync(string id, CancellationToken token)
@@ -110,7 +111,11 @@ namespace ATech.Ring.DotNet.Cli.Workspace
                 var deletions = _runnables.Keys.Except(configs.Keys).ToArray();
                 var deletionsTask = deletions.Select(RemoveAsync);
                 var additions = configs.Keys.Except(_runnables.Keys).ToArray();
-                var additionsTask = additions.Select(key => AddAsync(key, configs[key], CaclulateDelay(additions.Length), token));
+                var additionsTask = additions.Select(key => {
+                    var delay = CaclulateDelay(additions.Length);
+                    _logger.LogDebug("Starting in {delay}", delay);
+                    return AddAsync(key, configs[key], delay, token);
+                });
 
                 await Task.WhenAll(additionsTask.Concat(deletionsTask));
             }

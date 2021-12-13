@@ -6,7 +6,7 @@ namespace ATech.Ring.DotNet.Cli.Logging
 {
     public static class ScopeLoggingExtensions
     {
-        internal static Scope ToScope(this IRunnable r) => new Scope { [Scope.UniqueIdKey] = r.UniqueId };
+        internal static Scope ToScope(this IRunnable r) => new() { [Scope.UniqueIdKey] = r.UniqueId };
         public static void LogDebug<T>(this ILogger<T> logger, PhaseStatus s) => logger.LogDebug("{Status}", s);
         public static void LogInformation<T>(this ILogger<T> logger, PhaseStatus s) => logger.LogInformation("{Status}", s);
         public static void LogContextDebug<T>(this ILogger<T> logger, object context) => logger.LogDebug("{@Context}", context);

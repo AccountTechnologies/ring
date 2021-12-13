@@ -44,13 +44,13 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
 
                 using (log.WithProtocolScope(PhaseStatus.OK))
                 {
-                    log.LogInformation($"Client {clientId} connected");
+                    log.LogInformation("Client {clientId} connected", clientId);
                     await _socketManager.ListenAsync(clientId, () => context.WebSockets.AcceptWebSocketAsync(), context.Get<IHostApplicationLifetime>().ApplicationStopped);
                 }
             }
             catch (OperationCanceledException)
             {
-                context.Logger().LogInformation($"Client {clientId} disconnected", clientId);
+                context.Logger().LogInformation("Client {clientId} disconnected", clientId);
             }
             catch (WebSocketException ex)
             {
@@ -58,7 +58,7 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
                 {
                     ws.Dispose();
                 }
-                context.Logger().LogInformation($"Client {clientId} disconnected", clientId);
+                context.Logger().LogInformation("Client {clientId} disconnected", clientId);
                 context.Logger().LogDebug("Exception: {ex}", ex);
             }
             catch (Exception ex)
