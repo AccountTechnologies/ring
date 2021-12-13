@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "dependencies": {
+    ".NETStandard,Version=v2.1": {
+      "Nett": {
+        "type": "Direct",
+        "requested": "[0.13.0, )",
+        "resolved": "0.13.0",
+        "contentHash": "s3GMchEhJHuDEddBV4g5UbK7x6r7inTRZ0mOmqPXQPAQ0mr8pODN++5mfnAbAs/s6RI4+qYNuoUymnGBxgbfgQ=="
+      }
+    }
+  }
+}
