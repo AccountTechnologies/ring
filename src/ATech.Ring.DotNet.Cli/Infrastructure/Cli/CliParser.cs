@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
 using CommandLine;
 
 namespace ATech.Ring.DotNet.Cli.Infrastructure.Cli
@@ -25,7 +24,7 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure.Cli
                 .WithParsed<ShowConfigOptions>(opts =>
                 {
                     options = opts;
-                    Console.WriteLine(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "appsettings.json"));
+                    Console.WriteLine(InstallationDir.AppsettingsJsonPath());
                     Environment.Exit(0);
                 })
                 .WithNotParsed(x => Environment.Exit(-1));

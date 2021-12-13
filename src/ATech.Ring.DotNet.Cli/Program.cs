@@ -78,8 +78,8 @@ try
     builder.Services.AddSingleton<IWorkspaceInitHook, WorkspaceInitHook>();
     builder.Services.AddSingleton<ICloneMaker, CloneMaker>();
     builder.Services.AddSingleton<ATech.Ring.Protocol.Queue<IRingEvent>>();
-    builder.Services.AddSingleton<ISender<IRingEvent>>(f => f.GetService<ATech.Ring.Protocol.Queue<IRingEvent>>());
-    builder.Services.AddSingleton<IReceiver<IRingEvent>>(f => f.GetService<ATech.Ring.Protocol.Queue<IRingEvent>>());
+    builder.Services.AddSingleton<ISender<IRingEvent>>(f => f.GetRequiredService<ATech.Ring.Protocol.Queue<IRingEvent>>());
+    builder.Services.AddSingleton<IReceiver<IRingEvent>>(f => f.GetRequiredService<ATech.Ring.Protocol.Queue<IRingEvent>>());
     builder.Services.AddSingleton(f =>
     {
         var kubeConfigPath = f.GetRequiredService<Wsl>().ResolveToWindows("~/.kube/config").GetAwaiter().GetResult();
@@ -128,14 +128,14 @@ try
 
     builder.Host.ConfigureAppConfiguration((c, b) =>
     {
-        b.AddJsonFile(Path.Combine(Assembly.GetEntryAssembly().Location, "appsettings.json"), optional: false)
+        b.AddJsonFile(InstallationDir.AppsettingsJsonPath(), optional: false)
          .AddInMemoryCollection(new Dictionary<string, string> { ["ring:port"] = options.Port.ToString() })
          .AddUserSettingsFile()
          .AddEnvironmentVariables();
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            b.AddJsonFile(Path.Combine(Assembly.GetEntryAssembly().Location, "appsettings.Windows.json"), optional: false);
+            b.AddJsonFile(InstallationDir.AppsettingsJsonPath("Windows"), optional: false);
         }
         b.AddJsonFile(Path.Combine(originalWorkingDir, ".ring", "appsettings.json"), optional: true);
     });
@@ -151,7 +151,7 @@ try
     if (options.IsDebug) loggingConfig.MinimumLevel.Debug();
 
     Log.Logger = loggingConfig.CreateLogger();
-    var logger = app.Services.GetService<ILogger<Program>>();
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
 
     using (logger.WithHostScope(Phase.INIT))
     {
@@ -166,6 +166,7 @@ try
 catch (Exception ex)
 {
     Log.Logger.Fatal($"Unhandled exception: {ex}");
+    Environment.ExitCode = -1;
 }
 finally
 {
