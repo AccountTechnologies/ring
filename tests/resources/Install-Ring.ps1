@@ -3,7 +3,7 @@ $SrcPath = $IsCiBuild ? $env:SRC_PATH : "src/ATech.Ring.DotNet.Cli"
 $NuGetSource = $IsCiBuild ? $env:BUILD_ARTIFACTSTAGINGDIRECTORY : "$SrcPath/bin/Release/"
 $PkgVer = $IsCiBuild ? $env:PKGVER : ((dotnet run --project $SrcPath -- version 2>&1) -split ' ')[1]
 $ManifestDir = $TestDrive
-$ManifestFilePath = "$ManifestDir\.config\dotnet-tools.json"
+$ManifestFilePath = "$ManifestDir/.config/dotnet-tools.json"
 
 function Install-Ring {
 

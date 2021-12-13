@@ -27,21 +27,21 @@ Describe 'Ring' {
 
   # TODO: add ring console client so it can receive messages and determine if ring behaves correctly
   # also it would be able to terminate the server
-  Context '-- as a local tool' -Tag 'local' {
-    BeforeEach { 
-      Install-Ring
-      Push-Location
-      Set-Location $TestDrive
-    }
-    Describe 'run' {
-      It 'should be able run a workspace' {
-        dotnet ring run -w "$PSScriptRoot/test/resources/basic/n2etcore.toml" | Should -Be "YEah"
-        $LASTEXITCODE | Should -Be 0
-      }
-    }
-    AfterEach {
-      Uninstall-Ring
-      Pop-Location
-    }
-  }
+  # Context '-- as a local tool' -Tag 'local' {
+  #   BeforeEach { 
+  #     Install-Ring
+  #     Push-Location
+  #     Set-Location $TestDrive
+  #   }
+  #   Describe 'run' {
+  #     It 'should be able run a workspace' {
+  #       dotnet ring run -w "$PSScriptRoot/test/resources/basic/n2etcore.toml" | Should -Be "YEah"
+  #       $LASTEXITCODE | Should -Be 0
+  #     }
+  #   }
+  #   AfterEach {
+  #     Uninstall-Ring
+  #     Pop-Location
+  #   }
+  # }
 }
