@@ -1,6 +1,6 @@
 ﻿using ATech.Ring.DotNet.Cli.Abstractions.Context;
 
-namespace ATech.Ring.DotNet.Cli.Windows.Runnables.DockerCompose
+namespace ATech.Ring.DotNet.Cli.Runnables.DockerCompose
 {
     public class DockerComposeContext : ITrackProcessId, ITrackRetries
     {

@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Abstractions.Tools;
+using ATech.Ring.DotNet.Cli.Tools;
 using Microsoft.Extensions.Logging;
 
 namespace ATech.Ring.DotNet.Cli.Windows.Tools
@@ -8,7 +10,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
     public class IISExpressExe : ITool
     {
         public string ExePath { get; set; } = "C:\\Program Files\\IIS Express\\iisexpress.exe";
-        public string[] DefaultArgs { get; set; }
+        public string[] DefaultArgs { get; set; } = Array.Empty<string>();
         public ILogger<ITool> Logger { get; }
         public IISExpressExe(ILogger<IISExpressExe> logger) => Logger = logger;
 
@@ -20,7 +22,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
             Logger.LogError(message);
         }
 
-        public async Task<ExecutionInfo> StartWebsite(string configPath, IDictionary<string,string> envVars = null)
+        public async Task<ExecutionInfo> StartWebsite(string configPath, IDictionary<string,string>? envVars = null)
         {
             return await this.RunProcessAsync(OnError, envVars, $"/config:\"{configPath}\"", $"/siteid:1");
         }

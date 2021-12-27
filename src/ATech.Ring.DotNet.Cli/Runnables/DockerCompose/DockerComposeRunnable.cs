@@ -2,13 +2,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Abstractions;
 using ATech.Ring.DotNet.Cli.Dtos;
-using ATech.Ring.DotNet.Cli.Windows.Tools;
+using ATech.Ring.DotNet.Cli.Tools;
 using ATech.Ring.Protocol;
 using ATech.Ring.Protocol.Events;
 using Microsoft.Extensions.Logging;
 using DockerComposeConfig = ATech.Ring.Configuration.Runnables.DockerCompose;
 
-namespace ATech.Ring.DotNet.Cli.Windows.Runnables.DockerCompose
+namespace ATech.Ring.DotNet.Cli.Runnables.DockerCompose
 {
     public class DockerComposeRunnable : Runnable<DockerComposeContext, DockerComposeConfig>
     {

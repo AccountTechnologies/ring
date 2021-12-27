@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Infrastructure;
-using ATech.Ring.DotNet.Cli.Windows.Tools;
+using ATech.Ring.DotNet.Cli.Tools;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 

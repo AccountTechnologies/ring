@@ -1,7 +1,7 @@
 using ATech.Ring.DotNet.Cli.Abstractions.Tools;
 using Microsoft.Extensions.Logging;
 
-namespace ATech.Ring.DotNet.Cli.Windows.Tools
+namespace ATech.Ring.DotNet.Cli.Tools
 {
     public class ExeRunner : ITool
     {

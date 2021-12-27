@@ -3,12 +3,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using ATech.Ring.Configuration.Interfaces;
 using ATech.Ring.DotNet.Cli.CsProj;
-using ATech.Ring.DotNet.Cli.Windows.Tools;
+using ATech.Ring.DotNet.Cli.Tools;
 using ATech.Ring.Protocol;
 using ATech.Ring.Protocol.Events;
 using Microsoft.Extensions.Logging;
 
-namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Dotnet
+namespace ATech.Ring.DotNet.Cli.Runnables.Dotnet
 {
     public abstract class DotnetRunnableBase<TContext, TConfig> : ProcessRunnable<TContext, TConfig>
         where TContext : DotnetContext

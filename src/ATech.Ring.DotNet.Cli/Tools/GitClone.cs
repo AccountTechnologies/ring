@@ -10,13 +10,13 @@ using ATech.Ring.DotNet.Cli.Logging;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace ATech.Ring.DotNet.Cli.Windows.Tools
+namespace ATech.Ring.DotNet.Cli.Tools
 {
     public class GitClone : ITool
     {
         private readonly RingConfiguration _ringCfg;
         public string ExePath { get; set; } = "git";
-        public string[] DefaultArgs { get; set; }
+        public string[] DefaultArgs { get; set; } = Array.Empty<string>();
         public ILogger<ITool> Logger { get; }
         public GitClone(ILogger<GitClone> logger, IOptions<RingConfiguration> ringCfg)
         {
@@ -24,7 +24,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
             Logger = logger;
         }
 
-        public string ResolveFullClonePath(IFromGit gitCfg, string rootPathOverride = null)
+        public string ResolveFullClonePath(IFromGit gitCfg, string? rootPathOverride = null)
         {
             if (gitCfg == null) throw new ArgumentNullException(nameof(gitCfg));
             if (gitCfg.SshRepoUrl == null) throw new NullReferenceException(nameof(gitCfg.SshRepoUrl));
@@ -42,7 +42,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
             return Path.IsPathRooted(targetPath) ? targetPath : Path.GetFullPath(targetPath);
         }
 
-        public async Task<ExecutionInfo> CloneOrPullAsync(IFromGit gitCfg, CancellationToken token, bool shallow = false, bool defaultBranchOnly = false, string rootPathOverride = null)
+        public async Task<ExecutionInfo> CloneOrPullAsync(IFromGit gitCfg, CancellationToken token, bool shallow = false, bool defaultBranchOnly = false, string? rootPathOverride = null)
         {
             using var _ = Logger.WithScope(gitCfg.SshRepoUrl, Phase.GIT);
             var depthArg = shallow ? "--depth=1" : "";

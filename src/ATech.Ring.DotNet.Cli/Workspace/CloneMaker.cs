@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using ATech.Ring.Configuration;
 using ATech.Ring.Configuration.Interfaces;
 using ATech.Ring.DotNet.Cli.Logging;
-using ATech.Ring.DotNet.Cli.Windows.Tools;
+using ATech.Ring.DotNet.Cli.Tools;
 using Microsoft.Extensions.Logging;
 
 namespace ATech.Ring.DotNet.Cli.Workspace
@@ -22,7 +22,7 @@ namespace ATech.Ring.DotNet.Cli.Workspace
             _gitClone = gitClone;
         }
 
-        public async Task CloneWorkspaceRepos(string workspacePath, string outputDir = null, CancellationToken token = default)
+        public async Task CloneWorkspaceRepos(string workspacePath, string? outputDir = null, CancellationToken token = default)
         {
             using var _ = _logger.WithScope(nameof(CloneMaker), Phase.GIT);
             await _configurator.LoadAsync(new ConfiguratorPaths { WorkspacePath = workspacePath }, token);

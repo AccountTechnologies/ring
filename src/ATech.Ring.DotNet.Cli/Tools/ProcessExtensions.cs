@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 
-namespace ATech.Ring.DotNet.Cli.Windows.Tools
+namespace ATech.Ring.DotNet.Cli.Tools
 {
     public static class ProcessExtensions
     {

@@ -1,7 +1,9 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Abstractions.Tools;
+using ATech.Ring.DotNet.Cli.Tools;
 using k8s;
 using Microsoft.Extensions.Logging;
 
@@ -17,7 +19,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
         }
 
         public string ExePath { get; set; } = "wsl";
-        public string[] DefaultArgs { get; set; } = { };
+        public string[] DefaultArgs { get; set; } = Array.Empty<string>();
         public ILogger<ITool> Logger { get; }
 
         public async Task<bool> IsValidManifestAsync(string filePath)

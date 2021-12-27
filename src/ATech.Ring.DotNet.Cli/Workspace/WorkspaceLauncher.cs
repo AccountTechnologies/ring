@@ -23,15 +23,15 @@ namespace ATech.Ring.DotNet.Cli.Workspace
         private readonly Func<IRunnableConfig, IRunnable> _createRunnable;
         private readonly IWorkspaceInitHook _initHook;
         private readonly ISender<IRingEvent> _sender;
-        private readonly ConcurrentDictionary<string, RunnableContainer> _runnables = new ConcurrentDictionary<string, RunnableContainer>();
-        private Task _startTask;
-        private Task _stopTask;
-        private Task _initHookTask;
-        private CancellationTokenSource _cts = new CancellationTokenSource();
+        private readonly ConcurrentDictionary<string, RunnableContainer> _runnables = new();
+        private Task? _startTask;
+        private Task? _stopTask;
+        private Task? _initHookTask;
+        private CancellationTokenSource _cts = new();
         private WorkspaceInfo CurrentInfo { get; set; }
         private WorkspaceState CurrentStatus { get; set; }
         private int _initCounter;
-        private readonly Random _rnd = new Random();
+        private readonly Random _rnd = new();
 
         public event EventHandler OnInitiated;
         public string WorkspacePath => _configurator.Current.Path;
@@ -50,7 +50,7 @@ namespace ATech.Ring.DotNet.Cli.Workspace
             OnInitiated += WorkspaceLauncher_OnInitiated;
         }
 
-        private void WorkspaceLauncher_OnInitiated(object sender, EventArgs e)
+        private void WorkspaceLauncher_OnInitiated(object? sender, EventArgs e)
         {
             _initHookTask = _initHook.RunAsync(_cts.Token);
         }
@@ -60,6 +60,10 @@ namespace ATech.Ring.DotNet.Cli.Workspace
             _configurator.OnConfigurationChanged += async (_, args) => { await ApplyConfigChanges(args.Configuration, _cts.Token); };
 
             var configDirectory = new FileInfo(paths.WorkspacePath).DirectoryName;
+            if (configDirectory == null) 
+            {
+                throw new InvalidOperationException($"Path '{configDirectory}' does not have directory name");
+            }
             Directory.SetCurrentDirectory(configDirectory);
 
             await _configurator.LoadAsync(paths, _cts.Token);
@@ -87,7 +91,7 @@ namespace ATech.Ring.DotNet.Cli.Workspace
             if (_initHookTask != null) await _initHookTask;
             _initCounter = 0;
             _stopTask = Task.WhenAll(_runnables.Keys.Select(RemoveAsync));
-            await _startTask;
+            await (_startTask ?? throw new InvalidOperationException($"{nameof(_startTask)} must not be null"));
         }
 
         public async Task<ExcludeResult> ExcludeAsync(string id, CancellationToken token)
@@ -192,13 +196,13 @@ namespace ATech.Ring.DotNet.Cli.Workspace
             return true;
         }
 
-        private void OnRunnableInitExecuted(object sender, EventArgs e)
+        private void OnRunnableInitExecuted(object? sender, EventArgs e)
         {
             if (_configurator.Current.Count != Interlocked.Increment(ref _initCounter)) return;
             using var _ = _logger.WithHostScope(Phase.INIT);
             OnInitiated?.Invoke(this, EventArgs.Empty);
         }
-        private void OnPublishStatus(object sender, EventArgs args) => PublishStatusCore(ServerState.RUNNING, force: false);
+        private void OnPublishStatus(object? sender, EventArgs args) => PublishStatusCore(ServerState.RUNNING, force: false);
 
         private void PublishStatusCore(ServerState serverState, bool force)
         {

@@ -11,10 +11,10 @@ using ATech.Ring.Protocol;
 using ATech.Ring.Protocol.Events;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using static ATech.Ring.DotNet.Cli.Windows.Tools.ToolExtensions;
+using static ATech.Ring.DotNet.Cli.Tools.ToolExtensions;
 using KustomizeConfig = ATech.Ring.Configuration.Runnables.Kustomize;
 
-namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Kustomize
+namespace ATech.Ring.DotNet.Cli.Runnables.Kustomize
 {
     public class KustomizeRunnable : Runnable<KustomizeContext, KustomizeConfig>
     {

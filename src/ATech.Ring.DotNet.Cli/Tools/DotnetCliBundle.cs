@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Abstractions.Tools;
-using ATech.Ring.DotNet.Cli.Windows.Runnables.Dotnet;
+using ATech.Ring.DotNet.Cli.Runnables.Dotnet;
 using Microsoft.Extensions.Logging;
 
-namespace ATech.Ring.DotNet.Cli.Windows.Tools
+namespace ATech.Ring.DotNet.Cli.Tools
 {
     public class DotnetCliBundle : ITool
     {
@@ -14,8 +14,8 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
         private readonly ExeRunner _exeRunner;
         public ILogger<ITool> Logger { get; }
         public string ExePath { get; set; } = "dotnet";
-        public string[] DefaultArgs { get; set; } = { };
-        public Dictionary<string, string> DefaultEnvVars = new Dictionary<string, string> {["ASPNETCORE_ENVIRONMENT"] = "Development"};
+        public string[] DefaultArgs { get; set; } = Array.Empty<string>();
+        public Dictionary<string, string> DefaultEnvVars = new() { ["ASPNETCORE_ENVIRONMENT"] = "Development"};
         
         public DotnetCliBundle(ExeRunner exeRunner, ILogger<DotnetCliBundle> logger)
         {

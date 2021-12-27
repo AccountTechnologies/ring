@@ -7,7 +7,7 @@ using ATech.Ring.Protocol;
 using ATech.Ring.Protocol.Events;
 using Microsoft.Extensions.Logging;
 
-namespace ATech.Ring.DotNet.Cli.Windows.Runnables
+namespace ATech.Ring.DotNet.Cli.Runnables
 {
     public abstract class CsProjRunnable<TContext, TConfig> : ProcessRunnable<TContext, TConfig>
         where TContext : ITrackProcessId, ICsProjContext, ITrackRetries

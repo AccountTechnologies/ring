@@ -8,9 +8,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Abstractions.Tools;
+using ATech.Ring.DotNet.Cli.Windows.Tools;
 using Microsoft.Extensions.Logging;
 
-namespace ATech.Ring.DotNet.Cli.Windows.Tools
+namespace ATech.Ring.DotNet.Cli.Tools
 {
     public static class ToolExtensions
     {
@@ -40,23 +41,23 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
         public static Task<ExecutionInfo> RunProcessAsync(this ITool tool, params object[] args)
             => tool.RunProcessCoreAsync(args);
 
-        public static Task<ExecutionInfo> RunProcessAsync(this ITool tool, string workingDirectory, IDictionary<string, string> envVars, params object[] args)
+        public static Task<ExecutionInfo> RunProcessAsync(this ITool tool, string workingDirectory, IDictionary<string, string>? envVars, params object[] args)
             => tool.RunProcessCoreAsync(args, envVars: envVars, workingDirectory: workingDirectory);
 
-        public static Task<ExecutionInfo> RunProcessAsync(this ITool tool, Action<string> onErrorData, IDictionary<string, string> envVars, params object[] args)
+        public static Task<ExecutionInfo> RunProcessAsync(this ITool tool, Action<string> onErrorData, IDictionary<string, string>? envVars, params object[] args)
             => tool.RunProcessCoreAsync(args: args, onErrorData: onErrorData, envVars: envVars);
 
         private static async Task<ExecutionInfo> RunProcessCoreAsync(this ITool tool,
                                                                IEnumerable<object> args,
                                                                bool wait = false,
-                                                               string workingDirectory = null,
-                                                               IDictionary<string, string> envVars = null,
-                                                               Action<string> onErrorData = null)
+                                                               string? workingDirectory = null,
+                                                               IDictionary<string, string>? envVars = null,
+                                                               Action<string>? onErrorData = null)
         {
             var procUid = Guid.NewGuid().ToString("n").Remove(10);
             try
             {
-                var allArgs = string.Join(" ", (tool.DefaultArgs ?? new object[] { }).Concat(args.Select(x => x.ToString())));
+                var allArgs = string.Join(" ", (tool.DefaultArgs ?? Array.Empty<object>()).Concat((args ?? Array.Empty<object>()).Select(x => x.ToString())));
                 var sb = new StringBuilder();
                 void OnData(object _, DataReceivedEventArgs x) => sb.AppendLine(x.Data);
                 void OnError(object _, DataReceivedEventArgs x)
@@ -118,7 +119,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
 
                 var tcs = new TaskCompletionSource<ExecutionInfo>();
 
-                void OnExit(object sender, EventArgs _)
+                void OnExit(object? sender, EventArgs _)
                 {
                     if (sender is not Process e) return;
                     e.OutputDataReceived -= OnData;

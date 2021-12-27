@@ -5,7 +5,7 @@ using ATech.Ring.Configuration.Interfaces;
 using ATech.Ring.DotNet.Cli.Abstractions.Context;
 using ATech.Ring.DotNet.Cli.CsProj;
 
-namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Dotnet
+namespace ATech.Ring.DotNet.Cli.Runnables.Dotnet
 {
     public class DotnetContext : ICsProjContext, ITrackRetries, ITrackProcessId, ITrackProcessOutput
     {

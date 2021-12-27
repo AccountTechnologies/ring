@@ -1,4 +1,4 @@
-namespace ATech.Ring.DotNet.Cli.Windows.Runnables.Dotnet
+namespace ATech.Ring.DotNet.Cli.Runnables.Dotnet
 {
     public class AspNetCoreContext : DotnetContext
     {
