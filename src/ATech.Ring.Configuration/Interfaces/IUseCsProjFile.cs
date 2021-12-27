@@ -1,9 +1,8 @@
-﻿namespace ATech.Ring.Configuration.Interfaces
+﻿namespace ATech.Ring.Configuration.Interfaces;
+
+public interface IUseCsProjFile : IUseWorkingDir
 {
-    public interface IUseCsProjFile : IUseWorkingDir
-    {
-        string CsProj { get; set; }
-        string FullPath { get; }
-        string LaunchSettingsJsonPath { get; }
-    }
+    string CsProj { get; set; }
+    string FullPath { get; }
+    string LaunchSettingsJsonPath { get; }
 }

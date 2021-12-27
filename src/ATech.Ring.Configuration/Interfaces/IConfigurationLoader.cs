@@ -1,7 +1,6 @@
-﻿namespace ATech.Ring.Configuration.Interfaces
+﻿namespace ATech.Ring.Configuration.Interfaces;
+
+public interface IConfigurationLoader
 {
-    public interface IConfigurationLoader
-    {
-        T Load<T>(string path);
-    }
+    T Load<T>(string path);
 }

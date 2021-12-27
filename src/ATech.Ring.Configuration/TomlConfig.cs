@@ -1,10 +1,9 @@
 ﻿using Nett;
 
-namespace ATech.Ring.Configuration
+namespace ATech.Ring.Configuration;
+
+public static class TomlConfig
 {
-    public static class TomlConfig
-    {
-        public static TomlSettings Settings { get; } = TomlSettings.Create(cfg =>
-            cfg.ConfigurePropertyMapping(p => p.UseTargetPropertySelector(x => x.IgnoreCase)));
-    }
+    public static TomlSettings Settings { get; } = TomlSettings.Create(cfg =>
+        cfg.ConfigurePropertyMapping(p => p.UseTargetPropertySelector(x => x.IgnoreCase)));
 }

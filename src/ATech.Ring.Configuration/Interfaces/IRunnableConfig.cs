@@ -1,7 +1,6 @@
-﻿namespace ATech.Ring.Configuration.Interfaces
+﻿namespace ATech.Ring.Configuration.Interfaces;
+
+public interface IRunnableConfig : IWorkspaceConfig
 {
-    public interface IRunnableConfig : IWorkspaceConfig
-    {
-        string FriendlyName { get; }
-    }
+    string FriendlyName { get; }
 }

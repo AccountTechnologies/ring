@@ -1,7 +1,6 @@
-﻿namespace ATech.Ring.Configuration.Interfaces
+﻿namespace ATech.Ring.Configuration.Interfaces;
+
+public interface IConfigurationTreeReader
 {
-    public interface IConfigurationTreeReader
-    {
-        WorkspaceConfig GetConfigTree(ConfiguratorPaths paths);
-    }
+    WorkspaceConfig GetConfigTree(ConfiguratorPaths paths);
 }

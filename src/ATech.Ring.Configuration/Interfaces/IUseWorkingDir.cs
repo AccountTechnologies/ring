@@ -1,7 +1,6 @@
-﻿namespace ATech.Ring.Configuration.Interfaces
+﻿namespace ATech.Ring.Configuration.Interfaces;
+
+public interface IUseWorkingDir
 {
-    public interface IUseWorkingDir
-    {
-        string WorkingDir { get; set; }
-    }
+    string WorkingDir { get; set; }
 }

@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
 
-namespace ATech.Ring.Configuration.Interfaces
+namespace ATech.Ring.Configuration.Interfaces;
+
+public interface IWorkspaceConfig
 {
-    public interface IWorkspaceConfig 
-    {
-        string Id { get; }
-        HashSet<string> DeclaredPaths { get; set; } 
-    }
+    string Id { get; }
+    HashSet<string> DeclaredPaths { get; set; }
 }
