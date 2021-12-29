@@ -1,5 +1,4 @@
-﻿
-namespace Ring.Test.Integration
+﻿namespace Ring.Test.Integration
 
 open Ring.Test.Integration.DotNet
 open Ring.Test.Integration.DotNet.Types

@@ -19,8 +19,15 @@ type WsClient(options: ClientOptions) =
   let cancellationToken =  options.CancelationToken |> Option.defaultValue CancellationToken.None
   let mutable listenTask = Task.CompletedTask
   let socket = lazy(task {
-      let s = new ClientWebSocket()
-      do! s.ConnectAsync(options.RingUrl, cancellationToken)
+      let mutable s = new ClientWebSocket()
+      use connectionTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(20))
+      while s.State <> WebSocketState.Open && not <| connectionTimeout.IsCancellationRequested do
+        try
+          do! s.ConnectAsync(options.RingUrl, cancellationToken)
+        with
+         | :? WebSocketException as ex ->
+          s <- new ClientWebSocket()
+          do! Task.Delay (TimeSpan.FromSeconds(1))
 
       listenTask <- s.ListenAsync(Func<Message,CancellationToken, Task>(
       fun m t ->

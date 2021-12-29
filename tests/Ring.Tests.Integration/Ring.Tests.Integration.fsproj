@@ -28,5 +28,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Ring.Client\Ring.Client.fsproj" />
   </ItemGroup>
+
+  <Target Name="PackRingOnLocalBuild" AfterTargets="Build" Condition="$(TF_BUILD) == ''">
+    <Exec Command="dotnet pack ../../src/ATech.Ring.DotNet.Cli -c Release -p:VersionPrefix=0.0.0-dev" />
+  </Target>
   
 </Project>
