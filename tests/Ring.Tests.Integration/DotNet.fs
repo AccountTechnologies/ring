@@ -1,24 +1,26 @@
-﻿namespace Ring.Test.Integration.Install
+﻿namespace Ring.Test.Integration.DotNet
 
 open Fake.Core
 
-type Options = {
-  NuGetName: string
-  NuGetSourcePath: string
-  NuGetConfigPath: string
-  SrcPath: string
-  PackageVersion: string
-  LocalTool: LocalTool option
-  WorkingDir: string
-}
-and LocalTool = {
-  InstallPath: string
-  ManifestFilePath: string
-}
+module Types =
 
+  type Options = {
+    NuGetName: string
+    NuGetSourcePath: string
+    NuGetConfigPath: string
+    SrcPath: string
+    PackageVersion: string
+    LocalTool: LocalTool option
+    WorkingDir: string
+  }
+  and LocalTool = {
+    InstallPath: string
+    ManifestFilePath: string
+  }
 
 module Dotnet =
-
+  open Types
+  
   let createProc name workingDir args =
     RawCommand(name,
     Arguments.OfArgs args)
@@ -26,10 +28,8 @@ module Dotnet =
     |> CreateProcess.withWorkingDirectory workingDir
     |> CreateProcess.ensureExitCode
 
-  let dotnet workingDir args =
-    task {
-      return! (createProc "dotnet" workingDir args |> Proc.start)
-    }
+  let proc name workingDir args =
+    createProc name workingDir args |> Proc.start
 
   let procWithResult name workingDir args =
     task {
@@ -41,7 +41,7 @@ module Dotnet =
     }
 
   let newToolManifest (workingDir:string) = task {
-    return! (dotnet workingDir [ "new"; "tool-manifest"])
+    return! (proc "dotnet" workingDir [ "new"; "tool-manifest"])
    }
 
   let installTool (tool:Options) = task {
@@ -53,7 +53,7 @@ module Dotnet =
       ()
 
     return!
-      dotnet tool.WorkingDir [
+      proc "dotnet" tool.WorkingDir [
         "tool"; "install"; tool.NuGetName
         "--version"; tool.PackageVersion
         "--add-source"; tool.NuGetSourcePath
@@ -70,7 +70,7 @@ module Dotnet =
   let uninstallTool (tool:Options) = task {
 
     return!
-      dotnet tool.WorkingDir [
+      proc "dotnet" tool.WorkingDir [
         "tool"; "uninstall"; tool.NuGetName
         match tool.LocalTool with
         | None _ ->
@@ -80,24 +80,3 @@ module Dotnet =
           manifest.ManifestFilePath
       ]
   }
-
-module Tool =
-
-  type Ring(options: Options) =
-    let exec (args:string list) =
-      match options.LocalTool with
-      | None -> Dotnet.procWithResult "ring" options.WorkingDir args
-      | Some _ -> Dotnet.procWithResult "dotnet" options.WorkingDir ("ring"::args)
-    member _.Install() = task {
-      let! _ = Dotnet.installTool options
-      ()
-    }
-    member _.Uninstall() = task {
-      let! _ = Dotnet.uninstallTool options
-      ()
-    }
-    member _.Options = options
-    member _.ShowConfig() =
-      task {
-        return! exec ["show-config"]
-      }

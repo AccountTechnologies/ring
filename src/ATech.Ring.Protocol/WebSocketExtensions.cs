@@ -23,7 +23,7 @@ namespace ATech.Ring.Protocol
             await s.SendAsync(m.AsSegment(), WebSocketMessageType.Binary, true, token).ConfigureAwait(false);
         }
 
-        public static async Task ListenAsync(this WebSocket webSocket, ServerHandler onReceived, CancellationToken token)
+        public static async Task ListenAsync(this WebSocket webSocket, Func<Message, CancellationToken, Task> onReceived, CancellationToken token)
         {
             WebSocketReceiveResult result;
             do
@@ -42,7 +42,5 @@ namespace ATech.Ring.Protocol
 
             } while (!result.CloseStatus.HasValue && !token.IsCancellationRequested);
         }
-
-        public delegate Task ServerHandler(Message message, CancellationToken token);
     }
 }

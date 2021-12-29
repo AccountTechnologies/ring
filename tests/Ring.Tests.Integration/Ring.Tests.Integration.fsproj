@@ -8,7 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Install.fs" />
+    <Compile Include="DotNet.fs" />
+    <Compile Include="RingControl.fs" />
+    <Compile Include="TestContext.fs" />
     <Compile Include="Tests.fs" />
     <Compile Include="Main.fs" />
   </ItemGroup>
@@ -17,8 +19,14 @@
     <PackageReference Include="Expecto" Version="9.*" />
     <PackageReference Include="Fake.Core.Environment" Version="5.20.4" />
     <PackageReference Include="Fake.Core.Process" Version="5.20.4" />
+    <PackageReference Include="FSharp.Control.Reactive" Version="5.0.2" />
     <PackageReference Include="YoloDev.Expecto.TestSdk" Version="0.*" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
     <PackageReference Update="FSharp.Core" Version="6.*" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ring.Client\Ring.Client.fsproj" />
+  </ItemGroup>
+  
 </Project>

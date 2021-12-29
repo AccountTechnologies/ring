@@ -14,8 +14,8 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
         private readonly ILogger<WebsocketsHandler> _logger;
         public Task<WebSocket> Ws { get; }
         private Task _backgroundAwaiter = Task.CompletedTask;
-        private readonly CancellationTokenSource _localCts = new CancellationTokenSource();
-        private ConcurrentQueue<Task<Ack>> _taskQueue = new ConcurrentQueue<Task<Ack>>();
+        private readonly CancellationTokenSource _localCts = new();
+        private ConcurrentQueue<Task<Ack>> _taskQueue = new();
         public WsClient(ILogger<WebsocketsHandler> logger, Task<WebSocket> ws)
         {
             _logger = logger;
