@@ -9,6 +9,7 @@ type Options = {
   SrcPath: string
   PackageVersion: string
   LocalTool: LocalTool option
+  WorkingDir: string
 }
 and LocalTool = {
   InstallPath: string
@@ -18,30 +19,30 @@ and LocalTool = {
 
 module Dotnet =
 
-  let createProc name args =
+  let createProc name workingDir args =
     RawCommand(name,
     Arguments.OfArgs args)
     |> CreateProcess.fromCommand
+    |> CreateProcess.withWorkingDirectory workingDir
     |> CreateProcess.ensureExitCode
 
-  let dotnet args =
+  let dotnet workingDir args =
     task {
-      return! (createProc "dotnet" args |> Proc.start)
+      return! (createProc "dotnet" workingDir args |> Proc.start)
     }
 
-  let procWithResult name args =
+  let procWithResult name workingDir args =
     task {
       let! result =
-        createProc name args
+        createProc name workingDir args
         |> CreateProcess.redirectOutput
         |> Proc.start
       return result.Result.Output.TrimEnd()
     }
 
-  let newToolManifest (outDir:string) =
-    dotnet [
-      "new"; "tool-manifest"; "--output"; outDir
-    ]
+  let newToolManifest (workingDir:string) = task {
+    return! (dotnet workingDir [ "new"; "tool-manifest"])
+   }
 
   let installTool (tool:Options) = task {
 
@@ -52,7 +53,7 @@ module Dotnet =
       ()
 
     return!
-      dotnet [
+      dotnet tool.WorkingDir [
         "tool"; "install"; tool.NuGetName
         "--version"; tool.PackageVersion
         "--add-source"; tool.NuGetSourcePath
@@ -69,7 +70,7 @@ module Dotnet =
   let uninstallTool (tool:Options) = task {
 
     return!
-      dotnet [
+      dotnet tool.WorkingDir [
         "tool"; "uninstall"; tool.NuGetName
         match tool.LocalTool with
         | None _ ->
@@ -85,8 +86,8 @@ module Tool =
   type Ring(options: Options) =
     let exec (args:string list) =
       match options.LocalTool with
-      | None -> Dotnet.procWithResult "ring" args
-      | Some _ -> Dotnet.procWithResult "dotnet" ("ring"::args)
+      | None -> Dotnet.procWithResult "ring" options.WorkingDir args
+      | Some _ -> Dotnet.procWithResult "dotnet" options.WorkingDir ("ring"::args)
     member _.Install() = task {
       let! _ = Dotnet.installTool options
       ()

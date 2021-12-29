@@ -8,25 +8,26 @@ open System.IO
 open System
 open System.Threading.Tasks
 
-let ciBuild = not <| BuildServer.isLocalBuild
-let srcPath = Environment.environVarOrDefault "SRC_PATH" "src/ATech.Ring.DotNet.Cli"
 let env name = Environment.environVar name
 
 type TestDir() =
-  let origDir = Directory.GetCurrentDirectory ()
+  let origDir = 
+    let cwd = Directory.GetCurrentDirectory()
+    // ugly hack for https://github.com/microsoft/vstest/issues/2004
+    if Path.Combine(cwd, "../resources/NuGet.config") |> Path.GetFullPath |> File.Exists then cwd
+    else $"{cwd}/../../../" |> Path.GetFullPath
+
   let dir =
     let d = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()) |> Directory.CreateDirectory
-    Directory.SetCurrentDirectory d.FullName
     d
   member _.WorkPath = dir.FullName
   member _.InSourceDir (path) = Path.Combine(origDir, path) |> Path.GetFullPath
   interface IDisposable with
     member _.Dispose(): unit =
-      Directory.SetCurrentDirectory origDir
       dir.Delete(true)
 
 let localOptions (dir:TestDir) = {
-  SrcPath = srcPath
+  SrcPath = Environment.environVarOrDefault "SRC_PATH" "src/ATech.Ring.DotNet.Cli"
   PackageVersion = Environment.environVarOrDefault "PKGVER" "0.0.0-dev"
   NuGetSourcePath = Environment.environVarOrDefault "BUILD_ARTIFACTSTAGINGDIRECTORY" (dir.InSourceDir "../../src/ATech.Ring.DotNet.Cli/bin/Release")
   NuGetName = "atech.ring.dotnet.cli"
@@ -35,6 +36,7 @@ let localOptions (dir:TestDir) = {
     InstallPath = dir.WorkPath
     ManifestFilePath = ".config/dotnet-tools.json"
   }
+  WorkingDir = dir.WorkPath
 }
 
 let globalOptions (dir:TestDir) = { localOptions dir with LocalTool = None}
@@ -50,7 +52,7 @@ let withContext (opts: TestDir -> Options) (func: Tool.Ring -> TestDir -> Task<'
   }
 
 let asLocalTool func = withContext localOptions func
-let asGlobalTool func = withContext globalOptions  func
+let asGlobalTool func = withContext globalOptions func
 
 [<Tests>]
 let tests =
@@ -80,6 +82,5 @@ let globalTests =
         else $"""{env "HOME"}/.dotnet/tools/.store/atech.ring.dotnet.cli/{pkgVer}/atech.ring.dotnet.cli/{pkgVer}/tools/net6.0/any/appsettings.json"""
 
       "Config path should be correct" |> Expect.equal acutalPath expectedPath
-
     }
   ]
