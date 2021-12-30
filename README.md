@@ -1,7 +1,7 @@
 # Ring [![Build Status](https://dev.azure.com/AccountTechnologies/Ring/_apis/build/status/AccountTechnologies.ring?branchName=master)](https://dev.azure.com/AccountTechnologies/Ring/_build/latest?definitionId=2&branchName=master) [![NuGet Badge](https://buildstats.info/nuget/ATech.Ring.Dotnet.Cli?includePreReleases=true)](https://www.nuget.org/packages/ATech.Ring.Dotnet.Cli)
 
 
-Service launcher and monitor
+Process launcher and monitor
 
 Ring brings order into the messy world of developing and debugging a cloud-ready microservice system side by side with maintaining and migrating legacy ones where you may have many different types of services (ASP.NET Core, Topshelf, WCF, ...) hosted in many different ways (Kubernetes, Docker, IIS Express, WindowsService, Exe) and scattered across many solutions and repositories. 
 
@@ -9,18 +9,18 @@ Ring brings order into the messy world of developing and debugging a cloud-ready
 
 Ring consists of the following part:
 
-* Service launcher and monitor (a global dotnet tool)
-* [Visual Studio Extension](https://marketplace.visualstudio.com/items?itemName=account-technologies.ring-vsix) (2017, 2019)
-* [Visual Studio Code Extension](https://marketplace.visualstudio.com/items?itemName=account-technologies.ring-vscode) (early preview)
+* process launcher and monitor (a dotnet CLI tool)
+* [Visual Studio Extension](https://marketplace.visualstudio.com/items?itemName=account-technologies.ring-vsix) (2022, also versions pre 4.0 support 2017, and 2019)
+* [Visual Studio Code Extension](https://marketplace.visualstudio.com/items?itemName=account-technologies.ring-vscode) (WIP)
 
 # How it works
 
-Ring groups *runnables* (mostly services but not only) into *workspaces*. Workspaces are defined in [TOML](https://github.com/toml-lang/toml) files. Workspaces are composed from runnables and other workspaces. A workspace can be loaded and started. Ring periodically runs a health check for every runnable, tries restarting the unhealthy ones, and reports the dead ones. Ring also exposes a web socket interface. Visual Studio extensions use it mainly for visualizing workspace/runnables states, turning services off/on for build/debugging if they're a part of the currently loaded project/solution.
+Ring groups *runnables* (processes/services) into *workspaces*. Workspaces are defined in [TOML](https://github.com/toml-lang/toml) files. Workspaces are composed from runnables and other workspaces. A workspace can be loaded and started. Ring periodically runs a health check for every runnable, tries restarting the unhealthy ones, and reports the dead ones. Ring also exposes a web socket interface. Visual Studio extensions use it mainly for visualizing workspace/runnables states, turning services off/on for build/debugging if they're a part of the currently loaded project/solution.
 
 # Basic facts
 
-* There is only one Ring instance on your dev machine running at a time 
-* There can be multiple clients (VS/VS Code extensions) interacting with Ring at a time although mostly you'd have just one
+* You can run multiple instances of ring (serving different independent workspaces) 
+* There can be multiple clients (VS/VS Code extensions) interacting with a Ring instance at a time although mostly you'd have just one
 * Ring is meant to keep your workspace running even if you quit Visual Studio
 * You can also run Ring in a stand-alone mode which just keeps your workspace running
 * Ring exposes a web socket interface on port 7999
