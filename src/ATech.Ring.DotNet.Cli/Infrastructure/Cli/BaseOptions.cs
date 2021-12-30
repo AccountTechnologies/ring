@@ -1,16 +1,15 @@
-﻿using CommandLine;
+﻿namespace ATech.Ring.DotNet.Cli.Infrastructure.Cli;
 
-namespace ATech.Ring.DotNet.Cli.Infrastructure.Cli
+using CommandLine;
+
+public class BaseOptions
 {
-    public class BaseOptions
-    {
-        [Option('p', "port", Required = false, HelpText = "Specify sever port (defaults to 7999)")]
-        public int Port { get; set; } = 7999;
+    [Option('p', "port", Required = false, HelpText = "Specify sever port (defaults to 7999)")]
+    public int Port { get; set; } = 7999;
 
-        [Option('d', "debug", Required = false, HelpText = "Runs debug mode")]
-        public bool IsDebug { get; set; }
+    [Option('d', "debug", Required = false, HelpText = "Runs debug mode")]
+    public bool IsDebug { get; set; }
 
-        [Option('n', "no-logo", Required = false, HelpText = "Hides the startup logo")]
-        public bool NoLogo { get; set; }
-    }
+    [Option('n', "no-logo", Required = false, HelpText = "Hides the startup logo")]
+    public bool NoLogo { get; set; }
 }

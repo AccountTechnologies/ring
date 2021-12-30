@@ -44,7 +44,7 @@ namespace ATech.Ring.DotNet.Cli.Runnables.Dotnet
 
             if (!result.IsSuccess)
             {
-                _logger.LogInformation($"Build failed | {result.Output}");
+                _logger.LogInformation("Build failed | {output}", result.Output);
             }
             return ctx;
         }
