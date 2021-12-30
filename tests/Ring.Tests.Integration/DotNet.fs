@@ -22,6 +22,7 @@ module Dotnet =
   open Types
   
   let createProc name workingDir args =
+    Process.setEnableProcessTracing true
     RawCommand(name,
     Arguments.OfArgs args)
     |> CreateProcess.fromCommand
@@ -58,6 +59,7 @@ module Dotnet =
         "--version"; tool.PackageVersion
         "--add-source"; tool.NuGetSourcePath
         "--configfile"; tool.NuGetConfigPath
+        "--no-cache"
         match tool.LocalTool with
         | None _ ->
           "--global"

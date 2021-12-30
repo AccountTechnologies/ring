@@ -7,6 +7,7 @@ open Ring.Test.Integration.RingControl
 open ATech.Ring.Protocol.Events
 open System
 open Ring.Test.Integration.TestContext
+open System.IO
 
 let env name = Environment.environVar name
 
@@ -30,7 +31,7 @@ let tests =
   testList "Smoke tests" [
     testTask "show-config -- global" {
       use ctx = new TestContext(globalOptions)
-      let! (ring : Ring, _) = ctx.Start()
+      let! (ring : Ring, _) = ctx.Init()
       let pkgVer = ring.Options.PackageVersion
       let! actualPath = ring.ShowConfig()
       let expectedPath =
@@ -42,7 +43,7 @@ let tests =
 
     testTask "show-config -- local" {
       use ctx = new TestContext(localOptions)
-      let! (ring : Ring, _) = ctx.Start()
+      let! (ring : Ring, _) = ctx.Init()
       let pkgVer = ring.Options.PackageVersion
       let! actualPath = ring.ShowConfig()
       let expectedPath =
@@ -55,13 +56,32 @@ let tests =
 
     testTask "run basic workspace in headless mode" {
       use ctx = new TestContext(localOptions)
-      let! (ring : Ring, dir: TestDir) = ctx.Start()
-
+      let! (ring : Ring, dir: TestDir) = ctx.Init()
+      ring.Headless()
+      do! ring.Client.Connect()
       do! ring.Client.LoadWorkspace (dir.InSourceDir "../resources/basic/netcore.toml")
       do! ring.Client.StartWorkspace()
       let runnableId = "k8s-debug-poc"
       let timeout = TimeSpan.FromSeconds(60)
       let event = ring.Client.WaitUntil<RunnableHealthy>(suchAs = (fun x -> x.UniqueId = runnableId), timeout = timeout)
       $"Should receive RunnableHealthy for k8s-debug-poc (within {timeout})" |> Expect.isSome event
+    }
+
+    testTask "discover and run default workspace config if exists" {
+      use ctx = new TestContext(localOptions)
+      let! (ring : Ring, dir: TestDir) = ctx.Init()
+
+      File.WriteAllLines(dir.WorkPath + "/ring.toml", [
+        "[[aspnetcore]]"
+        $"""csproj = '{dir.InSourceDir "../resources/apps/aspnetcore/aspnetcore.csproj"}' """
+      ])
+
+      let runnableId = "aspnetcore"
+      let timeout = TimeSpan.FromSeconds(60)
+
+      ring.Run()
+      do! ring.Client.Connect()
+      let event = ring.Client.WaitUntil<RunnableHealthy>(suchAs = (fun x -> x.UniqueId = runnableId), timeout = timeout)
+      $"Should receive RunnableHealthy for {runnableId} (within {timeout})" |> Expect.isSome event
     }
   ]
