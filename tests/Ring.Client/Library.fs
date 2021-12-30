@@ -56,9 +56,16 @@ type WsClient(options: ClientOptions) =
     do! s.SendMessageAsync(Message.From M.TERMINATE, cancellationToken)
   }
 
+  member _.Connect() = task {
+    let! _ = socket.Value
+    ()
+  }
+  member _.IsConnected = socket.IsValueCreated
+
   member x.WaitUntil<'a when 'a :> IRingEvent>(?suchAs: 'a -> bool, ?timeout: TimeSpan) =
     try
       x.Event
+      |> Observable.iter (fun x -> printfn "%A" x.Type)
       |> Observable.firstIf (fun x -> x.GetType() = typeof<'a>)
       |> Observable.map (fun x -> x :?> 'a) 
       |> Observable.timeout (DateTimeOffset.Now.Add(defaultArg timeout (TimeSpan.FromSeconds(10))))

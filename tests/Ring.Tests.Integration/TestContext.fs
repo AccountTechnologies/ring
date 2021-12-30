@@ -27,11 +27,10 @@ module TestContext =
   type TestContext(opts: TestDir -> Options) =
     let dir = new TestDir()
     let ring = Ring(dir |> opts)
-    let mutable ringTask = Task.CompletedTask
-    member _.Start() =
+
+    member _.Init() =
       task {
           do! ring.Install()
-          ringTask <- ring.Headless()
           return ring, dir
       }
     
@@ -40,9 +39,8 @@ module TestContext =
         ValueTask (
             task {
                 do! (ring :> IAsyncDisposable).DisposeAsync()
-                do! ringTask
                 do! ring.Uninstall()
-                (dir :> IDisposable).Dispose()        
+                (dir :> IDisposable).Dispose()
             }
             )
     interface IDisposable with

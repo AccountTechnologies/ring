@@ -1,5 +1,9 @@
 # Release notes
 
+## 3.1.0
+
+* feat: enable detection of a default workspace file in cwd (#20)
+
 ## 3.0.1
 
 * fix: enable ring to run as a local tool

@@ -163,6 +163,11 @@ try
 
     await app.RunRingAsync();
 }
+catch (FileNotFoundException x) when (x.FileName == CliParser.DefaultFileName)
+{
+    Console.WriteLine($"ERROR: {x.Message}");
+    Environment.ExitCode = 1;
+}
 catch (Exception ex)
 {
     Log.Logger.Fatal($"Unhandled exception: {ex}");

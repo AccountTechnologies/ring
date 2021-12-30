@@ -79,13 +79,14 @@ namespace ATech.Ring.DotNet.Cli.Infrastructure
 
         public Task<Ack> ConnectAsync(CancellationToken token)
         {
-            _sender.Enqueue(_fsm.State switch
+            IRingEvent? maybeEvent = _fsm.State switch
             {
                 S.Idle => new ServerIdle(),
                 S.Loaded => new ServerLoaded { WorkspacePath = _launcher.WorkspacePath },
                 S.Running => new ServerRunning { WorkspacePath = _launcher.WorkspacePath },
                 _ => default
-            });
+            };
+            if (maybeEvent is IRingEvent e) _sender.Enqueue(e);
             return Task.FromResult(Ack.Ok);
         }
 

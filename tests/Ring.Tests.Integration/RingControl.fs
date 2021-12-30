@@ -11,10 +11,10 @@ module RingControl =
 
   type Ring(options: Options) =
     let cts = new CancellationTokenSource()
-    static let mutable portSequence : int = 7998
-    static let nextPort () = Interlocked.Increment(&portSequence)
-    let port = (nextPort ())
-    
+    static let mutable portSequence = 7998
+    let port = Interlocked.Increment(&portSequence)
+    let mutable ringTask : Task option = None
+
     let execCore dotnetFunc (args:string list) =
       match options.LocalTool with
       | None -> dotnetFunc "ring" options.WorkingDir args
@@ -41,16 +41,31 @@ module RingControl =
         return! execResult ["show-config"]
       }
     member _.Headless() =
-      task {
-        let! _ = exec ["headless"; "--no-logo"; "--port"; port |> string] 
-        ()
-      }
+      match ringTask with
+      | Some _ -> failwith "Ring is already running"
+      | None -> ringTask <- Some (exec ["headless"; "--no-logo"; "--port"; port |> string ])
+
+    member _.Run(?workspacePath:string, ?debugMode: bool) =
+      match ringTask with
+      | Some _ -> failwith "Ring is already running"
+      | None -> 
+        ringTask <-
+          let args =
+            ["--no-logo"; "--port"; (port |> string)]
+            |> Option.foldBack (fun debugMode args -> if debugMode then "--debug"::args else args) debugMode
+            |> Option.foldBack (fun path args -> "-w"::path::args) workspacePath
+
+          Some (exec ("run"::args))
+
     member _.Client = client
     interface IAsyncDisposable with
       member _.DisposeAsync(): ValueTask = ValueTask(
         task {
-            do! client.Terminate()
+            if client.IsConnected then do! client.Terminate()
             do! (client :> IAsyncDisposable).DisposeAsync()
             cts.Dispose()
+            match ringTask with
+            | None -> ()
+            | Some t -> do! t
         }
       )
