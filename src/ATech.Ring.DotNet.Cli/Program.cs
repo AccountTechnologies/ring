@@ -85,8 +85,9 @@ try
         var kubeConfigPath = f.GetRequiredService<Wsl>().ResolveToWindows("~/.kube/config").GetAwaiter().GetResult();
         return new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeConfigPath));
     });
-    builder.Services.AddHostedService<ConsoleClient>();
+
     builder.Services.AddHostedService<WebsocketsInitializer>();
+    builder.Services.AddHostedService<ConsoleClient>();
 
     static IEnumerable<TypeInfo> GetAllTypesOf<T, TAssembly>()
      => from t in typeof(TAssembly).Assembly.DefinedTypes
