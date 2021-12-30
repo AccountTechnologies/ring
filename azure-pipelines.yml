@@ -44,6 +44,13 @@ steps:
     verbosityPack: 'Normal'
   condition: succeeded()
 
+- task: InstallSSHKey@0
+  displayName: 'Install k8s-debug-poc repo deploy key'
+  inputs:
+    knownHostsEntry: 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl'
+    sshPublicKey: '$(ringPubKey)'
+    sshKeySecureFile: 'ring.key'
+
 - task: DotNetCoreCLI@2
   displayName: 'Test'
   inputs:
