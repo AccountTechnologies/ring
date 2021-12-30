@@ -30,7 +30,7 @@ let tests =
   testList "Smoke tests" [
     testTask "show-config -- global" {
       use ctx = new TestContext(globalOptions)
-      let! (ring : Ring, dir: TestDir) = ctx.Start()
+      let! (ring : Ring, _) = ctx.Start()
       let pkgVer = ring.Options.PackageVersion
       let! actualPath = ring.ShowConfig()
       let expectedPath =
@@ -42,7 +42,7 @@ let tests =
 
     testTask "show-config -- local" {
       use ctx = new TestContext(localOptions)
-      let! (ring : Ring, dir: TestDir) = ctx.Start()
+      let! (ring : Ring, _) = ctx.Start()
       let pkgVer = ring.Options.PackageVersion
       let! actualPath = ring.ShowConfig()
       let expectedPath =
@@ -59,7 +59,9 @@ let tests =
 
       do! ring.Client.LoadWorkspace (dir.InSourceDir "../resources/basic/netcore.toml")
       do! ring.Client.StartWorkspace()
-      let event = ring.Client.WaitUntil<RunnableHealthy>(suchAs = (fun x -> x.UniqueId = "k8s-debug-poc"), timeout = TimeSpan.FromSeconds(10))
-      "Runnable k8s-debug-poc should be healthy within 10 seconds" |> Expect.isSome event
+      let runnableId = "k8s-debug-poc"
+      let timeout = TimeSpan.FromSeconds(60)
+      let event = ring.Client.WaitUntil<RunnableHealthy>(suchAs = (fun x -> x.UniqueId = runnableId), timeout = timeout)
+      $"Should receive RunnableHealthy for k8s-debug-poc (within {timeout})" |> Expect.isSome event
     }
   ]
