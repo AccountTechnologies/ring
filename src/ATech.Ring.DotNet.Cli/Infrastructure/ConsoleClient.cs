@@ -6,10 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Infrastructure.Cli;
 using ATech.Ring.Protocol;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-public class ConsoleClient : IHostedService
+public class ConsoleClient
 {
     private readonly ILogger<ConsoleClient> _logger;
     private readonly BaseOptions _options;

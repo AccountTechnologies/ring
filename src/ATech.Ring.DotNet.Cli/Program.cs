@@ -87,7 +87,7 @@ try
     });
 
     builder.Services.AddHostedService<WebsocketsInitializer>();
-    builder.Services.AddHostedService<ConsoleClient>();
+    builder.Services.AddSingleton<ConsoleClient>();
 
     static IEnumerable<TypeInfo> GetAllTypesOf<T, TAssembly>()
      => from t in typeof(TAssembly).Assembly.DefinedTypes
@@ -161,6 +161,14 @@ try
 
     app.UseWebSockets();
     app.UseMiddleware<RingMiddleware>();
+
+    app.Lifetime.ApplicationStarted.Register(async () =>
+        await app.Services.GetRequiredService<ConsoleClient>().StartAsync(app.Lifetime.ApplicationStopping)
+    );
+
+    app.Lifetime.ApplicationStopping.Register(async () =>
+        await app.Services.GetRequiredService<ConsoleClient>().StopAsync(app.Lifetime.ApplicationStopped)
+    );
 
     await app.RunRingAsync();
 }
