@@ -66,6 +66,7 @@ type WsClient(options: ClientOptions) =
       |> Observable.wait
       |> Some
     with
+     | :? TimeoutException -> None
      | :? InvalidOperationException as x when x.Message = "Sequence contains no elements." ->
        None
 
