@@ -1,8 +1,12 @@
 # Release notes
 
+## 3.0.1
+
+* fix: enable ring to run as a local tool
+
 ## 3.0.0
 
-Migrate to .NET 6
+* Migrate to .NET 6
 
 ## 2.5.1
 
