@@ -10,8 +10,8 @@ using ATech.Ring.Configuration.Interfaces;
 using ATech.Ring.DotNet.Cli.Abstractions;
 using ATech.Ring.DotNet.Cli.Dtos;
 using ATech.Ring.DotNet.Cli.Logging;
-using ATech.Ring.Protocol;
-using ATech.Ring.Protocol.Events;
+using ATech.Ring.Protocol.v2;
+using ATech.Ring.Protocol.v2.Events;
 using Microsoft.Extensions.Logging;
 
 namespace ATech.Ring.DotNet.Cli.Workspace
@@ -28,7 +28,7 @@ namespace ATech.Ring.DotNet.Cli.Workspace
         private Task? _stopTask;
         private Task? _initHookTask;
         private CancellationTokenSource _cts = new();
-        private WorkspaceInfo CurrentInfo { get; set; }
+        private WorkspaceInfo CurrentInfo { get; set; } = WorkspaceInfo.Empty;
         private WorkspaceState CurrentStatus { get; set; }
         private int _initCounter;
         private readonly Random _rnd = new();
@@ -216,7 +216,7 @@ namespace ATech.Ring.DotNet.Cli.Workspace
             var info = Create(state, serverState);
             if (!force && info.Equals(CurrentInfo)) return;
             CurrentInfo = info;
-            _sender.Enqueue(new WorkspaceInfoPub { WorkspaceInfoJson = CurrentInfo });
+            _sender.Enqueue(new WorkspaceInfoPub(CurrentInfo));
         }
 
         public void Dispose() => _cts?.Dispose();

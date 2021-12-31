@@ -4,7 +4,7 @@ open Expecto
 open Fake.Core
 open Ring.Test.Integration.DotNet.Types
 open Ring.Test.Integration.RingControl
-open ATech.Ring.Protocol.Events
+open ATech.Ring.Protocol.v2.Events
 open System
 open Ring.Test.Integration.TestContext
 open System.IO
@@ -78,10 +78,11 @@ let tests =
 
       let runnableId = "aspnetcore"
       let timeout = TimeSpan.FromSeconds(60)
-
-      ring.Run()
-      do! ring.Client.Connect()
+      let task = ring.Client.Connect()
+      ring.Run(debugMode=true)
       let event = ring.Client.WaitUntil<RunnableHealthy>(suchAs = (fun x -> x.UniqueId = runnableId), timeout = timeout)
+      do! task
+    
       $"Should receive RunnableHealthy for {runnableId} (within {timeout})" |> Expect.isSome event
     }
   ]

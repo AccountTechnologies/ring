@@ -7,8 +7,8 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Logging;
-using ATech.Ring.Protocol;
-using ATech.Ring.Protocol.Events;
+using ATech.Ring.Protocol.v2;
+using ATech.Ring.Protocol.v2.Events;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -111,19 +111,24 @@ public class WebsocketsHandler
 
     private async Task<Ack> Dispatch(Message m, CancellationToken token)
     {
-        return m switch
+        Task<Ack> Dispatch()
         {
-            (M.LOAD, var path) => await _server.LoadAsync(path, token),
-            (M.UNLOAD, _) => await _server.UnloadAsync(token),
-            (M.TERMINATE, _) => await _server.TerminateAsync(token),
-            (M.START, _) => await _server.StartAsync(token),
-            (M.STOP, _) => await _server.StopAsync(token),
-            (M.RUNNABLE_INCLUDE, var runnableId) => await _server.IncludeAsync(runnableId, token),
-            (M.RUNNABLE_EXCLUDE, var runnableId) => await _server.ExcludeAsync(runnableId, token),
-            (M.WORKSPACE_INFO_RQ, _) => _server.RequestWorkspaceInfo(),
-            (M.PING, _) => Ack.Alive,
-            _ => Ack.NotSupported
-        };
+            return m switch
+            {
+                (M.LOAD, var path) => _server.LoadAsync(path.AsUtf8String(), token),
+                (M.UNLOAD, _) => _server.UnloadAsync(token),
+                (M.TERMINATE, _) => _server.TerminateAsync(token),
+                (M.START, _) => _server.StartAsync(token),
+                (M.STOP, _) => _server.StopAsync(token),
+                (M.RUNNABLE_INCLUDE, var runnableId) => _server.IncludeAsync(runnableId.AsUtf8String(), token),
+                (M.RUNNABLE_EXCLUDE, var runnableId) => _server.ExcludeAsync(runnableId.AsUtf8String(), token),
+                (M.WORKSPACE_INFO_RQ, _) => Task.FromResult(_server.RequestWorkspaceInfo()),
+                (M.PING, _) => Task.FromResult(Ack.Alive),
+                _ => Task.FromResult(Ack.NotSupported)
+            };
+        }
+
+        return await Dispatch();
     }
 
     public WsClient GetOrAddAsync(Guid key, Func<Task<WebSocket>> create)

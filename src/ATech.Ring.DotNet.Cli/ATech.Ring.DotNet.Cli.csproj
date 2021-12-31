@@ -35,7 +35,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ATech.Ring.Configuration\ATech.Ring.Configuration.csproj" />
-    <ProjectReference Include="..\ATech.Ring.Protocol\ATech.Ring.Protocol.csproj" />
+    <ProjectReference Include="..\ATech.Ring.Protocol.v2\ATech.Ring.Protocol.v2.csproj" />
   </ItemGroup>
 
   <ItemGroup>
