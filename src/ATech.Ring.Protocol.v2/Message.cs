@@ -3,7 +3,6 @@
 using ATech.Ring.Protocol.v2.Events;
 using System;
 using System.Text;
-using System.Text.Json;
 
 public enum M : byte
 {
@@ -44,20 +43,31 @@ public interface IAsMessage
     M Type { get; }
 }
 
-public static class Eeee
+public static class ReadOnlySpanExtensions
 {
     public static string AsUtf8String(this ReadOnlySpan<byte> span) => Encoding.UTF8.GetString(span);
 }
 
-public class Message
+public ref struct Message
 {
-    private ReadOnlyMemory<byte> Bytes { get; }
+    public ReadOnlySpan<byte> Bytes { get; }
+    public M Type => (M)Bytes[0];
 
-    public Message(ReadOnlyMemory<byte> bytes) => Bytes = bytes;
+    public Message(ReadOnlySpan<byte> bytes) => Bytes = bytes;
+    public Message(M type, string value) : this(type, Encoding.UTF8.GetBytes(value)) { }
+    public Message(M type, byte value) : this(type, new byte[] {value}) { }
+    public Message(M type, ReadOnlySpan<byte> bytes)
+    {
+        byte[] newBytes = new byte[bytes.Length + 1];
+        newBytes[0] = (byte)type;
+        Array.Copy(bytes.ToArray(), 0, newBytes, 1, bytes.Length);
+        Bytes = newBytes;
+    }
+    public Message(M type) => Bytes = new byte[] { (byte)type };
 
     public void Deconstruct(out M type, out ReadOnlySpan<byte> payload)
     {
-        type = (M)Bytes.Span[0];
+        type = Type;
         payload = Bytes.Length == 1 ? ReadOnlySpan<byte>.Empty : SliceUntilNull(Bytes[1..]);
     }
 
@@ -68,29 +78,15 @@ public class Message
         return $"{type}{maybeColon}{payload.AsUtf8String()}";
     }
 
-    private static ReadOnlySpan<byte> SliceUntilNull(ReadOnlyMemory<byte> m)
+    private static ReadOnlySpan<byte> SliceUntilNull(ReadOnlySpan<byte> m)
     {
-        var nullChar = m.Span.IndexOf((byte)0);
-        return m[..(nullChar == -1 ? m.Length : nullChar)].Span;
+        var nullChar = m.IndexOf((byte)0);
+        return m[..(nullChar == -1 ? m.Length : nullChar)];
     }
 
-
-    public static implicit operator ReadOnlyMemory<byte>(Message m) => m.Bytes;
-    public static implicit operator Message(Memory<byte> bytes) => Create(bytes);
-
-    public static Message Empty = Memory<byte>.Empty;
-    public static Message From(M messageType) => Create(new[] { (byte)messageType }.AsMemory());
-    public static Message FromUtf8Bytes(M messageType, ReadOnlySpan<byte> utf8Bytes)
-    {
-        throw new NotImplementedException(nameof(FromUtf8Bytes));
-    }
-    public static Message FromString(M messageType, string payload)
-    {
-        var array = Encoding.UTF8.GetBytes(0 + payload);
-        array[0] = (byte)messageType;
-        return Create(array.AsMemory());
-    }
-    private static Message Create(ReadOnlyMemory<byte> bytes) => new(bytes);
+    public static implicit operator ReadOnlySpan<byte>(Message m) => m.Bytes;
+    public static implicit operator Message(ReadOnlySpan<byte> bytes) => new(bytes);
+    public static implicit operator Message(M type) => new(type);
 }
 
 public static class FromMessage
@@ -111,6 +107,6 @@ public static class FromMessage
         (M.SERVER_LOADED, var path) => new ServerLoaded { WorkspacePath = path.AsUtf8String() },
         (M.SERVER_RUNNING, var path) => new ServerRunning { WorkspacePath = path.AsUtf8String() },
         (M.DISCONNECTED, _) => new Disconnected(),
-        _ => throw new NotSupportedException($"Message: {m}")
+        _ => throw new NotSupportedException($"Message: {m.Type}")
     };
 }

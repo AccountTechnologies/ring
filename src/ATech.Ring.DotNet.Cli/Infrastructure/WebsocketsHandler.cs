@@ -42,7 +42,6 @@ public class WebsocketsHandler
                     try
                     {
                         var @event = await _queue.WaitForNextAsync(_appLifetime.ApplicationStopping);
-                        var m = @event.AsMessage();
 
                         foreach (var (id, client) in _clients.ToList())
                         {
@@ -55,8 +54,8 @@ public class WebsocketsHandler
                             try
                             {
                                 var (id, client) = x;
-                                if (_logger.IsEnabled(LogLevel.Debug)) _logger.LogDebug($"{m} > {id}");
-                                await (await client.Ws).SendMessageAsync(m, default);
+                                if (_logger.IsEnabled(LogLevel.Debug)) _logger.LogDebug($"{@event.AsMessage().ToString()} > {id}");
+                                await (await client.Ws).SendMessageAsync(@event.AsMessage(), default);
 
                             }
                             catch (WebSocketException wse)
@@ -109,9 +108,9 @@ public class WebsocketsHandler
         }
     }
 
-    private async Task<Ack> Dispatch(Message m, CancellationToken token)
+    private Task<Ack> Dispatch(Message m, CancellationToken token)
     {
-        Task<Ack> Dispatch()
+        Task<Ack> Dispatch(Message m)
         {
             return m switch
             {
@@ -128,7 +127,7 @@ public class WebsocketsHandler
             };
         }
 
-        return await Dispatch();
+        return Dispatch(m);
     }
 
     public WsClient GetOrAddAsync(Guid key, Func<Task<WebSocket>> create)

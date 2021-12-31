@@ -31,8 +31,8 @@ public class ConsoleClient
             try
             {
                 await _clientSocket.ConnectAsync(new Uri($"ws://localhost:{_options.Port}/ws?clientId={ClientId}"), token);
-                await _clientSocket.SendMessageAsync(Message.FromString(M.LOAD, consoleOpts.WorkspacePath), token);
-                await _clientSocket.SendMessageAsync(Message.From(M.START), token);
+                await _clientSocket.SendMessageAsync(new(M.LOAD, consoleOpts.WorkspacePath), token);
+                await _clientSocket.SendMessageAsync(M.START, token);
 
             }
             catch (Exception ex)
