@@ -2,8 +2,8 @@
 using System.Threading.Tasks;
 using System.Threading;
 using Microsoft.Extensions.Logging;
-using ATech.Ring.Protocol;
-using ATech.Ring.Protocol.Events;
+using ATech.Ring.Protocol.v2;
+using ATech.Ring.Protocol.v2.Events;
 using ATech.Ring.DotNet.Cli.Abstractions.Tools;
 
 namespace ATech.Ring.DotNet.Cli.Runnables.Proc

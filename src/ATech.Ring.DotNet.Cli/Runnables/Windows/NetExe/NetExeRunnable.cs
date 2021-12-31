@@ -4,8 +4,8 @@ using ATech.Ring.DotNet.Cli.CsProj;
 using ATech.Ring.DotNet.Cli.Dtos;
 using ATech.Ring.DotNet.Cli.Runnables;
 using ATech.Ring.DotNet.Cli.Tools;
-using ATech.Ring.Protocol;
-using ATech.Ring.Protocol.Events;
+using ATech.Ring.Protocol.v2;
+using ATech.Ring.Protocol.v2.Events;
 using Microsoft.Extensions.Logging;
 using NetExeConfig = ATech.Ring.Configuration.Runnables.NetExe;
 

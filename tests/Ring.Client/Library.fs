@@ -1,11 +1,11 @@
 ﻿namespace Ring.Client
 
-open ATech.Ring.Protocol
+open ATech.Ring.Protocol.v2
+open ATech.Ring.Protocol.v2.Events
 open System
 open System.Net.WebSockets
 open System.Threading
 open System.Threading.Tasks
-open ATech.Ring.Protocol.Events
 open FSharp.Control.Reactive
 
 type ClientOptions = {

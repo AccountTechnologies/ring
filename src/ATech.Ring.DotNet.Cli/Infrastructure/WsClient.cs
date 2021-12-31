@@ -6,7 +6,7 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Logging;
-using ATech.Ring.Protocol;
+using ATech.Ring.Protocol.v2;
 using Microsoft.Extensions.Logging;
 
 public sealed class WsClient : IAsyncDisposable
@@ -15,7 +15,7 @@ public sealed class WsClient : IAsyncDisposable
     public Task<WebSocket> Ws { get; }
     private Task _backgroundAwaiter = Task.CompletedTask;
     private readonly CancellationTokenSource _localCts = new();
-    private ConcurrentQueue<Task<Ack>> _taskQueue = new();
+    private readonly ConcurrentQueue<Task<Ack>> _taskQueue = new();
     public WsClient(ILogger<WebsocketsHandler> logger, Task<WebSocket> ws)
     {
         _logger = logger;
@@ -49,28 +49,36 @@ public sealed class WsClient : IAsyncDisposable
 
         await (await Ws).ListenAsync(async (message, token) =>
         {
-            try
+            Task<Ack>? AckIfCompleted(WebSocket ws)
             {
-                var (type, payload) = message;
-                using (_logger.WithProtocolScope(type))
+                try
                 {
-                    if (_logger.IsEnabled(LogLevel.Debug)) _logger.LogDebug("< {Payload}", payload);
+                    var (type, payload) = message;
+                    using (_logger.WithProtocolScope(type))
+                    {
+                        if (_logger.IsEnabled(LogLevel.Debug)) _logger.LogDebug("< {Payload}", payload.AsUtf8String());
 
-                    var backgroundTask = dispatch(message, token);
-                    if (backgroundTask.IsCompleted) await (await Ws).SendAckAsync(await backgroundTask, token);
-                    else _taskQueue.Enqueue(backgroundTask);
+                        var backgroundTask = dispatch(message, token);
+                        if (backgroundTask.IsCompleted) return backgroundTask;
+                        else _taskQueue.Enqueue(backgroundTask);
+                    }
                 }
+                catch (OperationCanceledException)
+                {
+                    _logger.LogInformation("Listener terminating");
+                    _taskQueue.Enqueue(Task.FromResult(Ack.Terminating));
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Server error");
+                    _taskQueue.Enqueue(Task.FromResult(Ack.ServerError));
+                }
+                return null;
             }
-            catch (OperationCanceledException)
-            {
-                _logger.LogInformation("Listener terminating");
-                _taskQueue.Enqueue(Task.FromResult(Ack.Terminating));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Server error");
-                _taskQueue.Enqueue(Task.FromResult(Ack.ServerError));
-            }
+
+            var ws = await Ws;
+            if (AckIfCompleted(ws) is Task<Ack> t) await ws.SendAckAsync(await t, token);
+
         }, aggregatedCts.Token);
     }
 
