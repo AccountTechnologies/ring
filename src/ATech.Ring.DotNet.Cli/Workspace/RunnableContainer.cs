@@ -8,35 +8,37 @@ namespace ATech.Ring.DotNet.Cli.Workspace
 {
     internal sealed class RunnableContainer : IDisposable
     {
-        private CancellationTokenSource _aggregateCts;
+        private readonly CancellationTokenSource _aggregateCts;
         private readonly CancellationTokenSource _cts = new();
-        private RunnableContainer() { }
         public IRunnable Runnable { get; private set; }
-        public Task Task { get; private set; }
+        public Task? Task { get; private set; }
 
-        private async Task InitialiseAsync(IRunnable runnable, TimeSpan delay, CancellationToken token)
+        private RunnableContainer(IRunnable runnable, CancellationToken token) 
         {
-            _aggregateCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token, token);
-            if (delay != TimeSpan.Zero) await Task.Delay(delay, _aggregateCts.Token);
             Runnable = runnable;
+            _aggregateCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token, token);
         }
 
-        public async Task CancelAsync()
+        private async Task InitialiseAsync(TimeSpan delay)
         {
-            _cts.Cancel();
-            await Task;
-            await Runnable.TerminateAsync();
+            if (delay != TimeSpan.Zero) await Task.Delay(delay, _aggregateCts.Token);
         }
 
         public static async Task<RunnableContainer> CreateAsync(IRunnableConfig cfg, Func<IRunnableConfig, IRunnable> factory, TimeSpan delay, CancellationToken token)
         {
-            var runnable = factory(cfg);
-            var container = new RunnableContainer();
-            await container.InitialiseAsync(runnable, delay, token);
+            var container = new RunnableContainer(factory(cfg), token);
+            await container.InitialiseAsync(delay);
             return container;
         }
         
         public void Start() => Task = Runnable.RunAsync(_aggregateCts.Token);
+
+        public async Task CancelAsync()
+        {
+            _cts.Cancel();
+            if (Task is Task t) await t;
+            if (Runnable is IRunnable r) await r.TerminateAsync();
+        }
 
         public void Dispose()
         {
