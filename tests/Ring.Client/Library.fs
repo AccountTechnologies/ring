@@ -29,12 +29,11 @@ type WsClient(options: ClientOptions) =
           s <- new ClientWebSocket()
           do! Task.Delay (TimeSpan.FromSeconds(1))
 
-      listenTask <- s.ListenAsync(Func<Message,CancellationToken, Task>(
+      listenTask <- s.ListenAsync(WebSocketExtensions.HandleMessage(
       fun m t ->
-        task {
-          onRingEvent.Trigger(m.AsEvent())
-        })      
-      , cancellationToken)
+        onRingEvent.Trigger(m.AsEvent())
+        Task.CompletedTask
+      ), cancellationToken)
       return s
     })
    
@@ -43,17 +42,17 @@ type WsClient(options: ClientOptions) =
   
   member _.LoadWorkspace(path: string) = task {
     let! s = socket.Value
-    do! s.SendMessageAsync(Message.FromString(M.LOAD, path))
+    do! s.SendMessageAsync(Message(M.LOAD, path))
   }
   
   member _.StartWorkspace() = task {
     let! s = socket.Value
-    do! s.SendMessageAsync(Message.From(M.START))
+    do! s.SendMessageAsync(M.START)
   }
 
   member _.Terminate() = task {
     let! s = socket.Value
-    do! s.SendMessageAsync(Message.From M.TERMINATE, cancellationToken)
+    do! s.SendMessageAsync(M.TERMINATE, cancellationToken)
   }
 
   member _.Connect() = task {

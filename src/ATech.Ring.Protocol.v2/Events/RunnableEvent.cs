@@ -7,7 +7,7 @@ public abstract class RunnableEvent : IRingEvent, IRunnableIds
 
     public string UniqueId { get; set; }
     public abstract M Type { get; }
-    public virtual Message AsMessage() => Message.FromString(Type, UniqueId);
+    public virtual Message AsMessage() => new(Type, UniqueId);
 }
 
 public class RunnableStarted : RunnableEvent
@@ -48,27 +48,27 @@ public class RunnableDestroyed : RunnableEvent
 public class ServerIdle : IRingEvent
 {
     public M Type => M.SERVER_IDLE;
-    public Message AsMessage() => Message.From(Type);
+    public Message AsMessage() => new(Type);
 }
 
 public class Disconnected : IRingEvent
 {
     public M Type => M.DISCONNECTED;
-    public Message AsMessage() => Message.From(Type);
+    public Message AsMessage() => new(Type);
 }
 
 public class ServerLoaded : IRingEvent
 {
     public string WorkspacePath { get; set; }
     public M Type => M.SERVER_LOADED;
-    public Message AsMessage() => Message.FromString(Type, WorkspacePath);
+    public Message AsMessage() => new(Type, WorkspacePath);
 }
 
 public class ServerRunning : IRingEvent
 {
     public string WorkspacePath { get; set; }
     public M Type => M.SERVER_RUNNING;
-    public Message AsMessage() => Message.FromString(Type, WorkspacePath);
+    public Message AsMessage() => new(Type, WorkspacePath);
 }
 
 public readonly struct AckEvent : IRingEvent
@@ -77,5 +77,5 @@ public readonly struct AckEvent : IRingEvent
     public AckEvent(Ack value) => Value = value;
     public Ack Value { get; }
     public M Type => M.ACK;
-    public Message AsMessage() => Message.FromString(Type, Value.ToString());
+    public Message AsMessage() => new(Type, (byte) Value);
 }

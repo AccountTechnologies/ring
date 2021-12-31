@@ -1,45 +1,57 @@
-﻿namespace ATech.Ring.Protocol.v2;
-
-using ATech.Ring.Protocol.v2.Events;
-using System;
+﻿using System;
+using System.Buffers;
 using System.Net.WebSockets;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
+namespace ATech.Ring.Protocol.v2;
 public static class WebSocketExtensions
 {
-    internal static ArraySegment<byte> AsSegment(this Message message)
-    {
-        MemoryMarshal.TryGetArray<byte>(message, out var segment);
-        return segment;
-    }
 
     public static async Task SendAckAsync(this WebSocket s, Ack status, CancellationToken token = default)
-        => await s.SendAsync(new AckEvent(status).AsMessage().AsSegment(), WebSocketMessageType.Binary, true, token).ConfigureAwait(false);
+        => await s.SendAsync(new byte[] { (byte)status }, WebSocketMessageType.Binary, true, token).ConfigureAwait(false);
 
-    public static async Task SendMessageAsync(this WebSocket s, Message m, CancellationToken token = default)
+    public static Task SendMessageAsync(this WebSocket s, Message m, CancellationToken token = default)
     {
-        await s.SendAsync(m.AsSegment(), WebSocketMessageType.Binary, true, token).ConfigureAwait(false);
+        return s.SendAsync(new ArraySegment<byte>(m.Bytes.ToArray()), WebSocketMessageType.Binary, true, token);
     }
 
-    public static async Task ListenAsync(this WebSocket webSocket, Func<Message, CancellationToken, Task> onReceived, CancellationToken token)
+    public static async Task ListenAsync(this WebSocket webSocket, HandleMessage onReceived, CancellationToken token)
     {
         WebSocketReceiveResult result;
         do
         {
-            var buffer = new byte[Constants.MaxMessageSize];
-            result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), token);
+            var buffer = ArrayPool<byte>.Shared.Rent(Constants.MaxMessageSize);
 
-            if (result.MessageType == WebSocketMessageType.Close)
-            {
-                await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Requested by the client", token);
-                return;
+            try {
+                result = await webSocket.ReceiveAsync(buffer, token);
+
+                if (result.MessageType == WebSocketMessageType.Close)
+                {
+                    await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Requested by the client", token);
+                    return;
+                }
+                if (!result.EndOfMessage) await webSocket.SendAckAsync(Ack.ExpectedEndOfMessage, token);
+
+                static Task OnReceived(ReadOnlySpan<byte> buffer, HandleMessage onReceived, CancellationToken token)
+                {
+                    var m = new Message(buffer);
+                    return onReceived(ref m, token);
+                }
+
+                var maybeAck = OnReceived(buffer, onReceived, token);
+                if (maybeAck is Task<Ack> ack)
+                {
+                    await webSocket.SendAckAsync(await ack, token);
+                }
             }
-            if (!result.EndOfMessage) await webSocket.SendAckAsync(Ack.ExpectedEndOfMessage, token);
-
-            await onReceived(buffer.AsMemory(), token);
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer, true);
+            }
 
         } while (!result.CloseStatus.HasValue && !token.IsCancellationRequested);
     }
+
+    public delegate Task HandleMessage(ref Message message, CancellationToken token);
 }

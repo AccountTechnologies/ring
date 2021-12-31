@@ -8,5 +8,5 @@ public sealed class WorkspaceInfoPub : IRingEvent
     public WorkspaceInfo WorkspaceInfoJson { get; }
     public WorkspaceInfoPub(WorkspaceInfo info) => WorkspaceInfoJson = info;
     public WorkspaceInfoPub(ReadOnlySpan<byte> info) => WorkspaceInfoJson = WorkspaceInfo.Deserialize(info);
-    public Message AsMessage() => Message.FromUtf8Bytes(Type, WorkspaceInfoJson.Serialize());
+    public Message AsMessage() => new(Type, WorkspaceInfoJson.Serialize());
 }

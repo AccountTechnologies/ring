@@ -9,6 +9,8 @@ using ATech.Ring.DotNet.Cli.Logging;
 using ATech.Ring.Protocol.v2;
 using Microsoft.Extensions.Logging;
 
+public delegate Task<Ack> Dispatch(Message m, CancellationToken t);
+
 public sealed class WsClient : IAsyncDisposable
 {
     private readonly ILogger<WebsocketsHandler> _logger;
@@ -24,7 +26,7 @@ public sealed class WsClient : IAsyncDisposable
 
     public async Task<bool> IsOpenAsync() => (await Ws).State == WebSocketState.Open;
 
-    public async Task ListenAsync(Func<Message, CancellationToken, Task<Ack>> dispatch, CancellationToken t)
+    public async Task ListenAsync(Dispatch dispatch, CancellationToken t)
     {
         var aggregatedCts = CancellationTokenSource.CreateLinkedTokenSource(t, _localCts.Token);
         _backgroundAwaiter = Task.Run(async () =>
@@ -47,9 +49,9 @@ public sealed class WsClient : IAsyncDisposable
             }
         }, aggregatedCts.Token);
 
-        await (await Ws).ListenAsync(async (message, token) =>
+        await (await Ws).ListenAsync((ref Message message, CancellationToken token) =>
         {
-            Task<Ack>? AckIfCompleted(WebSocket ws)
+            Task<Ack>? AckIfCompleted(Message message)
             {
                 try
                 {
@@ -76,8 +78,7 @@ public sealed class WsClient : IAsyncDisposable
                 return null;
             }
 
-            var ws = await Ws;
-            if (AckIfCompleted(ws) is Task<Ack> t) await ws.SendAckAsync(await t, token);
+            return AckIfCompleted(message);
 
         }, aggregatedCts.Token);
     }
