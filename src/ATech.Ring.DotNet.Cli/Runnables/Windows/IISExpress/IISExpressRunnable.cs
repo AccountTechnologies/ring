@@ -12,7 +12,6 @@ using ATech.Ring.DotNet.Cli.Dtos;
 using ATech.Ring.DotNet.Cli.Runnables;
 using ATech.Ring.DotNet.Cli.Windows.Tools;
 using ATech.Ring.Protocol.v2;
-using ATech.Ring.Protocol.v2.Events;
 using Microsoft.Extensions.Logging;
 using IISExpressConfig = ATech.Ring.Configuration.Runnables.IISExpress;
 
@@ -27,8 +26,8 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.IISExpress
         public IISExpressRunnable(IISExpressConfig config,
                                   IISExpressExe iisExpress,
                                   ILogger<IISExpressRunnable> logger,
-                                  ISender<IRingEvent> eventQ,
-                                  Func<Uri, HttpClient> clientFactory) : base(config, logger, eventQ)
+                                  ISender sender,
+                                  Func<Uri, HttpClient> clientFactory) : base(config, logger, sender)
         {
             _iisExpress = iisExpress;
             _logger = logger;

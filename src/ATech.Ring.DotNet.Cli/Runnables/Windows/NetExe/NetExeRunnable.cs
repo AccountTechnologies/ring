@@ -5,7 +5,6 @@ using ATech.Ring.DotNet.Cli.Dtos;
 using ATech.Ring.DotNet.Cli.Runnables;
 using ATech.Ring.DotNet.Cli.Tools;
 using ATech.Ring.Protocol.v2;
-using ATech.Ring.Protocol.v2.Events;
 using Microsoft.Extensions.Logging;
 using NetExeConfig = ATech.Ring.Configuration.Runnables.NetExe;
 
@@ -19,7 +18,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.NetExe
             NetExeConfig config,
             ExeRunner exeRunner, 
             ILogger<NetExeRunnable> logger, 
-            ISender<IRingEvent> eventQ) : base(config, logger, eventQ)
+            ISender sender) : base(config, logger, sender)
         {
             _exeRunner = exeRunner;
         }

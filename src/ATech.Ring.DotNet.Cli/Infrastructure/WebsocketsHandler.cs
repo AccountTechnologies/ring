@@ -2,13 +2,13 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Logging;
 using ATech.Ring.Protocol.v2;
-using ATech.Ring.Protocol.v2.Events;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -16,16 +16,42 @@ public class WebsocketsHandler
 {
     private readonly ConcurrentDictionary<Guid, WsClient> _clients = new();
     private readonly IHostApplicationLifetime _appLifetime;
-    private readonly IReceiver<IRingEvent> _queue;
+    private readonly IReceiver _queue;
     private readonly IServer _server;
     private readonly ILogger<WebsocketsHandler> _logger;
 
-    public WebsocketsHandler(IHostApplicationLifetime appLifetime, IReceiver<IRingEvent> queue, IServer server, ILogger<WebsocketsHandler> logger)
+    public WebsocketsHandler(IHostApplicationLifetime appLifetime, IReceiver queue, IServer server, ILogger<WebsocketsHandler> logger)
     {
         _appLifetime = appLifetime;
         _queue = queue;
         _server = server;
         _logger = logger;
+    }
+
+
+    private Task BroadcastAsync((Guid id, WebSocket ws)[] clients, Message m)
+    {
+        Task SendAsync(WebSocket ws, Guid id, Message m)
+        {
+            try
+            {
+                if (_logger.IsEnabled(LogLevel.Debug)) _logger.LogDebug("{m} > {id}", m.ToString(), id);
+                return ws.SendMessageAsync(m, default);
+            }
+            catch (WebSocketException wse)
+            {
+                _logger.LogDebug("Exception {exception}", wse);
+                return Task.CompletedTask;
+            }
+        }
+
+        var tasks = new List<Task>();
+        foreach (var (id, ws) in clients)
+        {
+            tasks.Add(SendAsync(ws, id, m));
+        }
+
+        return Task.WhenAll(tasks.ToArray());
     }
 
     public async Task InitializeAsync(CancellationToken token)
@@ -37,33 +63,25 @@ public class WebsocketsHandler
 
             var messageLoop = Task.Run(async () =>
             {
-                while (true)
+                while (await _queue.WaitToReadAsync(_appLifetime.ApplicationStopping))
                 {
                     try
                     {
-                        var @event = await _queue.WaitForNextAsync(_appLifetime.ApplicationStopping);
-
                         foreach (var (id, client) in _clients.ToList())
                         {
                             if (await client.IsOpenAsync()) continue;
                             await TryRemoveAsync(id);
                         }
 
-                        await Task.WhenAll(_clients.Select(async x =>
+                        var all = await Task.WhenAll(_clients.Select(async x =>
                         {
-                            try
-                            {
-                                var (id, client) = x;
-                                if (_logger.IsEnabled(LogLevel.Debug)) _logger.LogDebug($"{@event.AsMessage().ToString()} > {id}");
-                                await (await client.Ws).SendMessageAsync(@event.AsMessage(), default);
-
-                            }
-                            catch (WebSocketException wse)
-                            {
-                                _logger.LogDebug("Exception {exception}", wse);
-                            }
+                            var (id, client) = x;
+                            return (id, await client.Ws);
                         }));
+
+                        await BroadcastAsync(all, _queue.Dequeue());
                     }
+
                     catch (OperationCanceledException)
                     {
                         break;
@@ -73,8 +91,8 @@ public class WebsocketsHandler
 
             _appLifetime.ApplicationStopping.Register(() =>
             {
-                    // blocking calls here to force server terminate before Kestrel Websockets die 
-                    _server.TerminateAsync(default).GetAwaiter().GetResult();
+                // blocking calls here to force server terminate before Kestrel Websockets die 
+                _server.TerminateAsync(default).GetAwaiter().GetResult();
                 messageLoop.GetAwaiter().GetResult();
             }, true);
             await messageLoop;

@@ -6,6 +6,7 @@ using System.Text;
 
 public enum M : byte
 {
+    EMPTY = 255,
     DISCONNECTED = 0,
     LOAD = 62,
     UNLOAD = 60,
@@ -48,10 +49,10 @@ public static class ReadOnlySpanExtensions
     public static string AsUtf8String(this ReadOnlySpan<byte> span) => Encoding.UTF8.GetString(span);
 }
 
-public ref struct Message
+public readonly ref struct Message
 {
     public ReadOnlySpan<byte> Bytes { get; }
-    public M Type => (M)Bytes[0];
+    public M Type => Bytes.Length == 0 ? M.EMPTY : (M)Bytes[0];
 
     public Message(ReadOnlySpan<byte> bytes) => Bytes = bytes;
     public Message(M type, string value) : this(type, Encoding.UTF8.GetBytes(value)) { }
@@ -63,6 +64,15 @@ public ref struct Message
         Array.Copy(bytes.ToArray(), 0, newBytes, 1, bytes.Length);
         Bytes = newBytes;
     }
+
+    public Message(M type, ReadOnlySpan<char> chars)
+    {
+        byte[] newBytes = new byte[chars.Length + 1];
+        newBytes[0] = (byte)type;
+        Encoding.UTF8.GetBytes(chars, newBytes.AsSpan()[1..]);
+        Bytes = newBytes;
+    }
+
     public Message(M type) => Bytes = new byte[] { (byte)type };
 
     public void Deconstruct(out M type, out ReadOnlySpan<byte> payload)
@@ -87,26 +97,17 @@ public ref struct Message
     public static implicit operator ReadOnlySpan<byte>(Message m) => m.Bytes;
     public static implicit operator Message(ReadOnlySpan<byte> bytes) => new(bytes);
     public static implicit operator Message(M type) => new(type);
-}
-
-public static class FromMessage
-{
-    public static IRingEvent AsEvent(this Message m) => m switch
-    {
-        (M.ACK, var ack) => new AckEvent((Ack)ack[0]),
-        (M.RUNNABLE_INITIATED, var runnableId) => new RunnableInitiated { UniqueId = runnableId.AsUtf8String() },
-        (M.RUNNABLE_STARTED, var runnableId) => new RunnableStarted { UniqueId = runnableId.AsUtf8String() },
-        (M.RUNNABLE_UNRECOVERABLE, var runnableId) => new RunnableDead { UniqueId = runnableId.AsUtf8String() },
-        (M.RUNNABLE_HEALTH_CHECK, var runnableId) => new RunnableHealthCheck { UniqueId = runnableId.AsUtf8String() },
-        (M.RUNNABLE_HEALTHY, var runnableId) => new RunnableHealthy { UniqueId = runnableId.AsUtf8String() },
-        (M.RUNNABLE_RECOVERING, var runnableId) => new RunnableRecovering { UniqueId = runnableId.AsUtf8String() },
-        (M.RUNNABLE_STOPPED, var runnableId) => new RunnableStopped { UniqueId = runnableId.AsUtf8String() },
-        (M.RUNNABLE_DESTROYED, var runnableId) => new RunnableDestroyed { UniqueId = runnableId.AsUtf8String() },
-        (M.WORKSPACE_INFO_PUBLISH, var data) => new WorkspaceInfoPub(data),
-        (M.SERVER_IDLE, _) => new ServerIdle(),
-        (M.SERVER_LOADED, var path) => new ServerLoaded { WorkspacePath = path.AsUtf8String() },
-        (M.SERVER_RUNNING, var path) => new ServerRunning { WorkspacePath = path.AsUtf8String() },
-        (M.DISCONNECTED, _) => new Disconnected(),
-        _ => throw new NotSupportedException($"Message: {m.Type}")
-    };
+    public static Message RunnableInitiated(ReadOnlySpan<char> id) => new(M.RUNNABLE_INITIATED, id);
+    public static Message RunnableStarted(ReadOnlySpan<char> id) => new(M.RUNNABLE_STARTED, id);
+    public static Message RunnableHealthCheck(ReadOnlySpan<char> id) => new(M.RUNNABLE_HEALTH_CHECK, id);
+    public static Message RunnableHealthy(ReadOnlySpan<char> id) => new(M.RUNNABLE_HEALTHY, id);
+    public static Message RunnableDead(ReadOnlySpan<char> id) => new(M.RUNNABLE_UNRECOVERABLE, id);
+    public static Message RunnableRecovering(ReadOnlySpan<char> id) => new(M.RUNNABLE_RECOVERING, id);
+    public static Message RunnableStopped(ReadOnlySpan<char> id) => new(M.RUNNABLE_STOPPED, id);
+    public static Message RunnableDestroyed(ReadOnlySpan<char> id) => new(M.RUNNABLE_DESTROYED, id);
+    public static Message ServerIdle() => new(M.SERVER_IDLE);
+    public static Message ServerLoaded(ReadOnlySpan<char> workspacePath) => new(M.SERVER_LOADED, workspacePath);
+    public static Message ServerRunning(ReadOnlySpan<char> workspacePath) => new(M.SERVER_RUNNING, workspacePath);
+    public static Message WorkspaceInfo(WorkspaceInfo info) => new(M.WORKSPACE_INFO_PUBLISH, info.Serialize());
+    public static Message Empty() => new(M.EMPTY);
 }

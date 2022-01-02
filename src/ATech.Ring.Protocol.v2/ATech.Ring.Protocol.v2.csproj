@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ErrorProne.NET.Structs" Version="0.4.0-beta.1">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="System.Text.Json" Version="6.0.1" />
     <PackageReference Include="System.Threading.Channels" Version="6.0.0" />
   </ItemGroup>

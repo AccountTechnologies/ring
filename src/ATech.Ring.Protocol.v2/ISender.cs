@@ -1,6 +1,6 @@
 ﻿namespace ATech.Ring.Protocol.v2;
 
-public interface ISender<in T>
+public interface ISender
 {
-    void Enqueue(T item);
+    void Enqueue(Message message);
 }

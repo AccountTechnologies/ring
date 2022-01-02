@@ -22,7 +22,7 @@ namespace ATech.Ring.DotNet.Cli.Workspace
         private readonly ILogger<WorkspaceLauncher> _logger;
         private readonly Func<IRunnableConfig, IRunnable> _createRunnable;
         private readonly IWorkspaceInitHook _initHook;
-        private readonly ISender<IRingEvent> _sender;
+        private readonly ISender _sender;
         private readonly ConcurrentDictionary<string, RunnableContainer> _runnables = new();
         private Task? _startTask;
         private Task? _stopTask;
@@ -40,7 +40,7 @@ namespace ATech.Ring.DotNet.Cli.Workspace
                                  ILogger<WorkspaceLauncher> logger,
                                  Func<IRunnableConfig, IRunnable> createRunnable,
                                  IWorkspaceInitHook initHook,
-                                 ISender<IRingEvent> sender)
+                                 ISender sender)
         {
             _configurator = configurator;
             _logger = logger;
@@ -216,7 +216,7 @@ namespace ATech.Ring.DotNet.Cli.Workspace
             var info = Create(state, serverState);
             if (!force && info.Equals(CurrentInfo)) return;
             CurrentInfo = info;
-            _sender.Enqueue(new WorkspaceInfoPub(CurrentInfo));
+            _sender.Enqueue(Message.WorkspaceInfo(CurrentInfo));
         }
 
         public void Dispose() => _cts?.Dispose();

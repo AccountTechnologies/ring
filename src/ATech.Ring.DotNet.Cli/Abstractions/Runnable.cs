@@ -9,27 +9,26 @@ using ATech.Ring.DotNet.Cli.Abstractions.Context;
 using ATech.Ring.DotNet.Cli.Dtos;
 using ATech.Ring.DotNet.Cli.Logging;
 using ATech.Ring.Protocol.v2;
-using ATech.Ring.Protocol.v2.Events;
 using Microsoft.Extensions.Logging;
 
 namespace ATech.Ring.DotNet.Cli.Abstractions
 {
     [DebuggerDisplay("{UniqueId}")]
-    public abstract class Runnable<TContext, TConfig> : IRunnable, IRunnableIds
+    public abstract class Runnable<TContext, TConfig> : IRunnable
         where TConfig : IRunnableConfig
     {
         private readonly ILogger<Runnable<TContext, TConfig>> _logger;
         private readonly Fsm _fsm = new();
-        private TContext _context;
-        protected readonly ISender<IRingEvent> Sender;
+        private TContext? _context;
+        protected readonly ISender Sender;
         protected virtual TimeSpan HealthCheckPeriod { get; } = TimeSpan.FromSeconds(5);
         protected virtual int MaxConsecutiveFailuresUntilDead { get; } = 2;
         protected virtual int MaxTotalFailuresUntilDead { get; } = 3;
         public TConfig Config { get; private set; }
         public abstract string UniqueId { get; }
         public State State => _fsm.State;
-        public event EventHandler OnHealthCheckCompleted;
-        public event EventHandler OnInitExecuted;
+        public event EventHandler? OnHealthCheckCompleted;
+        public event EventHandler? OnInitExecuted;
         public IReadOnlyDictionary<string, object> Details => _details;
         private readonly Dictionary<string, object> _details = new();
         /// <summary>
@@ -39,7 +38,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
         /// <param name="value"></param>
         protected void AddDetail(string key, object value) => _details.TryAdd(key, value);
 
-        protected Runnable(TConfig config, ILogger<Runnable<TContext, TConfig>> logger, ISender<IRingEvent> sender)
+        protected Runnable(TConfig config, ILogger<Runnable<TContext, TConfig>> logger, ISender sender)
         {
             Config = config;
             if (Config.FriendlyName != null) { _details.Add(DetailsKeys.FriendlyName, Config.FriendlyName);}
@@ -94,7 +93,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
                 .OnEntryFromAsync(Trigger.HealthLoop,
                     async () =>
                     {
-                        Sender.Enqueue(RunnableEvent.New<RunnableHealthCheck>(this));
+                        Sender.Enqueue(Message.RunnableHealthCheck(UniqueId));
                         var healthResult = await CheckHealthCoreAsync(_context, token);
                         await _fsm.FireAsync(healthResult switch
                         {
@@ -115,7 +114,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
             _fsm.Configure(State.Healthy)
                 .OnEntryFromAsync(Trigger.HcOk, async () =>
                 {
-                    Sender.Enqueue(RunnableEvent.New<RunnableHealthy>(this));
+                    Sender.Enqueue(Message.RunnableHealthy(UniqueId));
                     await QueueHealthCheckAsync(token);
                 })
                 .Permit(Trigger.HealthLoop, State.ProbingHealth)
@@ -124,7 +123,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
             _fsm.Configure(State.Dead)
                 .OnEntryFromAsync(Trigger.HcDead, () =>
                 {
-                    Sender.Enqueue(RunnableEvent.New<RunnableDead>(this));
+                    Sender.Enqueue(Message.RunnableDead(UniqueId));
                     return Task.CompletedTask;
                 })
                 .Permit(Trigger.Stop, State.Idle);
@@ -133,12 +132,12 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
                 .OnEntryFromAsync(Trigger.HcUnhealthy,
                     async () =>
                         {
-                            Sender.Enqueue(RunnableEvent.New<RunnableRecovering>(this));
+                            Sender.Enqueue(Message.RunnableRecovering(UniqueId));
                             await RecoverCoreAsync(_context, token);
                         })
                 .Permit(Trigger.Stop, State.Idle);
 
-            _fsm.OnTransitioned(t => _logger.LogDebug($"{t.Source} -> {t.Trigger} -> {t.Destination}"));
+            _fsm.OnTransitioned(t => _logger.LogDebug("{Source} -> {Trigger} -> {Destination}", t.Source, t.Trigger, t.Destination));
 
             await _fsm.ActivateAsync();
             return _fsm;
@@ -185,7 +184,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
                 _context = await InitAsync(token);
                 _logger.LogContextDebug(_context);
                 _logger.LogDebug(PhaseStatus.OK);
-                Sender.Enqueue(RunnableEvent.New<RunnableInitiated>(this));
+                Sender.Enqueue(Message.RunnableInitiated(UniqueId));
                 await _fsm.FireAsync(Trigger.Start);
             }
             catch (Exception ex)
@@ -206,7 +205,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
             await StartAsync(ctx, token);
             _logger.LogContextDebug(ctx);
             _logger.LogInformation(PhaseStatus.OK);
-            Sender.Enqueue(RunnableEvent.New<RunnableStarted>(this));
+            Sender.Enqueue(Message.RunnableStarted(UniqueId));
         }
         private async Task<HealthStatus> CheckHealthCoreAsync(TContext ctx, CancellationToken token)
         {
@@ -289,7 +288,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
             await StopAsync(ctx, token);
             _logger.LogContextDebug(ctx);
             _logger.LogDebug(PhaseStatus.OK);
-            Sender.Enqueue(RunnableEvent.New<RunnableStopped>(this));
+            Sender.Enqueue(Message.RunnableStopped(UniqueId));
         }
         private async Task DestroyCoreAsync(TContext ctx, CancellationToken token)
         {
@@ -298,7 +297,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
             await DestroyAsync(ctx, token);
             _logger.LogContextDebug(ctx);
             _logger.LogInformation(PhaseStatus.OK);
-            Sender.Enqueue(RunnableEvent.New<RunnableDestroyed>(this));
+            Sender.Enqueue(Message.RunnableDestroyed(UniqueId));
         }
 
         private class Fsm : Stateless.StateMachine<State, Trigger>

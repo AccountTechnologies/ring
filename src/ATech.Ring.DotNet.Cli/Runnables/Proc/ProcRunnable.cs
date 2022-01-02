@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using ATech.Ring.Protocol.v2;
-using ATech.Ring.Protocol.v2.Events;
 using ATech.Ring.DotNet.Cli.Abstractions.Tools;
 
 namespace ATech.Ring.DotNet.Cli.Runnables.Proc
@@ -19,8 +18,8 @@ namespace ATech.Ring.DotNet.Cli.Runnables.Proc
 
         public ProcRunnable(Configuration.Runnables.Proc config,
             ILogger<ProcessRunnable<ProcContext, Configuration.Runnables.Proc>> logger, 
-            ISender<IRingEvent> eventQ,
-            ITool tool) : base(config, logger, eventQ)
+            ISender sender,
+            ITool tool) : base(config, logger, sender)
         {
             _tool = tool;
         }

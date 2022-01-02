@@ -17,7 +17,6 @@ using ATech.Ring.DotNet.Cli.Logging;
 using ATech.Ring.DotNet.Cli.Windows.Tools;
 using ATech.Ring.DotNet.Cli.Workspace;
 using ATech.Ring.Protocol.v2;
-using ATech.Ring.Protocol.v2.Events;
 using k8s;
 using LightInject;
 using LightInject.Microsoft.AspNetCore.Hosting;
@@ -77,9 +76,9 @@ try
     builder.Services.AddSingleton<IWorkspaceLauncher, WorkspaceLauncher>();
     builder.Services.AddSingleton<IWorkspaceInitHook, WorkspaceInitHook>();
     builder.Services.AddSingleton<ICloneMaker, CloneMaker>();
-    builder.Services.AddSingleton<ATech.Ring.Protocol.v2.Queue<IRingEvent>>();
-    builder.Services.AddSingleton<ISender<IRingEvent>>(f => f.GetRequiredService<ATech.Ring.Protocol.v2.Queue<IRingEvent>>());
-    builder.Services.AddSingleton<IReceiver<IRingEvent>>(f => f.GetRequiredService<ATech.Ring.Protocol.v2.Queue<IRingEvent>>());
+    builder.Services.AddSingleton<ATech.Ring.Protocol.v2.Queue>();
+    builder.Services.AddSingleton<ISender>(f => f.GetRequiredService<ATech.Ring.Protocol.v2.Queue>());
+    builder.Services.AddSingleton<IReceiver>(f => f.GetRequiredService<ATech.Ring.Protocol.v2.Queue>());
     builder.Services.AddSingleton(f =>
     {
         var kubeConfigPath = f.GetRequiredService<Wsl>().ResolveToWindows("~/.kube/config").GetAwaiter().GetResult();

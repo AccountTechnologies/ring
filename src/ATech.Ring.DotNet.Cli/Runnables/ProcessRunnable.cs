@@ -5,7 +5,6 @@ using ATech.Ring.DotNet.Cli.Abstractions;
 using ATech.Ring.DotNet.Cli.Abstractions.Context;
 using ATech.Ring.DotNet.Cli.Tools;
 using ATech.Ring.Protocol.v2;
-using ATech.Ring.Protocol.v2.Events;
 using Microsoft.Extensions.Logging;
 
 namespace ATech.Ring.DotNet.Cli.Runnables
@@ -14,7 +13,7 @@ namespace ATech.Ring.DotNet.Cli.Runnables
         where TContext : ITrackProcessId
         where TConfig : IRunnableConfig
     {
-        protected ProcessRunnable(TConfig config, ILogger<ProcessRunnable<TContext, TConfig>> logger, ISender<IRingEvent> eventQ) : base(config, logger, eventQ)
+        protected ProcessRunnable(TConfig config, ILogger<ProcessRunnable<TContext, TConfig>> logger, ISender sender) : base(config, logger, sender)
         {
         }
 
