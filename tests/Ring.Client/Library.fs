@@ -1,7 +1,6 @@
 ﻿namespace Ring.Client
 
 open ATech.Ring.Protocol.v2
-open ATech.Ring.Protocol.v2.Events
 open System
 open System.Net.WebSockets
 open System.Threading
@@ -13,8 +12,13 @@ type ClientOptions = {
   CancelationToken: CancellationToken option
 }
 
+type Msg = {
+  Payload: string
+  Type: M
+}
+
 type WsClient(options: ClientOptions) =
-  let onRingEvent = new Event<IRingEvent>()
+  let onRingEvent = new Event<Msg>()
 
   let cancellationToken =  options.CancelationToken |> Option.defaultValue CancellationToken.None
   let mutable listenTask = Task.CompletedTask
@@ -31,7 +35,7 @@ type WsClient(options: ClientOptions) =
 
       listenTask <- s.ListenAsync(WebSocketExtensions.HandleMessage(
       fun m t ->
-        onRingEvent.Trigger(m.AsEvent())
+        onRingEvent.Trigger({Type=m.Type; Payload = m.Bytes.AsUtf8String()})
         Task.CompletedTask
       ), cancellationToken)
       return s
@@ -61,14 +65,13 @@ type WsClient(options: ClientOptions) =
   }
   member _.IsConnected = socket.IsValueCreated
 
-  member x.WaitUntil<'a when 'a :> IRingEvent>(?suchAs: 'a -> bool, ?timeout: TimeSpan) =
+  member x.WaitUntilMessage(typ: M, ?suchAs: string -> bool, ?timeout: TimeSpan) =
     try
       x.Event
       |> Observable.iter (fun x -> printfn "%A" x.Type)
-      |> Observable.firstIf (fun x -> x.GetType() = typeof<'a>)
-      |> Observable.map (fun x -> x :?> 'a) 
+      |> Observable.firstIf (fun x ->  x.Type = typ)
       |> Observable.timeout (DateTimeOffset.Now.Add(defaultArg timeout (TimeSpan.FromSeconds(10))))
-      |> Observable.filter (defaultArg suchAs (fun _ -> true))
+      |> Observable.filter (fun x -> x.Type = typ)
       |> Observable.wait
       |> Some
     with

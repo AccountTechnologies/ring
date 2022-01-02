@@ -8,7 +8,6 @@ using ATech.Ring.DotNet.Cli.Dtos;
 using ATech.Ring.DotNet.Cli.Infrastructure;
 using ATech.Ring.DotNet.Cli.Windows.Tools;
 using ATech.Ring.Protocol.v2;
-using ATech.Ring.Protocol.v2.Events;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using static ATech.Ring.DotNet.Cli.Tools.ToolExtensions;
@@ -32,7 +31,7 @@ namespace ATech.Ring.DotNet.Cli.Runnables.Kustomize
             KustomizeConfig config,
             IOptions<RingConfiguration> ringCfg,
             ILogger<Runnable<KustomizeContext, KustomizeConfig>> logger,
-            ISender<IRingEvent> sender,
+            ISender sender,
             KubectlBundle bundle) : base(config, logger, sender)
         {
             _logger = logger;

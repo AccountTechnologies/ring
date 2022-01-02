@@ -4,7 +4,6 @@ using ATech.Ring.DotNet.Cli.Abstractions;
 using ATech.Ring.DotNet.Cli.Dtos;
 using ATech.Ring.DotNet.Cli.Tools;
 using ATech.Ring.Protocol.v2;
-using ATech.Ring.Protocol.v2.Events;
 using Microsoft.Extensions.Logging;
 using DockerComposeConfig = ATech.Ring.Configuration.Runnables.DockerCompose;
 
@@ -15,7 +14,7 @@ namespace ATech.Ring.DotNet.Cli.Runnables.DockerCompose
         private readonly Tools.DockerCompose _dockerCompose;
 
         public DockerComposeRunnable(DockerComposeConfig config, ILogger<Runnable<DockerComposeContext, DockerComposeConfig>> logger,
-            ISender<IRingEvent> sender,
+            ISender sender,
             Tools.DockerCompose dockerCompose) : base(config, logger, sender)
         {
             _dockerCompose = dockerCompose;

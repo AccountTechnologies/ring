@@ -5,7 +5,6 @@ using ATech.Ring.Configuration.Interfaces;
 using ATech.Ring.DotNet.Cli.CsProj;
 using ATech.Ring.DotNet.Cli.Tools;
 using ATech.Ring.Protocol.v2;
-using ATech.Ring.Protocol.v2.Events;
 using Microsoft.Extensions.Logging;
 
 namespace ATech.Ring.DotNet.Cli.Runnables.Dotnet
@@ -21,9 +20,9 @@ namespace ATech.Ring.DotNet.Cli.Runnables.Dotnet
         protected DotnetRunnableBase(TConfig config,
                                      DotnetCliBundle dotnet,
                                      ILogger<DotnetRunnableBase<TContext, TConfig>> logger, 
-                                     ISender<IRingEvent> eventQ,
+                                     ISender sender,
                                      GitClone gitClone
-                                     ) : base(config, logger, eventQ)
+                                     ) : base(config, logger, sender)
         {
             Dotnet = dotnet;
             _logger = logger;

@@ -3,8 +3,8 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-public interface IReceiver<T>
+public interface IReceiver
 {
-    bool TryDequeue(out T item);
-    Task<T> WaitForNextAsync(CancellationToken token);
+    Message Dequeue();
+    Task<bool> WaitToReadAsync(CancellationToken token);
 }

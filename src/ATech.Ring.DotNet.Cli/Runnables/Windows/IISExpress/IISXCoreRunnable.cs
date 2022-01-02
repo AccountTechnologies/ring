@@ -6,9 +6,8 @@ using ATech.Ring.DotNet.Cli.Runnables;
 using ATech.Ring.DotNet.Cli.Tools;
 using ATech.Ring.DotNet.Cli.Windows.Tools;
 using ATech.Ring.Protocol.v2;
-using ATech.Ring.Protocol.v2.Events;
 using Microsoft.Extensions.Logging;
-using IISXCoreConfig =  ATech.Ring.Configuration.Runnables.IISXCore;
+using IISXCoreConfig = ATech.Ring.Configuration.Runnables.IISXCore;
 
 namespace ATech.Ring.DotNet.Cli.Windows.Runnables.IISExpress
 {
@@ -22,7 +21,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.IISExpress
             IISXCoreConfig config,
             IISExpressExe iisExpress,
             ILogger<IISXCoreRunnable> logger,
-            ISender<IRingEvent> eventQ, GitClone gitClone) : base(config, logger, eventQ)
+            ISender sender, GitClone gitClone) : base(config, logger, sender)
         {
             _iisExpress = iisExpress;
             _logger = logger;

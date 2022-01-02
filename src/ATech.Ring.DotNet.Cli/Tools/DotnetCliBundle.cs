@@ -23,7 +23,7 @@ namespace ATech.Ring.DotNet.Cli.Tools
             Logger = logger;
         }
 
-        public async Task<ExecutionInfo> RunAsync(DotnetContext ctx, string[] urls = null)
+        public async Task<ExecutionInfo> RunAsync(DotnetContext ctx, string[]? urls = null)
         {          
             HandleUrls();
             if (File.Exists(ctx.ExePath))

@@ -4,7 +4,6 @@ using ATech.Ring.Configuration.Interfaces;
 using ATech.Ring.DotNet.Cli.Abstractions.Context;
 using ATech.Ring.DotNet.Cli.CsProj;
 using ATech.Ring.Protocol.v2;
-using ATech.Ring.Protocol.v2.Events;
 using Microsoft.Extensions.Logging;
 
 namespace ATech.Ring.DotNet.Cli.Runnables
@@ -13,7 +12,7 @@ namespace ATech.Ring.DotNet.Cli.Runnables
         where TContext : ITrackProcessId, ICsProjContext, ITrackRetries
         where TConfig : IRunnableConfig, IUseCsProjFile
     {
-        protected CsProjRunnable(TConfig config, ILogger<CsProjRunnable<TContext, TConfig>> logger, ISender<IRingEvent> eventQ) : base(config, logger, eventQ)
+        protected CsProjRunnable(TConfig config, ILogger<CsProjRunnable<TContext, TConfig>> logger, ISender sender) : base(config, logger, sender)
         {
         }
 

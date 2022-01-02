@@ -2,6 +2,12 @@
   "version": 1,
   "dependencies": {
     "net6.0": {
+      "ErrorProne.NET.Structs": {
+        "type": "Direct",
+        "requested": "[0.4.0-beta.1, )",
+        "resolved": "0.4.0-beta.1",
+        "contentHash": "3cTaYc/hcDJumpCTjYNu+X0IEyTFRKHsIlsHwDjju1rGpH7/9dcostXJlRtmIIno6PgRWIh5ZalHDq76QYUA2w=="
+      },
       "System.Text.Json": {
         "type": "Direct",
         "requested": "[6.0.1, )",

@@ -4,27 +4,22 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-public class Queue<T> : ISender<T>, IReceiver<T>
+public class Queue : ISender, IReceiver
 {
-    private readonly Channel<T, T> _channel = Channel.CreateUnbounded<T>();
+    private readonly Channel<byte[]> _channel = Channel.CreateUnbounded<byte[]>();
 
-    public void Enqueue(T item) => _channel.Writer.TryWrite(item);
-    public bool TryDequeue(out T item) => _channel.Reader.TryRead(out item);
-    public async Task<T> WaitForNextAsync(CancellationToken token)
+    public void Complete() => _channel.Writer.Complete();
+
+    public void Enqueue(Message item)
     {
-        T item;
-        var shutdownTimeoutMillis = 5_000;
-        const int resolutionMillis = 100;
-        while (!TryDequeue(out item))
-        {
-            if (token.IsCancellationRequested)
-            {
-                shutdownTimeoutMillis -= resolutionMillis;
-                if (shutdownTimeoutMillis <= 0) token.ThrowIfCancellationRequested();
-            }
+        _channel.Writer.TryWrite(item.Bytes.ToArray());
+    }
 
-            await Task.Delay(resolutionMillis, default);
-        }
-        return item;
+    public async Task<bool> WaitToReadAsync(CancellationToken token) => await _channel.Reader.WaitToReadAsync(token);
+
+    public Message Dequeue()
+    {
+        var success = _channel.Reader.TryRead(out var bytes);
+        return success ? new Message(bytes) : Message.Empty();
     }
 }

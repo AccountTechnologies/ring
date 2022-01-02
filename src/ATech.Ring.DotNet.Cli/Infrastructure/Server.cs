@@ -22,10 +22,10 @@ public class Server : IServer
     private readonly ILogger<Server> _logger;
     private readonly IWorkspaceLauncher _launcher;
     private readonly IHostApplicationLifetime _appLifetime;
-    private readonly ISender<IRingEvent> _sender;
+    private readonly ISender _sender;
     private readonly ServerFsm _fsm;
     private Scope? _scope;
-    public Server(Func<Scope> getScope, ILogger<Server> logger, IWorkspaceLauncher launcher, IHostApplicationLifetime appLifetime, ISender<IRingEvent> sender)
+    public Server(Func<Scope> getScope, ILogger<Server> logger, IWorkspaceLauncher launcher, IHostApplicationLifetime appLifetime, ISender sender)
     {
         _getScope = getScope;
         _logger = logger;
@@ -78,14 +78,14 @@ public class Server : IServer
 
     public Task<Ack> ConnectAsync(CancellationToken token)
     {
-        IRingEvent? maybeEvent = _fsm.State switch
+        Message maybeMessage = _fsm.State switch
         {
-            S.Idle => new ServerIdle(),
-            S.Loaded => new ServerLoaded { WorkspacePath = _launcher.WorkspacePath },
-            S.Running => new ServerRunning { WorkspacePath = _launcher.WorkspacePath },
-            _ => default
+            S.Idle => Message.ServerIdle(),
+            S.Loaded => Message.ServerLoaded(_launcher.WorkspacePath.AsSpan()),
+            S.Running => Message.ServerRunning(_launcher.WorkspacePath.AsSpan()),
+            _ => Message.Empty()
         };
-        if (maybeEvent is IRingEvent e) _sender.Enqueue(e);
+        if (maybeMessage is not { Type: M.EMPTY }) _sender.Enqueue(maybeMessage);
         return Task.FromResult(Ack.Ok);
     }
 
