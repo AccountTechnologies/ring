@@ -1,21 +1,21 @@
 ﻿namespace ATech.Ring.Protocol.v2;
 
-using System.Collections.Concurrent;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 public class Queue<T> : ISender<T>, IReceiver<T>
 {
-    private readonly ConcurrentQueue<T> _queue = new();
+    private readonly Channel<T, T> _channel = Channel.CreateUnbounded<T>();
 
-    public void Enqueue(T item) => _queue.Enqueue(item);
-    public bool TryDequeue(out T item) => _queue.TryDequeue(out item);
+    public void Enqueue(T item) => _channel.Writer.TryWrite(item);
+    public bool TryDequeue(out T item) => _channel.Reader.TryRead(out item);
     public async Task<T> WaitForNextAsync(CancellationToken token)
     {
         T item;
         var shutdownTimeoutMillis = 5_000;
         const int resolutionMillis = 100;
-        while (!_queue.TryDequeue(out item))
+        while (!TryDequeue(out item))
         {
             if (token.IsCancellationRequested)
             {
