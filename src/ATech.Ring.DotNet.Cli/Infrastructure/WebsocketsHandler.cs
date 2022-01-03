@@ -2,7 +2,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,10 +10,11 @@ using ATech.Ring.DotNet.Cli.Logging;
 using ATech.Ring.Protocol.v2;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 
 public class WebsocketsHandler
 {
-    private readonly HashSet<WsClient> _clients = new(new WsClientEqualityComparer());
+    private readonly ConcurrentDictionary<Guid, WsClient> _clients = new();
     private readonly IHostApplicationLifetime _appLifetime;
     private readonly IReceiver _queue;
     private readonly IServer _server;
@@ -30,7 +31,8 @@ public class WebsocketsHandler
     private Task BroadcastAsync(Message m)
     {
         var tasks = new List<Task>();
-        foreach (var client in _clients.Where(c => c.IsOpen))
+
+        foreach (var client in _clients.Values.Where(x => x.IsOpen))
         {
             tasks.Add(client.SendAsync(m));
         }
@@ -85,6 +87,7 @@ public class WebsocketsHandler
         client = CreateClient(clientId, await createSocket());
         await _server.ConnectAsync(t);
         await client.ListenAsync(Dispatch, t);
+        _clients.TryRemove(clientId, out _);
     }
 
     private Task<Ack> Dispatch(Message m, CancellationToken token)
@@ -111,9 +114,8 @@ public class WebsocketsHandler
 
     public WsClient CreateClient(Guid key, WebSocket socket)
     {
-        _clients.RemoveWhere(x => !x.IsOpen);
         var wsClient = new WsClient(_logger, key, socket);
-        if (!_clients.Add(wsClient)) throw new InvalidOperationException($"Client already exists: {key}");
+        if (!_clients.TryAdd(key, wsClient)) throw new InvalidOperationException($"Client already exists: {key}");
 
         _appLifetime.ApplicationStopped.Register(async () => await wsClient.DisposeAsync());
 
