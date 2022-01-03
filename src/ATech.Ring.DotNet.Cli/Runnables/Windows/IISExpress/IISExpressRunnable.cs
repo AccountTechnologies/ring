@@ -65,7 +65,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.IISExpress
 
         protected override async Task StartAsync(IISExpressContext ctx, CancellationToken token)
         {
-            var result = await _iisExpress.StartWebsite(ctx.TempAppHostConfigPath);
+            var result = await _iisExpress.StartWebsite(ctx.TempAppHostConfigPath, token);
             ctx.ProcessId = result.Pid;
             ctx.Output = result.Output;
             _logger.LogInformation("{Uri}", ctx.Uri);

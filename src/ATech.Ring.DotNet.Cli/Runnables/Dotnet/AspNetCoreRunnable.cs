@@ -29,7 +29,7 @@ namespace ATech.Ring.DotNet.Cli.Runnables.Dotnet
 
         protected override async Task StartAsync(AspNetCoreContext ctx, CancellationToken token)
         {
-            var info = await Dotnet.RunAsync(ctx, ctx.Urls);
+            var info = await Dotnet.RunAsync(ctx, token, ctx.Urls);
             ctx.ProcessId = info.Pid;
             ctx.Output = info.Output;
         }

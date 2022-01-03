@@ -39,7 +39,7 @@ namespace ATech.Ring.DotNet.Cli.Runnables.Dotnet
             if (File.Exists(ctx.EntryAssemblyPath)) return ctx;
 
             _logger.LogDebug("Building {Project}", ctx.CsProjPath);
-            var result = await Dotnet.BuildAsync(ctx.CsProjPath);
+            var result = await Dotnet.BuildAsync(ctx.CsProjPath, token);
 
             if (!result.IsSuccess)
             {
@@ -50,7 +50,7 @@ namespace ATech.Ring.DotNet.Cli.Runnables.Dotnet
 
         protected override async Task StartAsync(TContext ctx, CancellationToken token)
         {
-            var info = await Dotnet.RunAsync(ctx);
+            var info = await Dotnet.RunAsync(ctx, token);
             ctx.ProcessId = info.Pid;
             ctx.Output = info.Output;
         }

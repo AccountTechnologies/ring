@@ -221,6 +221,9 @@ namespace ATech.Ring.DotNet.Cli.Workspace
 
         public void Dispose() => _cts?.Dispose();
 
-        public async ValueTask DisposeAsync() { if (_stopTask != null) await _stopTask; }
+        public async Task WaitUntilStoppedAsync(CancellationToken token)
+        {
+            if (_stopTask != null) await _stopTask;
+        }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Abstractions.Tools;
 using ATech.Ring.DotNet.Cli.Tools;
@@ -22,9 +23,9 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
             Logger.LogError(message);
         }
 
-        public async Task<ExecutionInfo> StartWebsite(string configPath, IDictionary<string,string>? envVars = null)
+        public async Task<ExecutionInfo> StartWebsite(string configPath, CancellationToken token, IDictionary<string,string>? envVars = null)
         {
-            return await this.RunProcessAsync(OnError, envVars, $"/config:\"{configPath}\"", $"/siteid:1");
+            return await this.RunProcessAsync(OnError, envVars, token, $"/config:\"{configPath}\"", $"/siteid:1");
         }
     }
 }

@@ -1,10 +1,18 @@
 namespace ATech.Ring.DotNet.Cli.Tools
 {
-    public class ExecutionInfo
+    public readonly struct ExecutionInfo
     {
-        public int Pid { get; set; }
-        public int? ExitCode { get; set; }
-        public string Output { get; set; } = string.Empty;
+        public ExecutionInfo(int pid, int? exitCode, string output)
+        {
+            Pid = pid;
+            ExitCode = exitCode;
+            Output = output;
+        }
+
+        public int Pid { get; }
+        public int? ExitCode { get; }
+        public string Output { get; }
         public bool IsSuccess => ExitCode == 0;
+        public static readonly ExecutionInfo Empty = new(0, 0, string.Empty);
     }
 }

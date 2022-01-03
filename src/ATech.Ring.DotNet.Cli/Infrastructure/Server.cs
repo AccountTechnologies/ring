@@ -44,6 +44,7 @@ public class Server : IServer
                 RequestWorkspaceInfo();
             })
           .Ignore(T.Unload)
+          .Ignore(T.Stop)
           .Permit(T.Load, S.Loaded);
 
         _fsm.Configure(S.Loaded)
@@ -60,7 +61,8 @@ public class Server : IServer
             .InternalTransition(T.Include, () => { })
             .InternalTransition(T.Exclude, () => { })
             .Permit(T.Unload, S.Idle)
-            .Permit(T.Start, S.Running);
+            .Permit(T.Start, S.Running)
+            .Ignore(T.Stop);
 
         _fsm.Configure(S.Running)
             .OnEntryFromAsync(T.Start, async () =>
@@ -106,8 +108,9 @@ public class Server : IServer
     {
         using var _ = _logger.WithHostScope(Phase.DESTROY);
         _logger.LogInformation("Server terminating");
-        await UnloadAsync(token);
-        await _launcher.DisposeAsync();
+        await _fsm.FireAsync(T.Stop);
+        await _launcher.WaitUntilStoppedAsync(token);
+        await _fsm.FireAsync(T.Unload);
         _scope?.Dispose();
         if (!_appLifetime.ApplicationStopping.IsCancellationRequested) _appLifetime.StopApplication();
         return Ack.Ok;

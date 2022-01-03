@@ -28,7 +28,7 @@ namespace ATech.Ring.DotNet.Cli.Workspace
             if (_configured)
             {
                 _logger.LogDebug("Executing Workspace Init Hook");
-                await _runner.RunProcessWaitAsync();
+                await _runner.RunProcessWaitAsync(token);
             }
             else
             {

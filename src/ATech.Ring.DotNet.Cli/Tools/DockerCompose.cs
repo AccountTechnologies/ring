@@ -1,3 +1,5 @@
+using System;
+using System.Threading;
 using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Abstractions.Tools;
 using Microsoft.Extensions.Logging;
@@ -9,32 +11,32 @@ namespace ATech.Ring.DotNet.Cli.Tools
         public DockerCompose(ILogger<ITool> logger) => Logger = logger;
 
         public string ExePath { get; set; } = "docker-compose";
-        public string[] DefaultArgs { get; set; } = { };
+        public string[] DefaultArgs { get; set; } = Array.Empty<string>();
         public ILogger<ITool> Logger { get; }
 
-        public async Task<ExecutionInfo> RmAsync(string composeFilePath)
+        public async Task<ExecutionInfo> RmAsync(string composeFilePath, CancellationToken token)
         {
-            return await this.RunProcessWaitAsync("-f", $"\"{composeFilePath}\"", "rm", "-f");
+            return await this.RunProcessWaitAsync(token, "-f", $"\"{composeFilePath}\"", "rm", "-f");
         }
 
-        public async Task<ExecutionInfo> PullAsync(string composeFilePath)
+        public async Task<ExecutionInfo> PullAsync(string composeFilePath, CancellationToken token)
         {
-            return await this.RunProcessWaitAsync("-f", $"\"{composeFilePath}\"", "pull");
+            return await this.RunProcessWaitAsync(token, "-f", $"\"{composeFilePath}\"", "pull");
         }
 
-        public async Task<ExecutionInfo> UpAsync(string composeFilePath)
+        public async Task<ExecutionInfo> UpAsync(string composeFilePath, CancellationToken token)
         {
-            return await this.RunProcessAsync("-f", $"\"{composeFilePath}\"", "up", "--force-recreate");
+            return await this.RunProcessAsync(token, "-f", $"\"{composeFilePath}\"", "up", "--force-recreate");
         }
 
-        public async Task<ExecutionInfo> DownAsync(string composeFilePath)
+        public async Task<ExecutionInfo> DownAsync(string composeFilePath, CancellationToken token)
         {
-            return await this.RunProcessWaitAsync("-f", $"\"{composeFilePath}\"", "down");
+            return await this.RunProcessWaitAsync(token, "-f", $"\"{composeFilePath}\"", "down");
         }
 
-        public async Task<ExecutionInfo> StopAsync(string composeFilePath)
+        public async Task<ExecutionInfo> StopAsync(string composeFilePath, CancellationToken token)
         {
-            return await this.RunProcessWaitAsync("-f", $"\"{composeFilePath}\"", "stop");
+            return await this.RunProcessWaitAsync(token, "-f", $"\"{composeFilePath}\"", "stop");
         }
     }
 }

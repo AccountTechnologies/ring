@@ -1,7 +1,6 @@
 ﻿namespace ATech.Ring.DotNet.Cli.Infrastructure;
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
@@ -14,7 +13,7 @@ using Microsoft.Extensions.Logging;
 
 public class WebsocketsHandler
 {
-    private readonly ConcurrentDictionary<Guid, WsClient> _clients = new();
+    private readonly HashSet<WsClient> _clients = new(new WsClientEqualityComparer());
     private readonly IHostApplicationLifetime _appLifetime;
     private readonly IReceiver _queue;
     private readonly IServer _server;
@@ -28,27 +27,12 @@ public class WebsocketsHandler
         _logger = logger;
     }
 
-
-    private Task BroadcastAsync((Guid id, WebSocket ws)[] clients, Message m)
+    private Task BroadcastAsync(Message m)
     {
-        Task SendAsync(WebSocket ws, Guid id, Message m)
-        {
-            try
-            {
-                if (_logger.IsEnabled(LogLevel.Debug)) _logger.LogDebug("{m} > {id}", m.ToString(), id);
-                return ws.SendMessageAsync(m, default);
-            }
-            catch (WebSocketException wse)
-            {
-                _logger.LogDebug("Exception {exception}", wse);
-                return Task.CompletedTask;
-            }
-        }
-
         var tasks = new List<Task>();
-        foreach (var (id, ws) in clients)
+        foreach (var client in _clients.Where(c => c.IsOpen))
         {
-            tasks.Add(SendAsync(ws, id, m));
+            tasks.Add(client.SendAsync(m));
         }
 
         return Task.WhenAll(tasks.ToArray());
@@ -63,25 +47,12 @@ public class WebsocketsHandler
 
             var messageLoop = Task.Run(async () =>
             {
-                while (await _queue.WaitToReadAsync(_appLifetime.ApplicationStopping))
+                while (await _queue.WaitToReadAsync(_appLifetime.ApplicationStopped))
                 {
                     try
                     {
-                        foreach (var (id, client) in _clients.ToList())
-                        {
-                            if (await client.IsOpenAsync()) continue;
-                            await TryRemoveAsync(id);
-                        }
-
-                        var all = await Task.WhenAll(_clients.Select(async x =>
-                        {
-                            var (id, client) = x;
-                            return (id, await client.Ws);
-                        }));
-
-                        await BroadcastAsync(all, _queue.Dequeue());
+                        await _queue.DequeueAsync(BroadcastAsync);
                     }
-
                     catch (OperationCanceledException)
                     {
                         break;
@@ -89,11 +60,15 @@ public class WebsocketsHandler
                 }
             }, _appLifetime.ApplicationStopping);
 
-            _appLifetime.ApplicationStopping.Register(() =>
+            _appLifetime.ApplicationStopping.Register(async () =>
             {
-                // blocking calls here to force server terminate before Kestrel Websockets die 
-                _server.TerminateAsync(default).GetAwaiter().GetResult();
-                messageLoop.GetAwaiter().GetResult();
+                await _server.TerminateAsync(default);
+                _queue.Complete();
+                await messageLoop;
+                foreach (var c in _clients)
+                {
+                    await c.DisposeAsync();
+                }
             }, true);
             await messageLoop;
         }
@@ -110,20 +85,10 @@ public class WebsocketsHandler
 
     public async Task ListenAsync(Guid clientId, Func<Task<WebSocket>> createSocket, CancellationToken t)
     {
-        var client = GetOrAddAsync(clientId, createSocket);
+        WsClient? client = null;
+        client = await CreateClient(clientId, await createSocket());
         await _server.ConnectAsync(t);
-
-        try
-        {
-            await client.ListenAsync(Dispatch, t);
-
-        }
-        catch (WebSocketException wse)
-        {
-            await TryRemoveAsync(clientId);
-            _logger.LogInformation("ClientId {clientId} ({errorCode}) {message}", clientId, wse.WebSocketErrorCode, wse.Message);
-            _logger.LogDebug("Exception {wse}", wse);
-        }
+        await client.ListenAsync(Dispatch, t);
     }
 
     private Task<Ack> Dispatch(Message m, CancellationToken token)
@@ -148,15 +113,15 @@ public class WebsocketsHandler
         return Dispatch(m);
     }
 
-    public WsClient GetOrAddAsync(Guid key, Func<Task<WebSocket>> create)
+    public async Task<WsClient> CreateClient(Guid key, WebSocket socket)
     {
-        return _clients.GetOrAdd(key, k => new WsClient(_logger, create()));
-    }
-
-    public async Task<(bool isSuccess, WebSocket webSocket)> TryRemoveAsync(Guid key)
-    {
-        var isRemoved = _clients.TryRemove(key, out var client);
-        if (isRemoved) await client.DisposeAsync();
-        return (isSuccess: isRemoved, isRemoved ? (await client.Ws) : null);
+        foreach (var c in _clients.Where(x => !x.IsOpen))
+        {
+            _clients.Remove(c);
+            await c.DisposeAsync();
+        }
+        var wsClient = new WsClient(_logger, key, socket);
+        if (!_clients.Add(wsClient)) throw new InvalidOperationException($"Client already exists: {key}");
+        return wsClient;
     }
 }

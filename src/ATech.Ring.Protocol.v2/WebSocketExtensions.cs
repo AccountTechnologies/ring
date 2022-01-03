@@ -18,22 +18,22 @@ public static class WebSocketExtensions
 
     public static async Task ListenAsync(this WebSocket webSocket, HandleMessage onReceived, CancellationToken token)
     {
-        WebSocketReceiveResult result;
+        WebSocketReceiveResult? result = null;
         do
         {
             var buffer = ArrayPool<byte>.Shared.Rent(Constants.MaxMessageSize);
-
-            try {
+            try
+            {
+                Array.Clear(buffer);
                 result = await webSocket.ReceiveAsync(buffer, token);
 
                 if (result.MessageType == WebSocketMessageType.Close)
                 {
-                    await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Requested by the client", token);
                     return;
                 }
                 if (!result.EndOfMessage) await webSocket.SendAckAsync(Ack.ExpectedEndOfMessage, token);
 
-                static Task OnReceived(ReadOnlySpan<byte> buffer, HandleMessage onReceived, CancellationToken token)
+                static Task? OnReceived(ReadOnlySpan<byte> buffer, HandleMessage onReceived, CancellationToken token)
                 {
                     var m = new Message(buffer);
                     return onReceived(ref m, token);
@@ -50,8 +50,8 @@ public static class WebSocketExtensions
                 ArrayPool<byte>.Shared.Return(buffer, true);
             }
 
-        } while (!result.CloseStatus.HasValue && !token.IsCancellationRequested);
+        } while (result is not null && !result.CloseStatus.HasValue && !token.IsCancellationRequested);
     }
 
-    public delegate Task HandleMessage(ref Message message, CancellationToken token);
+    public delegate Task? HandleMessage(ref Message message, CancellationToken token);
 }

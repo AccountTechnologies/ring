@@ -77,16 +77,16 @@ namespace ATech.Ring.DotNet.Cli.Runnables.Kustomize
                 CachePath = GetCachePath(kustomizationDir)
             };
 
-            await _bundle.RunProcessWaitAsync("mkdir", "-p", _cacheDir);
+            await _bundle.RunProcessWaitAsync(token, "mkdir", "-p", _cacheDir);
 
-            if (!await _bundle.FileExistsAsync(ctx.CachePath) || !await _bundle.IsValidManifestAsync(ctx.CachePath))
+            if (!await _bundle.FileExistsAsync(ctx.CachePath, token) || !await _bundle.IsValidManifestAsync(ctx.CachePath, token))
             {
-                var kustomizeResult = await _bundle.KustomizeBuildAsync(kustomizationDir, ctx.CachePath);
+                var kustomizeResult = await _bundle.KustomizeBuildAsync(kustomizationDir, ctx.CachePath, token);
                 _logger.LogDebug(kustomizeResult.Output);
             }
 
             var applyResult = await _bundle.TryAsync(10, TimeSpan.FromSeconds(2),
-                async t => await _bundle.ApplyJsonPathAsync(ctx.CachePath, NamespacesPath), token);
+                async t => await _bundle.ApplyJsonPathAsync(ctx.CachePath, NamespacesPath, token), token);
 
             _logger.LogDebug(applyResult.Output);
 
@@ -116,6 +116,6 @@ namespace ATech.Ring.DotNet.Cli.Runnables.Kustomize
         }
 
         protected override Task StopAsync(KustomizeContext ctx, CancellationToken token) => Task.CompletedTask;
-        protected override async Task DestroyAsync(KustomizeContext ctx, CancellationToken token) => await _bundle.DeleteAsync(ctx.CachePath);
+        protected override async Task DestroyAsync(KustomizeContext ctx, CancellationToken token) => await _bundle.DeleteAsync(ctx.CachePath, token);
     }
 }

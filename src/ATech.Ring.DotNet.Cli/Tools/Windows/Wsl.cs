@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Abstractions.Tools;
 using ATech.Ring.DotNet.Cli.Tools;
@@ -19,7 +20,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
 
         public async Task<string> ResolveToWindows(string wslPath)
         {
-            var getPath = await this.RunProcessWaitAsync("wslpath", "-w", wslPath).ContinueWith(async x =>
+            var getPath = await this.RunProcessWaitAsync(CancellationToken.None, "wslpath", "-w", wslPath).ContinueWith(async x =>
             {
                 var output = await x;
                 return output.Output;

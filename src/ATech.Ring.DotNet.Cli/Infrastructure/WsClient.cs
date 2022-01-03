@@ -1,9 +1,9 @@
 ﻿namespace ATech.Ring.DotNet.Cli.Infrastructure;
 
 using System;
-using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Logging;
 using ATech.Ring.Protocol.v2;
@@ -13,79 +13,113 @@ public delegate Task<Ack> Dispatch(Message m, CancellationToken t);
 
 public sealed class WsClient : IAsyncDisposable
 {
+    public Guid Id { get; }
     private readonly ILogger<WebsocketsHandler> _logger;
-    public Task<WebSocket> Ws { get; }
+    private WebSocket Ws { get; }
     private Task _backgroundAwaiter = Task.CompletedTask;
     private readonly CancellationTokenSource _localCts = new();
-    private readonly ConcurrentQueue<Task<Ack>> _taskQueue = new();
-    public WsClient(ILogger<WebsocketsHandler> logger, Task<WebSocket> ws)
+    private readonly Channel<Task<Ack>> _channel = Channel.CreateUnbounded<Task<Ack>>();
+    public WsClient(ILogger<WebsocketsHandler> logger, Guid id, WebSocket ws)
     {
         _logger = logger;
+        Id = id;
         Ws = ws;
     }
 
-    public async Task<bool> IsOpenAsync() => (await Ws).State == WebSocketState.Open;
+    public bool IsOpen => Ws.State == WebSocketState.Open;
+
+    public Task SendAsync(Message m)
+    {
+        try
+        {
+            if (_logger.IsEnabled(LogLevel.Debug)) _logger.LogDebug("{m} > {id}", m.ToString(), Id);
+            return Ws.SendMessageAsync(m);
+        }
+        catch (WebSocketException wse)
+        {
+            _logger.LogDebug("Exception {exception}", wse);
+            return Task.CompletedTask;
+        }
+    }
+
+    private async Task AckLongRunning(CancellationToken token)
+    {
+        try
+        {
+            while (await _channel.Reader.WaitToReadAsync(token))
+            {
+
+                while (_channel.Reader.TryPeek(out var peek))
+                {
+                    if (peek.IsCompleted)
+                    {
+                        if (_channel.Reader.TryRead(out var task)) await Ws.SendAckAsync(await task, token);
+                    }
+                    else
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(500), token);
+                    }
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+    }
 
     public async Task ListenAsync(Dispatch dispatch, CancellationToken t)
     {
-        var aggregatedCts = CancellationTokenSource.CreateLinkedTokenSource(t, _localCts.Token);
-        _backgroundAwaiter = Task.Run(async () =>
+        try
         {
-            while (true)
-            {
-                try
-                {
-                    while (_taskQueue.TryPeek(out var peek) && peek.IsCompleted)
-                    {
-                        if (_taskQueue.TryDequeue(out var task)) await (await Ws).SendAckAsync(await task, aggregatedCts.Token);
-                    }
-                    await Task.Delay(500, aggregatedCts.Token);
+            var cts = CancellationTokenSource.CreateLinkedTokenSource(t, _localCts.Token);
+            _backgroundAwaiter = Task.Run(() => AckLongRunning(cts.Token), cts.Token);
+            await Ws.ListenAsync(YieldOrQueueLongRunning, cts.Token);
+            _logger.LogInformation("Client {Id} disconnected ({WebSocketState})", Id, Ws.State);
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("Client {Id} disconnected ({WebSocketState})", Id, Ws.State);
+        }
+        catch(WebSocketException wx)
+        {
+            _logger.LogInformation("Client {Id} aborted the connection.", Id);
+            _logger.LogDebug(wx, "Exception details");
+        }
 
-                }
-                catch (OperationCanceledException)
+        Task<Ack>? YieldOrQueueLongRunning(ref Message message, CancellationToken token)
+        {
+            try
+            {
+                var (type, payload) = message;
+                using (_logger.WithProtocolScope(type))
                 {
-                    break;
+                    if (_logger.IsEnabled(LogLevel.Debug)) _logger.LogDebug("< {Payload}", payload.AsUtf8String());
+
+                    var backgroundTask = dispatch(message, token);
+                    if (backgroundTask.IsCompleted) return backgroundTask;
+                    else _channel.Writer.TryWrite(backgroundTask);
                 }
             }
-        }, aggregatedCts.Token);
-
-        await (await Ws).ListenAsync((ref Message message, CancellationToken token) =>
-        {
-            Task<Ack>? AckIfCompleted(Message message)
+            catch (OperationCanceledException)
             {
-                try
-                {
-                    var (type, payload) = message;
-                    using (_logger.WithProtocolScope(type))
-                    {
-                        if (_logger.IsEnabled(LogLevel.Debug)) _logger.LogDebug("< {Payload}", payload.AsUtf8String());
-
-                        var backgroundTask = dispatch(message, token);
-                        if (backgroundTask.IsCompleted) return backgroundTask;
-                        else _taskQueue.Enqueue(backgroundTask);
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    _logger.LogInformation("Listener terminating");
-                    _taskQueue.Enqueue(Task.FromResult(Ack.Terminating));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Server error");
-                    _taskQueue.Enqueue(Task.FromResult(Ack.ServerError));
-                }
-                return null;
+                _logger.LogInformation("Listener terminating");
+                _channel.Writer.TryWrite(Task.FromResult(Ack.Terminating));
             }
-
-            return AckIfCompleted(message);
-
-        }, aggregatedCts.Token);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Server error");
+                _channel.Writer.TryWrite(Task.FromResult(Ack.ServerError));
+            }
+            return null;
+        }
     }
 
     public async ValueTask DisposeAsync()
     {
+        if (IsOpen) await Ws.CloseOutputAsync(WebSocketCloseStatus.EndpointUnavailable, string.Empty, default);
         _localCts.Cancel();
         await _backgroundAwaiter;
+        Ws.Dispose();
     }
 }

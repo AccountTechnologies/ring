@@ -26,14 +26,14 @@ namespace ATech.Ring.DotNet.Cli.Runnables.DockerCompose
         {
             AddDetail(DetailsKeys.DockerComposePath, Config.FullPath);
             var ctx = new DockerComposeContext{ComposeFilePath = Config.FullPath };
-            await _dockerCompose.RmAsync(ctx.ComposeFilePath);
-            await _dockerCompose.PullAsync(ctx.ComposeFilePath);
+            await _dockerCompose.RmAsync(ctx.ComposeFilePath, token);
+            await _dockerCompose.PullAsync(ctx.ComposeFilePath, token);
             return ctx;
         }
 
         protected override async Task StartAsync(DockerComposeContext ctx, CancellationToken token)
         {
-            var result = await _dockerCompose.UpAsync(ctx.ComposeFilePath);
+            var result = await _dockerCompose.UpAsync(ctx.ComposeFilePath, token);
             ctx.ProcessId = result.Pid;
         }
 
@@ -44,12 +44,12 @@ namespace ATech.Ring.DotNet.Cli.Runnables.DockerCompose
 
         protected override async Task StopAsync(DockerComposeContext ctx, CancellationToken token)
         {
-            await _dockerCompose.StopAsync(ctx.ComposeFilePath);
+            await _dockerCompose.StopAsync(ctx.ComposeFilePath, token);
         }
 
         protected override async Task DestroyAsync(DockerComposeContext ctx, CancellationToken token)
         { 
-            await _dockerCompose.DownAsync(ctx.ComposeFilePath);
+            await _dockerCompose.DownAsync(ctx.ComposeFilePath, token);
         }
     }
 }
