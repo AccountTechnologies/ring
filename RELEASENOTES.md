@@ -1,5 +1,13 @@
 # Release notes
 
+## 3.1.2
+
+* fix: internal improvements around websockets
+
+## 3.1.1
+
+* fix: set VerisonPrefix in CI so the right version shows up in CLI
+
 ## 3.1.0
 
 * feat: enable detection of a default workspace file in cwd (#20)
