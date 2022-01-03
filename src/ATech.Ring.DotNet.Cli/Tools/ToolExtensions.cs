@@ -133,7 +133,14 @@ namespace ATech.Ring.DotNet.Cli.Tools
                 {
                     if (tcs.TrySetCanceled())
                     {
-                        p.Kill();
+                        try
+                        {
+                            p.Kill();
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine(ex.ToString());
+                        }
                     }
                 });
 

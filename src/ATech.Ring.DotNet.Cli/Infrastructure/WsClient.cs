@@ -81,7 +81,7 @@ public sealed class WsClient : IAsyncDisposable
         {
             _logger.LogInformation("Client {Id} disconnected ({WebSocketState})", Id, Ws.State);
         }
-        catch(WebSocketException wx)
+        catch (WebSocketException wx)
         {
             _logger.LogInformation("Client {Id} aborted the connection.", Id);
             _logger.LogDebug(wx, "Exception details");
@@ -117,9 +117,16 @@ public sealed class WsClient : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        if (IsOpen) await Ws.CloseOutputAsync(WebSocketCloseStatus.EndpointUnavailable, string.Empty, default);
-        _localCts.Cancel();
-        await _backgroundAwaiter;
-        Ws.Dispose();
+        try
+        {
+            if (IsOpen) await Ws.CloseOutputAsync(WebSocketCloseStatus.EndpointUnavailable, string.Empty, default);
+            _localCts.Cancel();
+            await _backgroundAwaiter;
+            Ws.Dispose();
+        }
+        catch (WebSocketException wx)
+        {
+            _logger.LogDebug(wx, "Error on disposing WsClient");
+        }
     }
 }
