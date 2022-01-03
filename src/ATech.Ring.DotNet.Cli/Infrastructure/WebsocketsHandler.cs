@@ -65,10 +65,6 @@ public class WebsocketsHandler
                 await _server.TerminateAsync(default);
                 _queue.Complete();
                 await messageLoop;
-                foreach (var c in _clients)
-                {
-                    await c.DisposeAsync();
-                }
             }, true);
             await messageLoop;
         }
@@ -86,7 +82,7 @@ public class WebsocketsHandler
     public async Task ListenAsync(Guid clientId, Func<Task<WebSocket>> createSocket, CancellationToken t)
     {
         WsClient? client = null;
-        client = await CreateClient(clientId, await createSocket());
+        client = CreateClient(clientId, await createSocket());
         await _server.ConnectAsync(t);
         await client.ListenAsync(Dispatch, t);
     }
@@ -113,15 +109,14 @@ public class WebsocketsHandler
         return Dispatch(m);
     }
 
-    public async Task<WsClient> CreateClient(Guid key, WebSocket socket)
+    public WsClient CreateClient(Guid key, WebSocket socket)
     {
-        foreach (var c in _clients.Where(x => !x.IsOpen))
-        {
-            _clients.Remove(c);
-            await c.DisposeAsync();
-        }
+        _clients.RemoveWhere(x => !x.IsOpen);
         var wsClient = new WsClient(_logger, key, socket);
         if (!_clients.Add(wsClient)) throw new InvalidOperationException($"Client already exists: {key}");
+
+        _appLifetime.ApplicationStopped.Register(async () => await wsClient.DisposeAsync());
+
         return wsClient;
     }
 }
