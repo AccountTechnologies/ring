@@ -58,6 +58,8 @@ public readonly ref struct Message
 {
     public ReadOnlySpan<byte> Bytes { get; }
     public M Type => Bytes.Length == 0 ? M.EMPTY : (M)Bytes[0];
+    public ReadOnlySpan<byte> Payload => Bytes.Length <= 1 ? ReadOnlySpan<byte>.Empty : Bytes[1..].SliceUntilNull();
+    public string PayloadString => Payload.AsUtf8String();
 
     public Message(ReadOnlySpan<byte> bytes) => Bytes = bytes.SliceUntilNull();
     public Message(M type, string value) : this(type, Encoding.UTF8.GetBytes(value)) { }
@@ -84,7 +86,7 @@ public readonly ref struct Message
     public void Deconstruct(out M type, out ReadOnlySpan<byte> payload)
     {
         type = Type;
-        payload = Bytes.Length == 1 ? ReadOnlySpan<byte>.Empty : Bytes[1..].SliceUntilNull();
+        payload = Payload;
     }
 
     public override string ToString()

@@ -29,6 +29,16 @@
     <ProjectReference Include="..\Ring.Client\Ring.Client.fsproj" />
   </ItemGroup>
 
+  <!-- Hack for https://github.com/dotnet/sdk/issues/11484 (Windows) -->
+  <Target Name="FlushCachedNugetWindows" AfterTargets="Build" Condition="$(TF_BUILD) == '' and '$(OS)' == 'Windows_NT'">
+    <Exec Command="rm $env:USERPROFILE\.nuget\packages\atech.ring.dotnet.cli\0.0.0-dev\ -recu -force || exit 0" />
+  </Target>
+
+  <!-- Hack for https://github.com/dotnet/sdk/issues/11484 (Linux) -->
+  <Target Name="FlushCachedNugetNonWindows" AfterTargets="Build" Condition="$(TF_BUILD) == '' and '$(OS)' != 'Windows_NT'">
+    <Exec Command="rm ~/.nuget/packages/atech.ring.dotnet.cli/0.0.0-dev -rf || exit 0" />
+  </Target>
+
   <Target Name="PackRingOnLocalBuild" AfterTargets="Build" Condition="$(TF_BUILD) == ''">
     <Exec Command="dotnet pack ../../src/ATech.Ring.DotNet.Cli -c Release -p:VersionPrefix=0.0.0-dev" />
   </Target>

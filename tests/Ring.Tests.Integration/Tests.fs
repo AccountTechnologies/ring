@@ -63,8 +63,20 @@ let tests =
       do! ring.Client.StartWorkspace()
       let runnableId = "k8s-debug-poc"
       let timeout = TimeSpan.FromSeconds(60)
-      let event = ring.Client.WaitUntilMessage(M.RUNNABLE_HEALTHY , suchAs = (fun payload -> payload = runnableId), timeout = timeout)
-      $"Should receive RunnableHealthy for k8s-debug-poc (within {timeout})" |> Expect.isSome event
+
+      let expectEvent (typ:M) =
+        let event = ring.Client.WaitUntilMessage(typ, timeout = timeout)
+
+        let runnable = $"Should receive a {typ} message (within {timeout})" |> Expect.wantSome event
+        $"Runnable Id should be correct" |> Expect.equal runnable.Payload runnableId
+        
+      expectEvent M.RUNNABLE_INITIATED
+      expectEvent M.RUNNABLE_STARTED
+      expectEvent M.RUNNABLE_HEALTH_CHECK
+      expectEvent M.RUNNABLE_HEALTHY
+      do! ring.Client.Terminate()
+      expectEvent M.RUNNABLE_STOPPED
+      expectEvent M.RUNNABLE_DESTROYED
     }
 
     testTask "discover and run default workspace config if exists" {
@@ -80,9 +92,11 @@ let tests =
       let timeout = TimeSpan.FromSeconds(60)
       let task = ring.Client.Connect()
       ring.Run(debugMode=true)
-      let event = ring.Client.WaitUntilMessage(M.RUNNABLE_HEALTHY, suchAs = (fun payload -> payload = runnableId), timeout = timeout)
+      let event = ring.Client.WaitUntilMessage(M.RUNNABLE_HEALTHY, timeout = timeout)
+      
       do! task
     
-      $"Should receive RunnableHealthy for {runnableId} (within {timeout})" |> Expect.isSome event
+      let runnable = $"Should receive a RunnableHealthy message (within {timeout})" |> Expect.wantSome event
+      $"Runnable Id should be correct" |> Expect.equal runnable.Payload runnableId
     }
   ]

@@ -35,7 +35,7 @@ type WsClient(options: ClientOptions) =
 
       listenTask <- s.ListenAsync(WebSocketExtensions.HandleMessage(
       fun m t ->
-        onRingEvent.Trigger({Type=m.Type; Payload = m.Bytes.AsUtf8String()})
+        onRingEvent.Trigger({Type=m.Type; Payload = m.PayloadString})
         Task.CompletedTask
       ), cancellationToken)
       return s
@@ -65,13 +65,12 @@ type WsClient(options: ClientOptions) =
   }
   member _.IsConnected = socket.IsValueCreated
 
-  member x.WaitUntilMessage(typ: M, ?suchAs: string -> bool, ?timeout: TimeSpan) =
+  member x.WaitUntilMessage(typ: M, ?timeout: TimeSpan) =
     try
       x.Event
-      |> Observable.iter (fun x -> printfn "%A" x.Type)
+      |> Observable.iter (fun x -> printfn "RECEIVED: %A %s" x.Type x.Payload)
       |> Observable.firstIf (fun x ->  x.Type = typ)
       |> Observable.timeout (DateTimeOffset.Now.Add(defaultArg timeout (TimeSpan.FromSeconds(10))))
-      |> Observable.filter (fun x -> x.Type = typ)
       |> Observable.wait
       |> Some
     with
