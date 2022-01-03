@@ -47,6 +47,11 @@ public interface IAsMessage
 public static class ReadOnlySpanExtensions
 {
     public static string AsUtf8String(this ReadOnlySpan<byte> span) => Encoding.UTF8.GetString(span);
+    public static ReadOnlySpan<byte> SliceUntilNull(this ReadOnlySpan<byte> span)
+    {
+        var nullChar = span.IndexOf((byte)0);
+        return span[..(nullChar == -1 ? span.Length : nullChar)];
+    }
 }
 
 public readonly ref struct Message
@@ -54,14 +59,15 @@ public readonly ref struct Message
     public ReadOnlySpan<byte> Bytes { get; }
     public M Type => Bytes.Length == 0 ? M.EMPTY : (M)Bytes[0];
 
-    public Message(ReadOnlySpan<byte> bytes) => Bytes = bytes;
+    public Message(ReadOnlySpan<byte> bytes) => Bytes = bytes.SliceUntilNull();
     public Message(M type, string value) : this(type, Encoding.UTF8.GetBytes(value)) { }
     public Message(M type, byte value) : this(type, new byte[] {value}) { }
     public Message(M type, ReadOnlySpan<byte> bytes)
     {
-        byte[] newBytes = new byte[bytes.Length + 1];
+        var trimmedBytes = bytes.SliceUntilNull();
+        byte[] newBytes = new byte[trimmedBytes.Length + 1];
         newBytes[0] = (byte)type;
-        Array.Copy(bytes.ToArray(), 0, newBytes, 1, bytes.Length);
+        Array.Copy(trimmedBytes.ToArray(), 0, newBytes, 1, trimmedBytes.Length);
         Bytes = newBytes;
     }
 
@@ -70,7 +76,7 @@ public readonly ref struct Message
         byte[] newBytes = new byte[chars.Length + 1];
         newBytes[0] = (byte)type;
         Encoding.UTF8.GetBytes(chars, newBytes.AsSpan()[1..]);
-        Bytes = newBytes;
+        Bytes = new ReadOnlySpan<byte>(newBytes).SliceUntilNull();
     }
 
     public Message(M type) => Bytes = new byte[] { (byte)type };
@@ -78,7 +84,7 @@ public readonly ref struct Message
     public void Deconstruct(out M type, out ReadOnlySpan<byte> payload)
     {
         type = Type;
-        payload = Bytes.Length == 1 ? ReadOnlySpan<byte>.Empty : SliceUntilNull(Bytes[1..]);
+        payload = Bytes.Length == 1 ? ReadOnlySpan<byte>.Empty : Bytes[1..].SliceUntilNull();
     }
 
     public override string ToString()
@@ -86,12 +92,6 @@ public readonly ref struct Message
         var (type, payload) = this;
         var maybeColon = payload == ReadOnlySpan<byte>.Empty ? "" : ":";
         return $"{type}{maybeColon}{payload.AsUtf8String()}";
-    }
-
-    private static ReadOnlySpan<byte> SliceUntilNull(ReadOnlySpan<byte> m)
-    {
-        var nullChar = m.IndexOf((byte)0);
-        return m[..(nullChar == -1 ? m.Length : nullChar)];
     }
 
     public static implicit operator ReadOnlySpan<byte>(Message m) => m.Bytes;

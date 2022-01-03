@@ -16,7 +16,7 @@ public static class WebSocketExtensions
     public static Task SendMessageAsync(this WebSocket s, Message m, CancellationToken token = default)
     {
         if (s.State != WebSocketState.Open) return Task.CompletedTask;
-        return s.SendAsync(new ArraySegment<byte>(m.Bytes.ToArray()), WebSocketMessageType.Binary, true, token);
+        return s.SendAsync(new ArraySegment<byte>(m.Bytes.SliceUntilNull().ToArray()), WebSocketMessageType.Binary, true, token);
     }
 
     public static async Task ListenAsync(this WebSocket webSocket, HandleMessage onReceived, CancellationToken token)
@@ -38,7 +38,7 @@ public static class WebSocketExtensions
 
                 static Task? OnReceived(ReadOnlySpan<byte> buffer, HandleMessage onReceived, CancellationToken token)
                 {
-                    var m = new Message(buffer);
+                    var m = new Message(buffer.SliceUntilNull());
                     return onReceived(ref m, token);
                 }
 
