@@ -40,22 +40,25 @@ namespace ATech.Ring.DotNet.Cli.Tools
 
         public static async Task<ExecutionInfo> TryAsync(this ITool t, int times, TimeSpan backOffInterval,
             Func<ITool, Task<ExecutionInfo>> func, CancellationToken token)
-            => await TryAsync(times, backOffInterval, () => func(t), r => r.IsSuccess, token); 
+            => await TryAsync(times, backOffInterval, () => func(t), r => r.IsSuccess, token);
 
-        public static Task<ExecutionInfo> RunProcessWaitAsync(this ITool tool, CancellationToken token, params object[] args)
+        public static Task<ExecutionInfo> RunProcessWaitAsync(this ITool tool, CancellationToken token)
+          => tool.RunProcessCoreAsync(args: null, wait: true, token: token);
+
+        public static Task<ExecutionInfo> RunProcessWaitAsync(this ITool tool, object[] args, CancellationToken token)
             => tool.RunProcessCoreAsync(args: args, wait: true, token: token);
 
-        public static Task<ExecutionInfo> RunProcessAsync(this ITool tool, CancellationToken token, params object[] args)
+        public static Task<ExecutionInfo> RunProcessAsync(this ITool tool, object[] args, CancellationToken token)
             => tool.RunProcessCoreAsync(args, token: token);
 
-        public static Task<ExecutionInfo> RunProcessAsync(this ITool tool, string workingDirectory, IDictionary<string, string>? envVars, CancellationToken token, params object[] args)
+        public static Task<ExecutionInfo> RunProcessAsync(this ITool tool, string workingDirectory, IDictionary<string, string>? envVars, object[]? args, CancellationToken token)
             => tool.RunProcessCoreAsync(args, envVars: envVars, workingDirectory: workingDirectory, token: token);
 
-        public static Task<ExecutionInfo> RunProcessAsync(this ITool tool, Action<string> onErrorData, IDictionary<string, string>? envVars, CancellationToken token, params object[] args)
+        public static Task<ExecutionInfo> RunProcessAsync(this ITool tool, Action<string> onErrorData, IDictionary<string, string>? envVars, object[]? args, CancellationToken token)
             => tool.RunProcessCoreAsync(args: args, onErrorData: onErrorData, envVars: envVars, token: token);
 
         private static async Task<ExecutionInfo> RunProcessCoreAsync(this ITool tool,
-                                                               IEnumerable<object> args,
+                                                               IEnumerable<object>? args,
                                                                bool wait = false,
                                                                string? workingDirectory = null,
                                                                IDictionary<string, string>? envVars = null,

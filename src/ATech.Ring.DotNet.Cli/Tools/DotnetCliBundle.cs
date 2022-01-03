@@ -30,12 +30,12 @@ namespace ATech.Ring.DotNet.Cli.Tools
             if (File.Exists(ctx.ExePath))
             {
                 _exeRunner.ExePath = ctx.ExePath;
-                return await _exeRunner.RunProcessAsync(token, ctx.WorkingDir, DefaultEnvVars);
+                return await _exeRunner.RunProcessAsync(ctx.WorkingDir, null, null, token);
             }
             if (File.Exists(ctx.EntryAssemblyPath))
             {
                 // Using dotnet exec here because dotnet run spawns subprocesses and killing it doesn't actually kill them
-                return await this.RunProcessAsync(token, ctx.WorkingDir, DefaultEnvVars, "exec", $"\"{ctx.EntryAssemblyPath}\"");
+                return await this.RunProcessAsync(ctx.WorkingDir, DefaultEnvVars, new object[] { "exec", $"\"{ctx.EntryAssemblyPath}\"" }, token);
             }
             throw new InvalidOperationException($"Neither Exe path nor Dll path specified. {ctx.CsProjPath}");
 
@@ -54,6 +54,6 @@ namespace ATech.Ring.DotNet.Cli.Tools
         }
 
         public async Task<ExecutionInfo> BuildAsync(string csProjFile, CancellationToken token)
-            => await this.RunProcessWaitAsync(token, "build", csProjFile, "-v:q", "/nologo", "/nodereuse:false");
+            => await this.RunProcessWaitAsync(new object[] { "build", csProjFile, "-v:q", "/nologo", "/nodereuse:false" }, token);
     }
 }

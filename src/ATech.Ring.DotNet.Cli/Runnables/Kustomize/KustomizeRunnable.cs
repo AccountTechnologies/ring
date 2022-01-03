@@ -77,7 +77,7 @@ namespace ATech.Ring.DotNet.Cli.Runnables.Kustomize
                 CachePath = GetCachePath(kustomizationDir)
             };
 
-            await _bundle.RunProcessWaitAsync(token, "mkdir", "-p", _cacheDir);
+            await _bundle.RunProcessWaitAsync(new object[] { "mkdir", "-p", _cacheDir }, token);
 
             if (!await _bundle.FileExistsAsync(ctx.CachePath, token) || !await _bundle.IsValidManifestAsync(ctx.CachePath, token))
             {

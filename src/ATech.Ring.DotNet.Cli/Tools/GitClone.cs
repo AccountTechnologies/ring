@@ -56,7 +56,7 @@ namespace ATech.Ring.DotNet.Cli.Tools
                 return await this.TryAsync(3, TimeSpan.FromSeconds(10),
                     async t =>
                     {
-                        var result = await t.RunProcessWaitAsync(token, "clone", singleBranchArg, depthArg, "--", gitCfg.SshRepoUrl, cloneFullPath);
+                        var result = await t.RunProcessWaitAsync(new object[] { "clone", singleBranchArg, depthArg, "--", gitCfg.SshRepoUrl, cloneFullPath }, token);
                         Logger.LogInformation(result.IsSuccess ? PhaseStatus.OK : PhaseStatus.FAILED);
                         return result;
                     }, token);
@@ -64,14 +64,14 @@ namespace ATech.Ring.DotNet.Cli.Tools
 
             if (!Directory.Exists(cloneFullPath)) return await CloneAsync();
 
-            var output = await this.RunProcessWaitAsync(token, "-C", cloneFullPath, "status");
+            var output = await this.RunProcessWaitAsync(new object[] { "-C", cloneFullPath, "status" }, token);
             if (output.IsSuccess)
             {
                 Logger.LogInformation("Pulling at {OutputPath}", cloneFullPath);
                 return await this.TryAsync(3, TimeSpan.FromSeconds(10),
                     async t =>
                     {
-                        var result = await t.RunProcessWaitAsync(token, "-C", cloneFullPath, "pull", depthArg);
+                        var result = await t.RunProcessWaitAsync(new object[] {"-C", cloneFullPath, "pull", depthArg }, token);
                         Logger.LogInformation(result.IsSuccess ? PhaseStatus.OK : PhaseStatus.FAILED);
                         return result;
                     }, token);

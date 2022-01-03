@@ -20,7 +20,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
 
         public async Task<string> ResolveToWindows(string wslPath)
         {
-            var getPath = await this.RunProcessWaitAsync(CancellationToken.None, "wslpath", "-w", wslPath).ContinueWith(async x =>
+            var getPath = await this.RunProcessWaitAsync(new object[] { "wslpath", "-w", wslPath }, CancellationToken.None).ContinueWith(async x =>
             {
                 var output = await x;
                 return output.Output;

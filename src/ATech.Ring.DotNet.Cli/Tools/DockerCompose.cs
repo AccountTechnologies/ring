@@ -16,27 +16,27 @@ namespace ATech.Ring.DotNet.Cli.Tools
 
         public async Task<ExecutionInfo> RmAsync(string composeFilePath, CancellationToken token)
         {
-            return await this.RunProcessWaitAsync(token, "-f", $"\"{composeFilePath}\"", "rm", "-f");
+            return await this.RunProcessWaitAsync(new object[] { "-f", $"\"{composeFilePath}\"", "rm", "-f" }, token);
         }
 
         public async Task<ExecutionInfo> PullAsync(string composeFilePath, CancellationToken token)
         {
-            return await this.RunProcessWaitAsync(token, "-f", $"\"{composeFilePath}\"", "pull");
+            return await this.RunProcessWaitAsync(new object[] { "-f", $"\"{composeFilePath}\"", "pull" }, token);
         }
 
         public async Task<ExecutionInfo> UpAsync(string composeFilePath, CancellationToken token)
         {
-            return await this.RunProcessAsync(token, "-f", $"\"{composeFilePath}\"", "up", "--force-recreate");
+            return await this.RunProcessAsync(new object[] { "-f", $"\"{composeFilePath}\"", "up", "--force-recreate" }, token);
         }
 
         public async Task<ExecutionInfo> DownAsync(string composeFilePath, CancellationToken token)
         {
-            return await this.RunProcessWaitAsync(token, "-f", $"\"{composeFilePath}\"", "down");
+            return await this.RunProcessWaitAsync(new object[] { "-f", $"\"{composeFilePath}\"", "down" }, token);
         }
 
         public async Task<ExecutionInfo> StopAsync(string composeFilePath, CancellationToken token)
         {
-            return await this.RunProcessWaitAsync(token, "-f", $"\"{composeFilePath}\"", "stop");
+            return await this.RunProcessWaitAsync(new object[] { "-f", $"\"{composeFilePath}\"", "stop" }, token);
         }
     }
 }

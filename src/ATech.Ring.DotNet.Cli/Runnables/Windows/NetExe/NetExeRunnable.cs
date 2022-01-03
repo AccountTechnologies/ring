@@ -42,7 +42,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Runnables.NetExe
         protected override async Task StartAsync(NetExeContext ctx, CancellationToken token)
         {
             _exeRunner.ExePath = ctx.EntryAssemblyPath;
-            var result = await _exeRunner.RunProcessAsync(token, Config.Args);
+            var result = await _exeRunner.RunProcessAsync(Config.Args, token);
             ctx.ProcessId = result.Pid;
             ctx.Output = result.Output;
         }

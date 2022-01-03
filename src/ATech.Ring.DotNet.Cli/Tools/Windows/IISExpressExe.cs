@@ -25,7 +25,7 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
 
         public async Task<ExecutionInfo> StartWebsite(string configPath, CancellationToken token, IDictionary<string,string>? envVars = null)
         {
-            return await this.RunProcessAsync(OnError, envVars, token, $"/config:\"{configPath}\"", $"/siteid:1");
+            return await this.RunProcessAsync(OnError, envVars, new object[] { $"/config:\"{configPath}\"", $"/siteid:1" }, token);
         }
     }
 }
