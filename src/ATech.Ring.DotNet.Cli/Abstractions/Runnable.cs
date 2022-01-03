@@ -31,6 +31,8 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
         public event EventHandler? OnInitExecuted;
         public IReadOnlyDictionary<string, object> Details => _details;
         private readonly Dictionary<string, object> _details = new();
+        private Task _stopTask = Task.CompletedTask;
+        private Task _destroyTask = Task.CompletedTask;
         /// <summary>
         /// Details added via this method are pushed to clients where can be used for different purposes
         /// </summary>
@@ -61,7 +63,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
         private async Task<Fsm> InitFsm(CancellationToken token)
         {
             _fsm.Configure(State.Zero)
-                .OnEntryFromAsync(Trigger.Destroy, async ctx => await DestroyCoreAsync(_context, token))
+                .OnEntryFromAsync(Trigger.Destroy, ctx => _destroyTask = DestroyCoreAsync(_context, token))
                 .Ignore(Trigger.NoOp)
                 .Ignore(Trigger.HcOk)
                 .Ignore(Trigger.HcUnhealthy)
@@ -69,7 +71,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
 
             _fsm.Configure(State.Idle)
                 .OnEntryFromAsync(Trigger.Init, () => InitCoreAsync(token))
-                .OnEntryFromAsync(Trigger.Stop, () => StopCoreAsync(_context, token))
+                .OnEntryFromAsync(Trigger.Stop, () => _stopTask = StopCoreAsync(_context, token))
                 .Permit(Trigger.Start, State.Pending)
                 .Permit(Trigger.InitFailure, State.Pending)
                 .Permit(Trigger.Destroy, State.Zero)
@@ -172,7 +174,9 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
         {
             using var _ = _logger.BeginScope(this.ToScope());
             await _fsm.FireAsync(Trigger.Stop);
+            await _stopTask;
             await _fsm.FireAsync(Trigger.Destroy);
+            await _destroyTask;
         }
 
         private async Task InitCoreAsync(CancellationToken token)

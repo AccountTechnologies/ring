@@ -65,8 +65,8 @@ public class WebsocketsHandler
             _appLifetime.ApplicationStopping.Register(async () =>
             {
                 await _server.TerminateAsync(default);
-                await messageLoop;
                 _queue.Complete();
+                await messageLoop;
             }, true);
             await messageLoop;
         }
