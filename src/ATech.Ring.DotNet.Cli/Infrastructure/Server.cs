@@ -7,8 +7,8 @@ using ATech.Ring.Configuration;
 using ATech.Ring.DotNet.Cli.Dtos;
 using ATech.Ring.DotNet.Cli.Logging;
 using ATech.Ring.DotNet.Cli.Workspace;
-using ATech.Ring.Protocol;
-using ATech.Ring.Protocol.Events;
+using ATech.Ring.Protocol.v2;
+using ATech.Ring.Protocol.v2.Events;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Stateless;
@@ -22,10 +22,10 @@ public class Server : IServer
     private readonly ILogger<Server> _logger;
     private readonly IWorkspaceLauncher _launcher;
     private readonly IHostApplicationLifetime _appLifetime;
-    private readonly ISender<IRingEvent> _sender;
+    private readonly ISender _sender;
     private readonly ServerFsm _fsm;
     private Scope? _scope;
-    public Server(Func<Scope> getScope, ILogger<Server> logger, IWorkspaceLauncher launcher, IHostApplicationLifetime appLifetime, ISender<IRingEvent> sender)
+    public Server(Func<Scope> getScope, ILogger<Server> logger, IWorkspaceLauncher launcher, IHostApplicationLifetime appLifetime, ISender sender)
     {
         _getScope = getScope;
         _logger = logger;
@@ -44,6 +44,7 @@ public class Server : IServer
                 RequestWorkspaceInfo();
             })
           .Ignore(T.Unload)
+          .Ignore(T.Stop)
           .Permit(T.Load, S.Loaded);
 
         _fsm.Configure(S.Loaded)
@@ -60,7 +61,8 @@ public class Server : IServer
             .InternalTransition(T.Include, () => { })
             .InternalTransition(T.Exclude, () => { })
             .Permit(T.Unload, S.Idle)
-            .Permit(T.Start, S.Running);
+            .Permit(T.Start, S.Running)
+            .Ignore(T.Stop);
 
         _fsm.Configure(S.Running)
             .OnEntryFromAsync(T.Start, async () =>
@@ -78,14 +80,14 @@ public class Server : IServer
 
     public Task<Ack> ConnectAsync(CancellationToken token)
     {
-        IRingEvent? maybeEvent = _fsm.State switch
+        Message maybeMessage = _fsm.State switch
         {
-            S.Idle => new ServerIdle(),
-            S.Loaded => new ServerLoaded { WorkspacePath = _launcher.WorkspacePath },
-            S.Running => new ServerRunning { WorkspacePath = _launcher.WorkspacePath },
-            _ => default
+            S.Idle => Message.ServerIdle(),
+            S.Loaded => Message.ServerLoaded(_launcher.WorkspacePath.AsSpan()),
+            S.Running => Message.ServerRunning(_launcher.WorkspacePath.AsSpan()),
+            _ => Message.Empty()
         };
-        if (maybeEvent is IRingEvent e) _sender.Enqueue(e);
+        if (maybeMessage is not { Type: M.EMPTY }) _sender.Enqueue(maybeMessage);
         return Task.FromResult(Ack.Ok);
     }
 
@@ -106,8 +108,9 @@ public class Server : IServer
     {
         using var _ = _logger.WithHostScope(Phase.DESTROY);
         _logger.LogInformation("Server terminating");
-        await UnloadAsync(token);
-        await _launcher.DisposeAsync();
+        await _fsm.FireAsync(T.Stop);
+        await _launcher.WaitUntilStoppedAsync(token);
+        await _fsm.FireAsync(T.Unload);
         _scope?.Dispose();
         if (!_appLifetime.ApplicationStopping.IsCancellationRequested) _appLifetime.StopApplication();
         return Ack.Ok;

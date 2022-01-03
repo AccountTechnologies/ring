@@ -4,7 +4,7 @@ open Expecto
 open Fake.Core
 open Ring.Test.Integration.DotNet.Types
 open Ring.Test.Integration.RingControl
-open ATech.Ring.Protocol.Events
+open ATech.Ring.Protocol.v2
 open System
 open Ring.Test.Integration.TestContext
 open System.IO
@@ -63,7 +63,7 @@ let tests =
       do! ring.Client.StartWorkspace()
       let runnableId = "k8s-debug-poc"
       let timeout = TimeSpan.FromSeconds(60)
-      let event = ring.Client.WaitUntil<RunnableHealthy>(suchAs = (fun x -> x.UniqueId = runnableId), timeout = timeout)
+      let event = ring.Client.WaitUntilMessage(M.RUNNABLE_HEALTHY , suchAs = (fun payload -> payload = runnableId), timeout = timeout)
       $"Should receive RunnableHealthy for k8s-debug-poc (within {timeout})" |> Expect.isSome event
     }
 
@@ -78,10 +78,11 @@ let tests =
 
       let runnableId = "aspnetcore"
       let timeout = TimeSpan.FromSeconds(60)
-
-      ring.Run()
-      do! ring.Client.Connect()
-      let event = ring.Client.WaitUntil<RunnableHealthy>(suchAs = (fun x -> x.UniqueId = runnableId), timeout = timeout)
+      let task = ring.Client.Connect()
+      ring.Run(debugMode=true)
+      let event = ring.Client.WaitUntilMessage(M.RUNNABLE_HEALTHY, suchAs = (fun payload -> payload = runnableId), timeout = timeout)
+      do! task
+    
       $"Should receive RunnableHealthy for {runnableId} (within {timeout})" |> Expect.isSome event
     }
   ]

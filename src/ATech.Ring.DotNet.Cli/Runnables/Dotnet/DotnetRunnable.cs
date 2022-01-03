@@ -4,8 +4,7 @@ using System.Threading.Tasks;
 using ATech.Ring.Configuration.Interfaces;
 using ATech.Ring.DotNet.Cli.CsProj;
 using ATech.Ring.DotNet.Cli.Tools;
-using ATech.Ring.Protocol;
-using ATech.Ring.Protocol.Events;
+using ATech.Ring.Protocol.v2;
 using Microsoft.Extensions.Logging;
 
 namespace ATech.Ring.DotNet.Cli.Runnables.Dotnet
@@ -21,9 +20,9 @@ namespace ATech.Ring.DotNet.Cli.Runnables.Dotnet
         protected DotnetRunnableBase(TConfig config,
                                      DotnetCliBundle dotnet,
                                      ILogger<DotnetRunnableBase<TContext, TConfig>> logger, 
-                                     ISender<IRingEvent> eventQ,
+                                     ISender sender,
                                      GitClone gitClone
-                                     ) : base(config, logger, eventQ)
+                                     ) : base(config, logger, sender)
         {
             Dotnet = dotnet;
             _logger = logger;
@@ -40,7 +39,7 @@ namespace ATech.Ring.DotNet.Cli.Runnables.Dotnet
             if (File.Exists(ctx.EntryAssemblyPath)) return ctx;
 
             _logger.LogDebug("Building {Project}", ctx.CsProjPath);
-            var result = await Dotnet.BuildAsync(ctx.CsProjPath);
+            var result = await Dotnet.BuildAsync(ctx.CsProjPath, token);
 
             if (!result.IsSuccess)
             {
@@ -51,7 +50,7 @@ namespace ATech.Ring.DotNet.Cli.Runnables.Dotnet
 
         protected override async Task StartAsync(TContext ctx, CancellationToken token)
         {
-            var info = await Dotnet.RunAsync(ctx);
+            var info = await Dotnet.RunAsync(ctx, token);
             ctx.ProcessId = info.Pid;
             ctx.Output = info.Output;
         }

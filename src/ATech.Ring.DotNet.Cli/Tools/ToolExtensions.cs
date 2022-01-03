@@ -24,7 +24,14 @@ namespace ATech.Ring.DotNet.Cli.Tools
             {
                 result = await func();
                 if (until(result)) return result;
-                await Task.Delay(backOffInterval, token);
+                try
+                {
+                    await Task.Delay(backOffInterval, token);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
                 triesLeft--;
             }
 
@@ -33,26 +40,29 @@ namespace ATech.Ring.DotNet.Cli.Tools
 
         public static async Task<ExecutionInfo> TryAsync(this ITool t, int times, TimeSpan backOffInterval,
             Func<ITool, Task<ExecutionInfo>> func, CancellationToken token)
-            => await TryAsync(times, backOffInterval, () => func(t), r => r.IsSuccess, token); 
+            => await TryAsync(times, backOffInterval, () => func(t), r => r.IsSuccess, token);
 
-        public static Task<ExecutionInfo> RunProcessWaitAsync(this ITool tool, params object[] args)
-            => tool.RunProcessCoreAsync(args: args, wait: true);
+        public static Task<ExecutionInfo> RunProcessWaitAsync(this ITool tool, CancellationToken token)
+          => tool.RunProcessCoreAsync(args: null, wait: true, token: token);
 
-        public static Task<ExecutionInfo> RunProcessAsync(this ITool tool, params object[] args)
-            => tool.RunProcessCoreAsync(args);
+        public static Task<ExecutionInfo> RunProcessWaitAsync(this ITool tool, object[] args, CancellationToken token)
+            => tool.RunProcessCoreAsync(args: args, wait: true, token: token);
 
-        public static Task<ExecutionInfo> RunProcessAsync(this ITool tool, string workingDirectory, IDictionary<string, string>? envVars, params object[] args)
-            => tool.RunProcessCoreAsync(args, envVars: envVars, workingDirectory: workingDirectory);
+        public static Task<ExecutionInfo> RunProcessAsync(this ITool tool, object[] args, CancellationToken token)
+            => tool.RunProcessCoreAsync(args, token: token);
 
-        public static Task<ExecutionInfo> RunProcessAsync(this ITool tool, Action<string> onErrorData, IDictionary<string, string>? envVars, params object[] args)
-            => tool.RunProcessCoreAsync(args: args, onErrorData: onErrorData, envVars: envVars);
+        public static Task<ExecutionInfo> RunProcessAsync(this ITool tool, string workingDirectory, IDictionary<string, string>? envVars, object[]? args, CancellationToken token)
+            => tool.RunProcessCoreAsync(args, envVars: envVars, workingDirectory: workingDirectory, token: token);
+
+        public static Task<ExecutionInfo> RunProcessAsync(this ITool tool, Action<string> onErrorData, IDictionary<string, string>? envVars, object[]? args, CancellationToken token)
+            => tool.RunProcessCoreAsync(args: args, onErrorData: onErrorData, envVars: envVars, token: token);
 
         private static async Task<ExecutionInfo> RunProcessCoreAsync(this ITool tool,
-                                                               IEnumerable<object> args,
+                                                               IEnumerable<object>? args,
                                                                bool wait = false,
                                                                string? workingDirectory = null,
                                                                IDictionary<string, string>? envVars = null,
-                                                               Action<string>? onErrorData = null)
+                                                               Action<string>? onErrorData = null, CancellationToken token=default)
         {
             var procUid = Guid.NewGuid().ToString("n").Remove(10);
             try
@@ -119,13 +129,28 @@ namespace ATech.Ring.DotNet.Cli.Tools
 
                 var tcs = new TaskCompletionSource<ExecutionInfo>();
 
+                token.Register(() =>
+                {
+                    if (tcs.TrySetCanceled())
+                    {
+                        try
+                        {
+                            p.Kill();
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine(ex.ToString());
+                        }
+                    }
+                });
+
                 void OnExit(object? sender, EventArgs _)
                 {
                     if (sender is not Process e) return;
                     e.OutputDataReceived -= OnData;
                     e.ErrorDataReceived -= OnError;
                     e.Exited -= OnExit;
-                    tcs.SetResult(new ExecutionInfo { Pid = e.Id, Output = sb.ToString().Trim('\r', '\n', ' ', '\t'), ExitCode = e.ExitCode });
+                    tcs.TrySetResult(new ExecutionInfo(e.Id, e.ExitCode, sb.ToString().Trim('\r', '\n', ' ', '\t')));
                     e.Dispose();
                 }
 
@@ -139,15 +164,20 @@ namespace ATech.Ring.DotNet.Cli.Tools
                 }
                 else
                 {
-                    result = new ExecutionInfo { Pid = p.Id, Output = sb.ToString().Trim('\r', '\n', ' ', '\t') };
+                    result = new ExecutionInfo(p.Id, null, sb.ToString().Trim('\r', '\n', ' ', '\t'));
                 }
 
                 return result;
             }
+            catch (OperationCanceledException)
+            {
+                tool.Logger.LogInformation("Forcefully terminated process {procUid}", procUid);
+                return ExecutionInfo.Empty;
+            }
             catch (Exception ex)
             {
                 tool.Logger.LogCritical(ex, "{procUid} - Unhandled error when starting process", procUid);
-                return new ExecutionInfo();
+                return ExecutionInfo.Empty;
             }
         }
     }

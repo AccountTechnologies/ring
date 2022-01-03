@@ -12,7 +12,9 @@ namespace ATech.Ring.DotNet.Cli.CsProj
     {
         private const string MsBuildNs = "http://schemas.microsoft.com/developer/msbuild/2003";
 
-        public static string GetWorkingDir(this IUseCsProjFile proj) => new FileInfo(proj.FullPath).DirectoryName;
+        public static string GetWorkingDir(this IUseCsProjFile proj) => 
+            new FileInfo(proj.FullPath).DirectoryName
+            ?? throw new InvalidOperationException($"Path '{proj.FullPath}' doesn't have directory name");
         public static string GetProjName(this IUseCsProjFile proj) => Path.GetFileNameWithoutExtension(proj.FullPath);
         public static (string framework, string runtime) GetTargetFrameworkAndRuntime(this IUseCsProjFile proj)
         {
@@ -42,12 +44,14 @@ namespace ATech.Ring.DotNet.Cli.CsProj
             if (File.Exists(proj.LaunchSettingsJsonPath))
             {
                 var launchSettings = JsonSerializer.Deserialize<Root>(File.ReadAllText(proj.LaunchSettingsJsonPath));
-                var iisExpress = launchSettings.iisSettings.iisExpress;
-                var originalUri = iisExpress.applicationUrl;
-                var builder = new UriBuilder(originalUri)
+                var iisExpress = launchSettings?.iisSettings?.iisExpress;
+                if (iisExpress is not iisExpress settings) throw new InvalidOperationException("Expected path launchSettings.iisSettings.iisExpress not found or empty.");
+                var originalUri = settings.applicationUrl;
+                if (originalUri is not Uri u) throw new InvalidOperationException("iisExpress.applicationUrl must not be empty");
+                var builder = new UriBuilder(u)
                 {
-                    Port = iisExpress.sslPort != 0 ? iisExpress.sslPort : originalUri.Port, 
-                    Scheme = iisExpress.sslPort != 0 ? Uri.UriSchemeHttps : originalUri.Scheme
+                    Port = settings.sslPort != 0 ? settings.sslPort : originalUri.Port, 
+                    Scheme = settings.sslPort != 0 ? Uri.UriSchemeHttps : originalUri.Scheme
                 };
                 return builder.Uri;
             }

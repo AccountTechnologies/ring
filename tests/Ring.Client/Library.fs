@@ -1,11 +1,10 @@
 ﻿namespace Ring.Client
 
-open ATech.Ring.Protocol
+open ATech.Ring.Protocol.v2
 open System
 open System.Net.WebSockets
 open System.Threading
 open System.Threading.Tasks
-open ATech.Ring.Protocol.Events
 open FSharp.Control.Reactive
 
 type ClientOptions = {
@@ -13,8 +12,13 @@ type ClientOptions = {
   CancelationToken: CancellationToken option
 }
 
+type Msg = {
+  Payload: string
+  Type: M
+}
+
 type WsClient(options: ClientOptions) =
-  let onRingEvent = new Event<IRingEvent>()
+  let onRingEvent = new Event<Msg>()
 
   let cancellationToken =  options.CancelationToken |> Option.defaultValue CancellationToken.None
   let mutable listenTask = Task.CompletedTask
@@ -29,12 +33,11 @@ type WsClient(options: ClientOptions) =
           s <- new ClientWebSocket()
           do! Task.Delay (TimeSpan.FromSeconds(1))
 
-      listenTask <- s.ListenAsync(Func<Message,CancellationToken, Task>(
+      listenTask <- s.ListenAsync(WebSocketExtensions.HandleMessage(
       fun m t ->
-        task {
-          onRingEvent.Trigger(m.AsEvent())
-        })      
-      , cancellationToken)
+        onRingEvent.Trigger({Type=m.Type; Payload = m.Bytes.AsUtf8String()})
+        Task.CompletedTask
+      ), cancellationToken)
       return s
     })
    
@@ -43,17 +46,17 @@ type WsClient(options: ClientOptions) =
   
   member _.LoadWorkspace(path: string) = task {
     let! s = socket.Value
-    do! s.SendMessageAsync(Message.FromString(M.LOAD, path))
+    do! s.SendMessageAsync(Message(M.LOAD, path))
   }
   
   member _.StartWorkspace() = task {
     let! s = socket.Value
-    do! s.SendMessageAsync(Message.From(M.START))
+    do! s.SendMessageAsync(M.START)
   }
 
   member _.Terminate() = task {
     let! s = socket.Value
-    do! s.SendMessageAsync(Message.From M.TERMINATE, cancellationToken)
+    do! s.SendMessageAsync(M.TERMINATE, cancellationToken)
   }
 
   member _.Connect() = task {
@@ -62,14 +65,13 @@ type WsClient(options: ClientOptions) =
   }
   member _.IsConnected = socket.IsValueCreated
 
-  member x.WaitUntil<'a when 'a :> IRingEvent>(?suchAs: 'a -> bool, ?timeout: TimeSpan) =
+  member x.WaitUntilMessage(typ: M, ?suchAs: string -> bool, ?timeout: TimeSpan) =
     try
       x.Event
       |> Observable.iter (fun x -> printfn "%A" x.Type)
-      |> Observable.firstIf (fun x -> x.GetType() = typeof<'a>)
-      |> Observable.map (fun x -> x :?> 'a) 
+      |> Observable.firstIf (fun x ->  x.Type = typ)
       |> Observable.timeout (DateTimeOffset.Now.Add(defaultArg timeout (TimeSpan.FromSeconds(10))))
-      |> Observable.filter (defaultArg suchAs (fun _ -> true))
+      |> Observable.filter (fun x -> x.Type = typ)
       |> Observable.wait
       |> Some
     with

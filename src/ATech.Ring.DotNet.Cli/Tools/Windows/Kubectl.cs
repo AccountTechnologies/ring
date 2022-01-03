@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Abstractions.Tools;
 using ATech.Ring.DotNet.Cli.Tools;
@@ -22,39 +23,39 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
         public string[] DefaultArgs { get; set; } = Array.Empty<string>();
         public ILogger<ITool> Logger { get; }
 
-        public async Task<bool> IsValidManifestAsync(string filePath)
+        public async Task<bool> IsValidManifestAsync(string filePath, CancellationToken token)
         {
-            var result = await this.RunProcessWaitAsync("kubectl", "apply", "--validate=true", "--dry-run=true", "-f", $"\"{filePath}\"");
+            var result = await this.RunProcessWaitAsync(new object[] { "kubectl", "apply", "--validate=true", "--dry-run=true", "-f", $"\"{filePath}\"" }, token);
             return result.IsSuccess;
         }
 
-        public async Task<bool> FileExistsAsync(string filePath)
+        public async Task<bool> FileExistsAsync(string filePath, CancellationToken token)
         {
-            var result = await this.RunProcessWaitAsync("wslpath", "-w", filePath);
+            var result = await this.RunProcessWaitAsync(new object[] { "wslpath", "-w", filePath }, token);
             return result.IsSuccess && File.Exists(result.Output);
         }
 
-        public async Task<ExecutionInfo> KustomizeBuildAsync(string kustomizeDir, string outputFilePath)
+        public async Task<ExecutionInfo> KustomizeBuildAsync(string kustomizeDir, string outputFilePath, CancellationToken token)
         {
-            return await this.RunProcessWaitAsync("kustomize", "build", $"\"{kustomizeDir}\"", ">", outputFilePath);
+            return await this.RunProcessWaitAsync(new object[] { "kustomize", "build", $"\"{kustomizeDir}\"", ">", outputFilePath }, token);
         }
 
-        public async Task<ExecutionInfo> ApplyJsonPathAsync(string path, string jsonPath)
+        public async Task<ExecutionInfo> ApplyJsonPathAsync(string path, string jsonPath, CancellationToken token)
         {
-            return await this.RunProcessWaitAsync("kubectl", "apply", "-o", $"jsonpath=\"{jsonPath}\"", "-f", $"\"{path}\"");
+            return await this.RunProcessWaitAsync(new object[] { "kubectl", "apply", "-o", $"jsonpath=\"{jsonPath}\"", "-f", $"\"{path}\"" }, token);
         }
 
         public async Task<string[]> GetPods(string nameSpace) => (await _client.ListNamespacedPodAsync(nameSpace)).Items.Select(x => x.Metadata.Name).ToArray();
 
-        public async Task<string> GetPodStatus(string podName, string nameSpace)
+        public async Task<string> GetPodStatus(string podName, string nameSpace, CancellationToken token)
         {
-            var pod = await _client.ReadNamespacedPodStatusAsync(podName, nameSpace);
+            var pod = await _client.ReadNamespacedPodStatusAsync(podName, nameSpace, cancellationToken: token);
             return pod.Status.Phase;
         }
 
-        public async Task<ExecutionInfo> DeleteAsync(string path)
+        public async Task<ExecutionInfo> DeleteAsync(string path, CancellationToken token)
         {
-            return await this.RunProcessWaitAsync("kubectl", "delete", "--ignore-not-found", "-f", $"\"{path}\"");
+            return await this.RunProcessWaitAsync(new object[] { "kubectl", "delete", "--ignore-not-found", "-f", $"\"{path}\"" }, token);
         }
     }
 }

@@ -2,7 +2,7 @@
 
 using System.Threading;
 using System.Threading.Tasks;
-using ATech.Ring.Protocol;
+using ATech.Ring.Protocol.v2;
 
 public interface IServer
 {

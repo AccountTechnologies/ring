@@ -44,22 +44,17 @@ public class RingMiddleware
 
             using (log.WithProtocolScope(PhaseStatus.OK))
             {
-                log.LogInformation("Client {clientId} connected", clientId);
-                await _socketManager.ListenAsync(clientId, () => context.WebSockets.AcceptWebSocketAsync(), context.Get<IHostApplicationLifetime>().ApplicationStopped);
+                await _socketManager.ListenAsync(clientId, () =>
+                {
+                    var s = context.WebSockets.AcceptWebSocketAsync();
+                    log.LogInformation("Client {clientId} connected", clientId);
+                    return s;
+                }, context.Get<IHostApplicationLifetime>().ApplicationStopped);
             }
         }
         catch (OperationCanceledException)
         {
             context.Logger().LogInformation("Client {clientId} disconnected", clientId);
-        }
-        catch (WebSocketException ex)
-        {
-            if (await _socketManager.TryRemoveAsync(clientId) is (true, var ws))
-            {
-                ws.Dispose();
-            }
-            context.Logger().LogInformation("Client {clientId} disconnected", clientId);
-            context.Logger().LogDebug("Exception: {ex}", ex);
         }
         catch (Exception ex)
         {
