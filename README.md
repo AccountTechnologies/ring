@@ -38,7 +38,7 @@ Ring groups *runnables* (processes/services) into *workspaces*. Workspaces are d
 
 ## Ring dotnet tool
 ```
-dotnet tool install --global ATech.Ring.DotNet.Cli --version 3.1.0
+dotnet tool install --global ATech.Ring.DotNet.Cli --version 3.1.2
 ```
 
 ## Visual Studio Extension
