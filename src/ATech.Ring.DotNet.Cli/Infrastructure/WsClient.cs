@@ -27,7 +27,6 @@ public sealed class WsClient : IAsyncDisposable
     }
 
     public bool IsOpen => Ws.State == WebSocketState.Open;
-
     public Task SendAsync(Message m)
     {
         try
@@ -86,6 +85,10 @@ public sealed class WsClient : IAsyncDisposable
             _logger.LogInformation("Client {Id} aborted the connection.", Id);
             _logger.LogDebug(wx, "Exception details");
         }
+        finally
+        {
+            if (Ws.State == WebSocketState.Open) await Ws.CloseOutputAsync(WebSocketCloseStatus.EndpointUnavailable, string.Empty, default);
+        }
 
         Task<Ack>? YieldOrQueueLongRunning(ref Message message, CancellationToken token)
         {
@@ -119,7 +122,6 @@ public sealed class WsClient : IAsyncDisposable
     {
         try
         {
-            if (IsOpen) await Ws.CloseOutputAsync(WebSocketCloseStatus.EndpointUnavailable, string.Empty, default);
             _localCts.Cancel();
             await _backgroundAwaiter;
             Ws.Dispose();
