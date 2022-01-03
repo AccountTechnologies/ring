@@ -20,14 +20,14 @@ public class WorkspaceInfo : IEquatable<WorkspaceInfo>
     public ServerState ServerState { get; }
     public WorkspaceState WorkspaceState { get; }
 
-    public bool Equals(WorkspaceInfo other)
+    public bool Equals(WorkspaceInfo? other)
     {
         if (other is null) return false;
         if (ReferenceEquals(this, other)) return true;
         return string.Equals(Path, other.Path) && Runnables.SequenceEqual(other.Runnables) && ServerState == other.ServerState && WorkspaceState == other.WorkspaceState;
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         if (obj is null) return false;
         if (ReferenceEquals(this, obj)) return true;
@@ -36,10 +36,7 @@ public class WorkspaceInfo : IEquatable<WorkspaceInfo>
     }
 
     public override int GetHashCode() => HashCode.Combine(Path, Runnables, ServerState, WorkspaceState);
-
     public static WorkspaceInfo Empty { get; } = new WorkspaceInfo(string.Empty, Array.Empty<RunnableInfo>(), ServerState.IDLE, WorkspaceState.NONE);
-
-    public static WorkspaceInfo Deserialize(ReadOnlySpan<byte> data) => JsonSerializer.Deserialize<WorkspaceInfo>(data, SerializerOptions.Value);
     public ReadOnlySpan<byte> Serialize() => JsonSerializer.SerializeToUtf8Bytes(this, SerializerOptions.Value);
 
     private static readonly Lazy<JsonSerializerOptions> SerializerOptions = new(() =>

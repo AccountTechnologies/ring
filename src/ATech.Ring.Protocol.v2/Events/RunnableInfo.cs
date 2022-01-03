@@ -21,14 +21,14 @@ public class RunnableInfo : IEquatable<RunnableInfo>
     public RunnableState State { get; }
     public IReadOnlyDictionary<string, object> Details { get; }
 
-    public bool Equals(RunnableInfo other)
+    public bool Equals(RunnableInfo? other)
     {
         if (other is null) return false;
         if (ReferenceEquals(this, other)) return true;
         return string.Equals(Id, other.Id) && DeclaredIn.SequenceEqual(other.DeclaredIn) && string.Equals(Type, other.Type) && State == other.State && Details.SequenceEqual(other.Details);
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         if (obj is null) return false;
         if (ReferenceEquals(this, obj)) return true;
