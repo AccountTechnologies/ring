@@ -46,7 +46,7 @@ namespace ATech.Ring.DotNet.Cli.Runnables.Kustomize
 
         private string GetCachePath(string inputDir) => $"{_cacheDir}/{Regex.Replace(inputDir, "[@\\.:/\\\\]", "-")}.yaml";
 
-        private async Task<bool> WaitAllPodsAsync(KustomizeContext ctx, params string[] statuses) =>
+        private async Task<bool> WaitAllPodsAsync(KustomizeContext ctx, CancellationToken token, params string[] statuses) =>
             (await Task.WhenAll(
                 ctx.Namespaces.Select(async n =>
                 {
@@ -62,8 +62,20 @@ namespace ATech.Ring.DotNet.Cli.Runnables.Kustomize
 
                     return (await Task.WhenAll(n.Pods.Select(async p =>
                     {
-                        var result = await _bundle.GetPodStatus(p, n.Name);
-                        return statuses.Contains(result);
+                        try
+                        {
+                            var result = await _bundle.GetPodStatus(p, n.Name, token);
+                            return statuses.Contains(result);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            return false;
+                        }
+                        catch(Exception ex)
+                        {
+                            _logger.LogError(ex, "Could not get pod status");
+                            return false;
+                        }
                     }))).All(x => x);
                 }))).All(x => x);
 
@@ -104,14 +116,14 @@ namespace ATech.Ring.DotNet.Cli.Runnables.Kustomize
         protected override async Task StartAsync(KustomizeContext ctx, CancellationToken token)
         {
             await TryAsync(100, TimeSpan.FromSeconds(6),
-                async () => await WaitAllPodsAsync(ctx, PodStatus.Running, PodStatus.Error), r => r, token);
+                async () => await WaitAllPodsAsync(ctx, token, PodStatus.Running, PodStatus.Error), r => r, token);
             AddDetail(DetailsKeys.Pods, string.Join("|", ctx.Namespaces.SelectMany(n => n.Pods.Select(p => n.Name + "/" + p))));
         }
 
         protected override async Task<HealthStatus> CheckHealthAsync(KustomizeContext ctx, CancellationToken token)
         {
             if (ctx.Namespaces == null) return HealthStatus.Dead;
-            var podsHealthy = await WaitAllPodsAsync(ctx, PodStatus.Running);
+            var podsHealthy = await WaitAllPodsAsync(ctx, token, PodStatus.Running);
             return podsHealthy ? HealthStatus.Ok : HealthStatus.Unhealthy;
         }
 

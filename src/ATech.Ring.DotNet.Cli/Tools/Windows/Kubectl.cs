@@ -47,9 +47,9 @@ namespace ATech.Ring.DotNet.Cli.Windows.Tools
 
         public async Task<string[]> GetPods(string nameSpace) => (await _client.ListNamespacedPodAsync(nameSpace)).Items.Select(x => x.Metadata.Name).ToArray();
 
-        public async Task<string> GetPodStatus(string podName, string nameSpace)
+        public async Task<string> GetPodStatus(string podName, string nameSpace, CancellationToken token)
         {
-            var pod = await _client.ReadNamespacedPodStatusAsync(podName, nameSpace);
+            var pod = await _client.ReadNamespacedPodStatusAsync(podName, nameSpace, cancellationToken: token);
             return pod.Status.Phase;
         }
 
