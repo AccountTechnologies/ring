@@ -64,12 +64,13 @@ public class WebsocketsHandler
 
             _appLifetime.ApplicationStopping.Register(async () =>
             {
+                using var _ = _logger.WithHostScope(Phase.DESTROY);
                 await _server.TerminateAsync(default);
-                _logger.LogInformation("Worskpace terminated");
+                _logger.LogInformation("Workspace terminated");
                 _logger.LogDebug("Draining pub-sub");
                 await _queue.CompleteAsync(TimeSpan.FromSeconds(5));
-                _logger.LogDebug("Shutdown");
                 await messageLoop;
+                _logger.LogDebug("Shutdown");
             }, true);
             await messageLoop;
         }
