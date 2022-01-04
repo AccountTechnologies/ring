@@ -26,11 +26,11 @@ let localOptions (dir:TestDir) = {
 
 let globalOptions (dir:TestDir) = { localOptions dir with LocalTool = None}
 
-let expectEvent (ring:Ring) timeout (typ:M) runnableId =
+let expectEvent (ring:Ring) timeout (typ:M) (maybePayload:string option) =
   let event = ring.Client.WaitUntilMessage(typ, timeout = timeout)
 
   let runnable = $"Should receive a {typ} message (within {timeout})" |> Expect.wantSome event
-  $"Runnable Id should be correct" |> Expect.equal runnable.Payload runnableId
+  maybePayload |> Option.iter( fun p -> $"Runnable Id should be correct" |> Expect.equal runnable.Payload p)
 
 [<Tests>]
 let tests =
@@ -70,13 +70,13 @@ let tests =
 
       let expectEvent = expectEvent ring (TimeSpan.FromSeconds(60))
         
-      "k8s-debug-poc" |> expectEvent M.RUNNABLE_INITIATED
-      "k8s-debug-poc" |> expectEvent M.RUNNABLE_STARTED
-      "k8s-debug-poc" |> expectEvent M.RUNNABLE_HEALTH_CHECK
-      "k8s-debug-poc" |> expectEvent M.RUNNABLE_HEALTHY
+      Some "k8s-debug-poc" |> expectEvent M.RUNNABLE_INITIATED
+      Some "k8s-debug-poc" |> expectEvent M.RUNNABLE_STARTED
+      Some "k8s-debug-poc" |> expectEvent M.RUNNABLE_HEALTH_CHECK
+      Some "k8s-debug-poc" |> expectEvent M.RUNNABLE_HEALTHY
       do! ring.Client.Terminate()
-      "k8s-debug-poc" |> expectEvent M.RUNNABLE_STOPPED
-      "k8s-debug-poc" |> expectEvent M.RUNNABLE_DESTROYED
+      Some "k8s-debug-poc" |> expectEvent M.RUNNABLE_STOPPED
+      Some "k8s-debug-poc" |> expectEvent M.RUNNABLE_DESTROYED
     }
 
     testTask "discover and run default workspace config if exists" {
@@ -91,12 +91,17 @@ let tests =
       let expectEvent = expectEvent ring (TimeSpan.FromSeconds(60))
       let task = ring.Client.Connect()
       ring.Run(debugMode=true)
-      "aspnetcore" |> expectEvent M.RUNNABLE_INITIATED
-      "aspnetcore" |> expectEvent M.RUNNABLE_STARTED
-      "aspnetcore" |> expectEvent M.RUNNABLE_HEALTH_CHECK
-      "aspnetcore" |> expectEvent M.RUNNABLE_HEALTHY
+      Some "aspnetcore" |> expectEvent M.RUNNABLE_INITIATED
+      Some "aspnetcore" |> expectEvent M.RUNNABLE_STARTED
+      Some "aspnetcore" |> expectEvent M.RUNNABLE_HEALTH_CHECK
+      Some "aspnetcore" |> expectEvent M.RUNNABLE_HEALTHY
       
+      do! ring.Client.StopWorkspace()
+      Some "aspnetcore" |> expectEvent M.RUNNABLE_STOPPED
+      Some "aspnetcore" |> expectEvent M.RUNNABLE_DESTROYED
       do! task
+
+
 
     }
   ]

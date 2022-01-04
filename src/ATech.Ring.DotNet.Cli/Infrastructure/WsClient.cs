@@ -87,9 +87,9 @@ public sealed class WsClient : IAsyncDisposable
         }
         finally
         {
-            _logger.LogDebug("Closing websocket ({Id})", Id);
-            if (Ws.State == WebSocketState.Open) await Ws.CloseOutputAsync(WebSocketCloseStatus.EndpointUnavailable, string.Empty, default);
-            _logger.LogDebug("Closed websocket ({Id})", Id);
+            _logger.LogDebug("Closing websocket ({Id}) ({WebSocketState})", Id, Ws.State);
+            await Ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, string.Empty, default);
+            _logger.LogDebug("Closed websocket ({Id}) ({WebSocketState})", Id, Ws.State);
         }
 
         Task<Ack>? YieldOrQueueLongRunning(ref Message message, CancellationToken token)

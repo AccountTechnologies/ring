@@ -22,6 +22,7 @@ type WsClient(options: ClientOptions) =
 
   let cancellationToken =  options.CancelationToken |> Option.defaultValue CancellationToken.None
   let mutable listenTask = Task.CompletedTask
+  let mutable terminateRequested = false
   let socket = lazy(task {
       let mutable s = new ClientWebSocket()
       use connectionTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(20))
@@ -54,15 +55,24 @@ type WsClient(options: ClientOptions) =
     do! s.SendMessageAsync(M.START)
   }
 
-  member _.Terminate() = task {
+  member _.StopWorkspace() = task {
     let! s = socket.Value
-    do! s.SendMessageAsync(M.TERMINATE, cancellationToken)
+    do! s.SendMessageAsync(M.STOP)
+  }
+
+  member _.Terminate() = task {
+    if terminateRequested then ()
+    else
+      terminateRequested <- true
+      let! s = socket.Value
+      do! s.SendMessageAsync(M.TERMINATE, cancellationToken)
   }
 
   member _.Connect() = task {
     let! _ = socket.Value
     ()
   }
+
   member _.IsConnected = socket.IsValueCreated
 
   member x.WaitUntilMessage(typ: M, ?timeout: TimeSpan) =
@@ -84,10 +94,12 @@ type WsClient(options: ClientOptions) =
             if socket.IsValueCreated
             then
               try
+                let! s = socket.Value
+                do! s.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, String.Empty, cancellationToken)
                 do! listenTask
               with
-               | :? WebSocketException ->
-                 printfn "Socket closed"
+               | :? WebSocketException as wx ->
+                 printfn "%s" (wx.ToString())
               let! s = socket.Value
               s.Dispose()
       })  

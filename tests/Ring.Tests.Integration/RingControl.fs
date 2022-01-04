@@ -1,5 +1,6 @@
 ﻿namespace Ring.Test.Integration
 
+open ATech.Ring.Protocol.v2
 open Ring.Test.Integration.DotNet
 open Ring.Test.Integration.DotNet.Types
 open System.Threading
@@ -47,7 +48,7 @@ module RingControl =
         ringTask <- 
           let args =
             ["--no-logo"; "--port"; port |> string ]
-           |> Option.foldBack (fun debugMode args -> if debugMode then "--debug"::args else args) debugMode
+            |> Option.foldBack (fun debugMode args -> if debugMode then "--debug"::args else args) debugMode
           Some(exec ("headless"::args)) 
 
     member _.Run(?workspacePath:string, ?debugMode: bool) =
@@ -67,6 +68,7 @@ module RingControl =
       member _.DisposeAsync(): ValueTask = ValueTask(
         task {
             if client.IsConnected then do! client.Terminate()
+            client.WaitUntilMessage(M.SERVER_SHUTDOWN) |> ignore
             do! (client :> IAsyncDisposable).DisposeAsync()
             cts.Dispose()
             match ringTask with

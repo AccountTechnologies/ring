@@ -113,6 +113,7 @@ public class Server : IServer
         await _fsm.FireAsync(T.Unload);
         _scope?.Dispose();
         if (!_appLifetime.ApplicationStopping.IsCancellationRequested) _appLifetime.StopApplication();
+        _sender.Enqueue(new(M.SERVER_SHUTDOWN));
         return Ack.Ok;
     }
 

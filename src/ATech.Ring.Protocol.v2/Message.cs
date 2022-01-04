@@ -35,7 +35,8 @@ public enum M : byte
     WORKSPACE_INFO_PUBLISH = 26,
     SERVER_IDLE = 22,
     SERVER_LOADED = 23,
-    SERVER_RUNNING = 24
+    SERVER_RUNNING = 24,
+    SERVER_SHUTDOWN = 25
 }
 
 public interface IAsMessage
