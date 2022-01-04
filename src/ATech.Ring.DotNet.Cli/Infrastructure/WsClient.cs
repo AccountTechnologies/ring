@@ -74,11 +74,11 @@ public sealed class WsClient : IAsyncDisposable
             var cts = CancellationTokenSource.CreateLinkedTokenSource(t, _localCts.Token);
             _backgroundAwaiter = Task.Run(() => AckLongRunning(cts.Token), cts.Token);
             await Ws.ListenAsync(YieldOrQueueLongRunning, cts.Token);
-            _logger.LogInformation("Client {Id} disconnected ({WebSocketState})", Id, Ws.State);
+            _logger.LogInformation("Client disconnected ({Id}) ({WebSocketState})", Id, Ws.State);
         }
         catch (OperationCanceledException)
         {
-            _logger.LogInformation("Client {Id} disconnected ({WebSocketState})", Id, Ws.State);
+            _logger.LogInformation("Client disconnected ({Id}) ({WebSocketState})", Id, Ws.State);
         }
         catch (WebSocketException wx)
         {
@@ -87,7 +87,9 @@ public sealed class WsClient : IAsyncDisposable
         }
         finally
         {
+            _logger.LogDebug("Closing websocket ({Id})", Id);
             if (Ws.State == WebSocketState.Open) await Ws.CloseOutputAsync(WebSocketCloseStatus.EndpointUnavailable, string.Empty, default);
+            _logger.LogDebug("Closed websocket ({Id})", Id);
         }
 
         Task<Ack>? YieldOrQueueLongRunning(ref Message message, CancellationToken token)

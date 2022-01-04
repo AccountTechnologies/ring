@@ -40,10 +40,15 @@ module RingControl =
       task {
         return! execResult ["show-config"]
       }
-    member _.Headless() =
+    member _.Headless(?debugMode: bool) =
       match ringTask with
       | Some _ -> failwith "Ring is already running"
-      | None -> ringTask <- Some (exec ["headless"; "--no-logo"; "--port"; port |> string ])
+      | None -> 
+        ringTask <- 
+          let args =
+            ["--no-logo"; "--port"; port |> string ]
+           |> Option.foldBack (fun debugMode args -> if debugMode then "--debug"::args else args) debugMode
+          Some(exec ("headless"::args)) 
 
     member _.Run(?workspacePath:string, ?debugMode: bool) =
       match ringTask with

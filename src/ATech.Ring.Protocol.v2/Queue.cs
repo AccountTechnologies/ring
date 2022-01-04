@@ -10,7 +10,12 @@ public sealed class Queue : ISender, IReceiver
 {
     private readonly Channel<byte[]> _channel = Channel.CreateUnbounded<byte[]>();
 
-    public void Complete() => _channel.Writer.Complete();
+    public async Task CompleteAsync(TimeSpan timeout)
+    {
+        await Task.Delay(timeout);
+        _channel.Writer.Complete();
+    }
+
     public void Enqueue(Message item)
     {
         var bytes = ArrayPool<byte>.Shared.Rent(item.Bytes.Length);

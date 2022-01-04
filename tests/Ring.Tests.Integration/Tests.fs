@@ -26,6 +26,12 @@ let localOptions (dir:TestDir) = {
 
 let globalOptions (dir:TestDir) = { localOptions dir with LocalTool = None}
 
+let expectEvent (ring:Ring) timeout (typ:M) runnableId =
+  let event = ring.Client.WaitUntilMessage(typ, timeout = timeout)
+
+  let runnable = $"Should receive a {typ} message (within {timeout})" |> Expect.wantSome event
+  $"Runnable Id should be correct" |> Expect.equal runnable.Payload runnableId
+
 [<Tests>]
 let tests =
   testList "Smoke tests" [
@@ -57,26 +63,20 @@ let tests =
     testTask "run basic workspace in headless mode" {
       use ctx = new TestContext(localOptions)
       let! (ring : Ring, dir: TestDir) = ctx.Init()
-      ring.Headless()
+      ring.Headless(debugMode=true)
       do! ring.Client.Connect()
       do! ring.Client.LoadWorkspace (dir.InSourceDir "../resources/basic/netcore.toml")
       do! ring.Client.StartWorkspace()
-      let runnableId = "k8s-debug-poc"
-      let timeout = TimeSpan.FromSeconds(60)
 
-      let expectEvent (typ:M) =
-        let event = ring.Client.WaitUntilMessage(typ, timeout = timeout)
-
-        let runnable = $"Should receive a {typ} message (within {timeout})" |> Expect.wantSome event
-        $"Runnable Id should be correct" |> Expect.equal runnable.Payload runnableId
+      let expectEvent = expectEvent ring (TimeSpan.FromSeconds(60))
         
-      expectEvent M.RUNNABLE_INITIATED
-      expectEvent M.RUNNABLE_STARTED
-      expectEvent M.RUNNABLE_HEALTH_CHECK
-      expectEvent M.RUNNABLE_HEALTHY
+      "k8s-debug-poc" |> expectEvent M.RUNNABLE_INITIATED
+      "k8s-debug-poc" |> expectEvent M.RUNNABLE_STARTED
+      "k8s-debug-poc" |> expectEvent M.RUNNABLE_HEALTH_CHECK
+      "k8s-debug-poc" |> expectEvent M.RUNNABLE_HEALTHY
       do! ring.Client.Terminate()
-      expectEvent M.RUNNABLE_STOPPED
-      expectEvent M.RUNNABLE_DESTROYED
+      "k8s-debug-poc" |> expectEvent M.RUNNABLE_STOPPED
+      "k8s-debug-poc" |> expectEvent M.RUNNABLE_DESTROYED
     }
 
     testTask "discover and run default workspace config if exists" {
@@ -88,15 +88,15 @@ let tests =
         $"""csproj = '{dir.InSourceDir "../resources/apps/aspnetcore/aspnetcore.csproj"}' """
       ])
 
-      let runnableId = "aspnetcore"
-      let timeout = TimeSpan.FromSeconds(60)
+      let expectEvent = expectEvent ring (TimeSpan.FromSeconds(60))
       let task = ring.Client.Connect()
       ring.Run(debugMode=true)
-      let event = ring.Client.WaitUntilMessage(M.RUNNABLE_HEALTHY, timeout = timeout)
+      "aspnetcore" |> expectEvent M.RUNNABLE_INITIATED
+      "aspnetcore" |> expectEvent M.RUNNABLE_STARTED
+      "aspnetcore" |> expectEvent M.RUNNABLE_HEALTH_CHECK
+      "aspnetcore" |> expectEvent M.RUNNABLE_HEALTHY
       
       do! task
-    
-      let runnable = $"Should receive a RunnableHealthy message (within {timeout})" |> Expect.wantSome event
-      $"Runnable Id should be correct" |> Expect.equal runnable.Payload runnableId
+
     }
   ]

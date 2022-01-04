@@ -68,7 +68,7 @@ type WsClient(options: ClientOptions) =
   member x.WaitUntilMessage(typ: M, ?timeout: TimeSpan) =
     try
       x.Event
-      |> Observable.iter (fun x -> printfn "RECEIVED: %A %s" x.Type x.Payload)
+      |> Observable.iter (fun x -> printfn "\n----> %A %s <----\n" x.Type x.Payload)
       |> Observable.firstIf (fun x ->  x.Type = typ)
       |> Observable.timeout (DateTimeOffset.Now.Add(defaultArg timeout (TimeSpan.FromSeconds(10))))
       |> Observable.wait

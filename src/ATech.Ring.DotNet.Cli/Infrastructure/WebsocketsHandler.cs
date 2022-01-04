@@ -65,7 +65,10 @@ public class WebsocketsHandler
             _appLifetime.ApplicationStopping.Register(async () =>
             {
                 await _server.TerminateAsync(default);
-                _queue.Complete();
+                _logger.LogInformation("Worskpace terminated");
+                _logger.LogDebug("Draining pub-sub");
+                await _queue.CompleteAsync(TimeSpan.FromSeconds(5));
+                _logger.LogDebug("Shutdown");
                 await messageLoop;
             }, true);
             await messageLoop;
@@ -77,7 +80,7 @@ public class WebsocketsHandler
         }
         catch (Exception ex)
         {
-            _logger.LogError("Exception: {exception}", ex);
+            _logger.LogCritical(ex, "Critical error");
         }
     }
 
