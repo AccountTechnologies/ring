@@ -100,8 +100,5 @@ let tests =
       Some "aspnetcore" |> expectEvent M.RUNNABLE_STOPPED
       Some "aspnetcore" |> expectEvent M.RUNNABLE_DESTROYED
       do! task
-
-
-
     }
   ]
