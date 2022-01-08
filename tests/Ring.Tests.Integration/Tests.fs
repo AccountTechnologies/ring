@@ -91,6 +91,8 @@ let tests =
       let expectEvent = expectEvent ring (TimeSpan.FromSeconds(60))
       let task = ring.Client.Connect()
       ring.Run(debugMode=true)
+      // do! ring.Client.LoadWorkspace (dir.WorkPath + "/ring.toml")
+      // do! ring.Client.StartWorkspace()
       Some "aspnetcore" |> expectEvent M.RUNNABLE_INITIATED
       Some "aspnetcore" |> expectEvent M.RUNNABLE_STARTED
       Some "aspnetcore" |> expectEvent M.RUNNABLE_HEALTH_CHECK

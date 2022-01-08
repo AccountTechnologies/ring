@@ -16,12 +16,21 @@ public sealed class Queue : ISender, IReceiver
         _channel.Writer.Complete();
     }
 
-    public void Enqueue(Message item)
+    private static byte[] CopyBytes(Message message)
     {
-        var bytes = ArrayPool<byte>.Shared.Rent(item.Bytes.Length);
+        var bytes = ArrayPool<byte>.Shared.Rent(message.Bytes.Length);
         Array.Clear(bytes);
-        item.Bytes.CopyTo(bytes);
-        _channel.Writer.TryWrite(bytes);
+        message.Bytes.CopyTo(bytes);
+        return bytes;
+    }
+    public ValueTask EnqueueAsync(Message message, CancellationToken token)
+    {
+        return _channel.Writer.WriteAsync(CopyBytes(message), token);
+    }
+
+    public void Enqueue(Message message)
+    {
+        _channel.Writer.TryWrite(CopyBytes(message));
     }
 
     public async Task<bool> WaitToReadAsync(CancellationToken token)

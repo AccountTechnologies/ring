@@ -36,8 +36,8 @@ namespace ATech.Ring.DotNet.Cli.Workspace
         public async Task CancelAsync()
         {
             _cts.Cancel();
-            if (Task is Task t) await t;
-            if (Runnable is IRunnable r) await r.TerminateAsync();
+            if (Task is { } t) await t;
+            if (Runnable is { } r) await r.TerminateAsync();
         }
 
         public void Dispose()

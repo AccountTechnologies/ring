@@ -78,17 +78,22 @@ public class Server : IServer
         return Task.CompletedTask;
     }
 
-    public Task<Ack> ConnectAsync(CancellationToken token)
+    public async Task<Ack> ConnectAsync(CancellationToken token)
     {
-        Message maybeMessage = _fsm.State switch
+        ValueTask EnqueueServerStatusAsync()
         {
-            S.Idle => Message.ServerIdle(),
-            S.Loaded => Message.ServerLoaded(_launcher.WorkspacePath.AsSpan()),
-            S.Running => Message.ServerRunning(_launcher.WorkspacePath.AsSpan()),
-            _ => Message.Empty()
-        };
-        if (maybeMessage is not { Type: M.EMPTY }) _sender.Enqueue(maybeMessage);
-        return Task.FromResult(Ack.Ok);
+            var maybeMessage = _fsm.State switch
+            {
+                S.Idle => Message.ServerIdle(),
+                S.Loaded => Message.ServerLoaded(_launcher.WorkspacePath.AsSpan()),
+                S.Running => Message.ServerRunning(_launcher.WorkspacePath.AsSpan()),
+                _ => Message.Empty()
+            };
+            return maybeMessage is not { Type: M.EMPTY } ? _sender.EnqueueAsync(maybeMessage, token) : ValueTask.CompletedTask;
+        }
+
+        await EnqueueServerStatusAsync();
+        return Ack.Ok;
     }
 
     public async Task<Ack> LoadAsync(string path, CancellationToken token)
@@ -113,7 +118,7 @@ public class Server : IServer
         await _fsm.FireAsync(T.Unload);
         _scope?.Dispose();
         if (!_appLifetime.ApplicationStopping.IsCancellationRequested) _appLifetime.StopApplication();
-        _sender.Enqueue(new(M.SERVER_SHUTDOWN));
+        await _sender.EnqueueAsync(new Message(M.SERVER_SHUTDOWN), token);
         return Ack.Ok;
     }
 

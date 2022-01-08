@@ -43,7 +43,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
         protected Runnable(TConfig config, ILogger<Runnable<TContext, TConfig>> logger, ISender sender)
         {
             Config = config;
-            if (Config.FriendlyName != null) { _details.Add(DetailsKeys.FriendlyName, Config.FriendlyName);}
+            if (Config.FriendlyName != null) { _details.Add(DetailsKeys.FriendlyName, Config.FriendlyName); }
             _logger = logger;
             Sender = sender;
         }
@@ -95,7 +95,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
                 .OnEntryFromAsync(Trigger.HealthLoop,
                     async () =>
                     {
-                        Sender.Enqueue(Message.RunnableHealthCheck(UniqueId));
+                        await Sender.EnqueueAsync(Message.RunnableHealthCheck(UniqueId), token);
                         var healthResult = await CheckHealthCoreAsync(_context, token);
                         await _fsm.FireAsync(healthResult switch
                         {
@@ -116,17 +116,16 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
             _fsm.Configure(State.Healthy)
                 .OnEntryFromAsync(Trigger.HcOk, async () =>
                 {
-                    Sender.Enqueue(Message.RunnableHealthy(UniqueId));
+                    await Sender.EnqueueAsync(Message.RunnableHealthy(UniqueId), token);
                     await QueueHealthCheckAsync(token);
                 })
                 .Permit(Trigger.HealthLoop, State.ProbingHealth)
                 .Permit(Trigger.Stop, State.Idle);
 
             _fsm.Configure(State.Dead)
-                .OnEntryFromAsync(Trigger.HcDead, () =>
+                .OnEntryFromAsync(Trigger.HcDead, async () =>
                 {
-                    Sender.Enqueue(Message.RunnableDead(UniqueId));
-                    return Task.CompletedTask;
+                    await Sender.EnqueueAsync(Message.RunnableDead(UniqueId), token);
                 })
                 .Permit(Trigger.Stop, State.Idle);
 
@@ -134,7 +133,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
                 .OnEntryFromAsync(Trigger.HcUnhealthy,
                     async () =>
                         {
-                            Sender.Enqueue(Message.RunnableRecovering(UniqueId));
+                            await Sender.EnqueueAsync(Message.RunnableRecovering(UniqueId), token);
                             await RecoverCoreAsync(_context, token);
                         })
                 .Permit(Trigger.Stop, State.Idle);
@@ -188,13 +187,13 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
                 _context = await InitAsync(token);
                 _logger.LogContextDebug(_context);
                 _logger.LogDebug(PhaseStatus.OK);
-                Sender.Enqueue(Message.RunnableInitiated(UniqueId));
+                await Sender.EnqueueAsync(Message.RunnableInitiated(UniqueId), token);
                 await _fsm.FireAsync(Trigger.Start);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Initialization failed");
-                _context = (TContext) FormatterServices.GetUninitializedObject(typeof(TContext));
+                _context = (TContext)FormatterServices.GetUninitializedObject(typeof(TContext));
                 await _fsm.FireAsync(Trigger.InitFailure);
             }
             finally
@@ -209,7 +208,7 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
             await StartAsync(ctx, token);
             _logger.LogContextDebug(ctx);
             _logger.LogInformation(PhaseStatus.OK);
-            Sender.Enqueue(Message.RunnableStarted(UniqueId));
+            await Sender.EnqueueAsync(Message.RunnableStarted(UniqueId), token);
         }
         private async Task<HealthStatus> CheckHealthCoreAsync(TContext ctx, CancellationToken token)
         {
@@ -288,20 +287,47 @@ namespace ATech.Ring.DotNet.Cli.Abstractions
         protected async Task StopCoreAsync(TContext ctx, CancellationToken token)
         {
             using var _ = _logger.BeginScope(Scope.Phase(Phase.STOP));
-            _logger.LogDebug(PhaseStatus.PENDING);
-            await StopAsync(ctx, token);
-            _logger.LogContextDebug(ctx);
-            _logger.LogDebug(PhaseStatus.OK);
-            Sender.Enqueue(Message.RunnableStopped(UniqueId));
+            try
+            {
+                _logger.LogDebug(PhaseStatus.PENDING);
+                await StopAsync(ctx, token);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Stopping runnable failed");
+            }
+            finally
+            {
+                await Sender.EnqueueAsync(Message.RunnableStopped(UniqueId), default);
+                _logger.LogContextDebug(ctx);
+                _logger.LogDebug(PhaseStatus.OK);
+            }
         }
         private async Task DestroyCoreAsync(TContext ctx, CancellationToken token)
         {
             using var _ = _logger.BeginScope(Scope.Phase(Phase.DESTROY));
-            _logger.LogDebug(PhaseStatus.PENDING);
-            await DestroyAsync(ctx, token);
-            _logger.LogContextDebug(ctx);
-            _logger.LogInformation(PhaseStatus.OK);
-            Sender.Enqueue(Message.RunnableDestroyed(UniqueId));
+            try
+            {
+                _logger.LogDebug(PhaseStatus.PENDING);
+                await DestroyAsync(ctx, token);
+            }
+            catch (OperationCanceledException)
+            {
+               
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Destroying runnable failed");
+            }
+            finally
+            {
+                await Sender.EnqueueAsync(Message.RunnableDestroyed(UniqueId), default);
+                _logger.LogContextDebug(ctx);
+                _logger.LogInformation(PhaseStatus.OK);
+            }
         }
 
         private class Fsm : Stateless.StateMachine<State, Trigger>
