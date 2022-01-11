@@ -150,6 +150,7 @@ Coming soon
 
 [Here](RELEASENOTES.md)
 
+# Known Issues
 ## Permission Issue on Apple Silicon
 Running Ring! on Apple Silicone with .NET 6 (x64) installed can result in permission errors such as this one:
 
@@ -157,11 +158,4 @@ Running Ring! on Apple Silicone with .NET 6 (x64) installed can result in permis
 [‘/etc/dotnet/install_location_x64’] failed to open: Permission denied.
 ```
 
-Use the following workaround to resolve this issue: 
-* Navigate to `/etc` in Finder
-* Right click on the `dotnet` directory then select `Get Info` in the context menu
-* In the information panel, select the `+` sign and add your user to the permission pool
-* Update your privileges to `Read & Write` in the permissions table
-* Click on the `...` icon to `Apply to enclose items`. 
-
-This will grant you execution permissions for all the files and should resolve the error.
+To resolve this issue add your user to the `dotnet` directory (and its encolsed items) with `Read & Write` permissions.
