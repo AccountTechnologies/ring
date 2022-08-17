@@ -5,7 +5,7 @@ open System
 open System.Net.WebSockets
 open System.Threading
 open System.Threading.Tasks
-open FSharp.Control.Reactive
+open FSharp.Control
 
 type ClientOptions = {
   RingUrl: Uri
@@ -13,13 +13,16 @@ type ClientOptions = {
 }
 
 type Msg = {
+  Timestamp: DateTime
   Payload: string
   Type: M
 }
 
 type WsClient(options: ClientOptions) =
-  let onRingEvent = Event<Msg>()
-
+  let buffer = Channels.Channel.CreateUnbounded<Msg>()
+  
+  let mutable eventLog = AsyncSeq.empty
+  
   let cancellationToken =  options.CancelationToken |> Option.defaultValue CancellationToken.None
   let mutable listenTask = Task.CompletedTask
   let mutable terminateRequested = false
@@ -38,15 +41,21 @@ type WsClient(options: ClientOptions) =
 
       listenTask <- s.ListenAsync(WebSocketExtensions.HandleMessage(
       fun m t ->
-        onRingEvent.Trigger({Type=m.Type; Payload = m.PayloadString})
+        let msg = { Timestamp = DateTime.Now.ToLocalTime(); Type = m.Type; Payload = m.PayloadString }
+        if not <| buffer.Writer.TryWrite(msg)
+        then failwithf $"Could not write: %A{msg}"
         Task.CompletedTask
       ), cancellationToken)
       return s
     })
-   
-  [<CLIEvent>]
-  member _.Event = onRingEvent.Publish
-  
+
+  member _.EventStream =
+    eventLog <-
+      buffer.Reader.ReadAllAsync() |> AsyncSeq.ofAsyncEnum
+      |> AsyncSeq.append eventLog
+      |> AsyncSeq.cache
+    eventLog
+
   member _.LoadWorkspace(path: string) = task {
     let! s = socket.Value
     do! s.SendMessageAsync(Message(M.LOAD, path))
@@ -76,22 +85,24 @@ type WsClient(options: ClientOptions) =
   }
 
   member _.IsConnected = socket.IsValueCreated
-
-  member x.WaitUntilMessage(typ: M, ?timeout: TimeSpan) =
+  
+  member x.WaitUntilMessage(typ: M, ?timeout: TimeSpan) : Msg option =
     try
-      x.Event
-      |> Observable.iter (fun x -> printfn "\n----> %A %s <----\n" x.Type x.Payload)
-      |> Observable.firstIf (fun x ->  x.Type = typ)
-      |> Observable.timeout (DateTimeOffset.Now.Add(defaultArg timeout (TimeSpan.FromSeconds(10))))
-      |> Observable.wait
-      |> Some
+      let waitUntil = defaultArg timeout (TimeSpan.FromSeconds(10))
+      let asyncFlow =
+        x.EventStream
+        |> AsyncSeq.map (fun x -> printfn $"\n----> %A{x.Type} %s{x.Payload} <----\n"; x)
+        |> AsyncSeq.skipWhile (fun x ->  x.Type <> typ)
+        |> AsyncSeq.tryFirst
+      Async.RunSynchronously(asyncFlow, waitUntil.TotalMilliseconds |> int)
+      
     with
      | :? TimeoutException -> None
      | :? InvalidOperationException as x when x.Message = "Sequence contains no elements." ->
        None
 
   interface IAsyncDisposable with
-    member _.DisposeAsync() = 
+    member x.DisposeAsync() = 
       ValueTask (task {
             if socket.IsValueCreated
             then
@@ -99,9 +110,19 @@ type WsClient(options: ClientOptions) =
                 let! s = socket.Value
                 do! s.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, String.Empty, cancellationToken)
                 do! listenTask
+                buffer.Writer.Complete()
+                x.EventStream
+                |> AsyncSeq.map (fun m ->
+                  match m with
+                  | x when x.Payload = "" -> m.Type |> string
+                  | x -> $"%A{x.Type}|%s{x.Payload}"
+                  |> fun pretty -> $"{m.Timestamp:``HH:mm:ss.fff``}|{pretty}"
+                 )
+                |> AsyncSeq.iter (printfn "%s")
+                |> Async.RunSynchronously
               with
                | :? WebSocketException as wx ->
-                 printfn "%s" (wx.ToString())
+                 printfn $"%s{wx.ToString()}"
               let! s = socket.Value
               s.Dispose()
       })  
