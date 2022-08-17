@@ -18,7 +18,7 @@ type Msg = {
 }
 
 type WsClient(options: ClientOptions) =
-  let onRingEvent = new Event<Msg>()
+  let onRingEvent = Event<Msg>()
 
   let cancellationToken =  options.CancelationToken |> Option.defaultValue CancellationToken.None
   let mutable listenTask = Task.CompletedTask
@@ -31,6 +31,8 @@ type WsClient(options: ClientOptions) =
           do! s.ConnectAsync(options.RingUrl, cancellationToken)
         with
          | :? WebSocketException as ex ->
+          printfn $"Test client failed to connect to Ring: {ex.Message}. Reconnecting..."
+          s.Dispose()
           s <- new ClientWebSocket()
           do! Task.Delay (TimeSpan.FromSeconds(1))
 

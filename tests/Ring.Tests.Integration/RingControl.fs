@@ -57,7 +57,7 @@ module RingControl =
       | None -> 
         ringTask <-
           let args =
-            ["--no-logo"; "--port"; (port |> string)]
+            ["--no-logo"; "--port"; (port |> string); "--startup-delay-seconds"; "10"]
             |> Option.foldBack (fun debugMode args -> if debugMode then "--debug"::args else args) debugMode
             |> Option.foldBack (fun path args -> "-w"::path::args) workspacePath
 
