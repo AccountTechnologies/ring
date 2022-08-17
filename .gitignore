@@ -172,7 +172,6 @@ DocProject/Help/html
 publish/
 
 # Publish Web Output
-*.[Pp]ublish.xml
 *.azurePubxml
 # Note: Comment the next line if you want to checkin your web deploy settings,
 # but database connection strings (with potential passwords) will be unencrypted
@@ -203,6 +202,7 @@ csx/
 *.build.csdef
 
 # Microsoft Azure Emulator
+*.[Pp]ublish.xml
 ecf/
 rcf/
 
@@ -351,3 +351,5 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 testResults.xml
+
+**/.idea
