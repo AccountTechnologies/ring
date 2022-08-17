@@ -1,10 +1,9 @@
-namespace ATech.Ring.DotNet.Cli.Abstractions
+namespace ATech.Ring.DotNet.Cli.Abstractions;
+
+public enum HealthStatus
 {
-    public enum HealthStatus
-    {
-        Ok,
-        Unhealthy,
-        Dead,
-        Ignore
-    }
+    Ok,
+    Unhealthy,
+    Dead,
+    Ignore
 }

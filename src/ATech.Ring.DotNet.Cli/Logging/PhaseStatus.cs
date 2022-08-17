@@ -1,12 +1,11 @@
 ﻿
 // ReSharper disable InconsistentNaming
 
-namespace ATech.Ring.DotNet.Cli.Logging
+namespace ATech.Ring.DotNet.Cli.Logging;
+
+public enum PhaseStatus
 {
-    public enum PhaseStatus
-    {
-        PENDING = 0,
-        OK = 1,
-        FAILED = 2
-    }
+    PENDING = 0,
+    OK = 1,
+    FAILED = 2
 }

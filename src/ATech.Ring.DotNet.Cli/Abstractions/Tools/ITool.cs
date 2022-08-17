@@ -1,11 +1,10 @@
 using Microsoft.Extensions.Logging;
 
-namespace ATech.Ring.DotNet.Cli.Abstractions.Tools
+namespace ATech.Ring.DotNet.Cli.Abstractions.Tools;
+
+public interface ITool
 {
-    public interface ITool
-    {
-        string ExePath { get; set; }
-        string[] DefaultArgs { get; set; }
-        ILogger<ITool> Logger { get; }
-    }
+    string ExePath { get; set; }
+    string[] DefaultArgs { get; set; }
+    ILogger<ITool> Logger { get; }
 }

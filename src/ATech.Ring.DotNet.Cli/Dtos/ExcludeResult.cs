@@ -1,8 +1,7 @@
-﻿namespace ATech.Ring.DotNet.Cli.Dtos
+﻿namespace ATech.Ring.DotNet.Cli.Dtos;
+
+public enum ExcludeResult
 {
-    public enum ExcludeResult
-    {
-        Ok,
-        UnknownRunnable
-    }
+    Ok,
+    UnknownRunnable
 }

@@ -1,7 +1,6 @@
-﻿namespace ATech.Ring.DotNet.Cli.Abstractions.Context
+﻿namespace ATech.Ring.DotNet.Cli.Abstractions.Context;
+
+public interface ITrackProcessOutput
 {
-    public interface ITrackProcessOutput
-    {
-        string Output { get; set; }
-    }
+    string Output { get; set; }
 }
