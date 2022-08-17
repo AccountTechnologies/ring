@@ -111,15 +111,16 @@ type WsClient(options: ClientOptions) =
                 do! s.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, String.Empty, cancellationToken)
                 do! listenTask
                 buffer.Writer.Complete()
-                x.EventStream
-                |> AsyncSeq.map (fun m ->
-                  match m with
-                  | x when x.Payload = "" -> m.Type |> string
-                  | x -> $"%A{x.Type}|%s{x.Payload}"
-                  |> fun pretty -> $"{m.Timestamp:``HH:mm:ss.fff``}|{pretty}"
-                 )
-                |> AsyncSeq.iter (printfn "%s")
-                |> Async.RunSynchronously
+                let eventLog =
+                  x.EventStream
+                  |> AsyncSeq.map (fun m ->
+                    match m with
+                    | x when x.Payload = "" -> m.Type |> string
+                    | x -> $"%A{x.Type}|%s{x.Payload}"
+                    |> fun pretty -> $"{m.Timestamp:``HH:mm:ss.fff``}|{pretty}"
+                   )
+                  |> AsyncSeq.iter (printfn "%s")
+                Async.RunSynchronously(eventLog, 10000)
               with
                | :? WebSocketException as wx ->
                  printfn $"%s{wx.ToString()}"
