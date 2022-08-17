@@ -63,12 +63,11 @@ let tests =
     testTask "run basic workspace in headless mode" {
       use ctx = new TestContext(localOptions)
       let! (ring : Ring, dir: TestDir) = ctx.Init()
+      let expectEvent = expectEvent ring (TimeSpan.FromSeconds(60))
       ring.Headless(debugMode=true)
       do! ring.Client.Connect()
       do! ring.Client.LoadWorkspace (dir.InSourceDir "../resources/basic/netcore.toml")
       do! ring.Client.StartWorkspace()
-
-      let expectEvent = expectEvent ring (TimeSpan.FromSeconds(60))
         
       Some "k8s-debug-poc" |> expectEvent M.RUNNABLE_INITIATED
       Some "k8s-debug-poc" |> expectEvent M.RUNNABLE_STARTED
