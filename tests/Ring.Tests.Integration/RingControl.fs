@@ -67,9 +67,10 @@ module RingControl =
     interface IAsyncDisposable with
       member _.DisposeAsync(): ValueTask = ValueTask(
         task {
-            if client.IsConnected then do! client.Terminate()
-            client.WaitUntilMessage(M.SERVER_SHUTDOWN) |> ignore
-            do! (client :> IAsyncDisposable).DisposeAsync()
+            if client.HasEverConnected then
+              do! client.Terminate()
+              client.WaitUntilMessage(M.SERVER_SHUTDOWN) |> ignore
+              do! (client :> IAsyncDisposable).DisposeAsync()
             cts.Dispose()
             match ringTask with
             | None -> ()

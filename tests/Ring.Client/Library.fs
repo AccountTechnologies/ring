@@ -84,7 +84,7 @@ type WsClient(options: ClientOptions) =
     ()
   }
 
-  member _.IsConnected = socket.IsValueCreated
+  member _.HasEverConnected = socket.IsValueCreated
   
   member x.WaitUntilMessage(typ: M, ?timeout: TimeSpan) : Msg option =
     try
