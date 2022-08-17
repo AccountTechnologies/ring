@@ -21,7 +21,7 @@ public static class WebSocketExtensions
 
     public static async Task ListenAsync(this WebSocket webSocket, HandleMessage onReceived, CancellationToken token=default)
     {
-        WebSocketReceiveResult? result = null;
+        WebSocketReceiveResult? result;
         do
         {
             var buffer = ArrayPool<byte>.Shared.Rent(Constants.MaxMessageSize);
@@ -53,7 +53,7 @@ public static class WebSocketExtensions
                 ArrayPool<byte>.Shared.Return(buffer, true);
             }
 
-        } while (result is not null && !result.CloseStatus.HasValue && !token.IsCancellationRequested);
+        } while (!result.CloseStatus.HasValue && !token.IsCancellationRequested);
     }
 
     public delegate Task? HandleMessage(ref Message message, CancellationToken token);
