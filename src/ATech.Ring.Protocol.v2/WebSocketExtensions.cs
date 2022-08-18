@@ -10,7 +10,7 @@ public static class WebSocketExtensions
     public static async Task SendAckAsync(this WebSocket s, Ack status, CancellationToken token = default)
     {
         if (s.State != WebSocketState.Open) return;
-        await s.SendAsync(new byte[] { (byte)status }, WebSocketMessageType.Binary, true, token).ConfigureAwait(false);
+        await s.SendAsync(new ArraySegment<byte>(new Message(M.ACK, (byte)status).Bytes.ToArray()), WebSocketMessageType.Binary, true, token).ConfigureAwait(false);
     }
 
     public static Task SendMessageAsync(this WebSocket s, Message m, CancellationToken token = default)
@@ -19,9 +19,9 @@ public static class WebSocketExtensions
         return s.SendAsync(new ArraySegment<byte>(m.Bytes.SliceUntilNull().ToArray()), WebSocketMessageType.Binary, true, token);
     }
 
-    public static async Task ListenAsync(this WebSocket webSocket, HandleMessage onReceived, CancellationToken token)
+    public static async Task ListenAsync(this WebSocket webSocket, HandleMessage onReceived, CancellationToken token=default)
     {
-        WebSocketReceiveResult? result = null;
+        WebSocketReceiveResult? result;
         do
         {
             var buffer = ArrayPool<byte>.Shared.Rent(Constants.MaxMessageSize);
@@ -53,7 +53,7 @@ public static class WebSocketExtensions
                 ArrayPool<byte>.Shared.Return(buffer, true);
             }
 
-        } while (result is not null && !result.CloseStatus.HasValue && !token.IsCancellationRequested);
+        } while (!result.CloseStatus.HasValue && !token.IsCancellationRequested);
     }
 
     public delegate Task? HandleMessage(ref Message message, CancellationToken token);

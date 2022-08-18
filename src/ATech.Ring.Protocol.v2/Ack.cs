@@ -10,5 +10,3 @@ public enum Ack : byte
     NotFound = 5,
     Alive
 }
-
-

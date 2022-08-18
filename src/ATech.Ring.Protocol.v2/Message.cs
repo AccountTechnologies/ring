@@ -1,6 +1,6 @@
 ﻿namespace ATech.Ring.Protocol.v2;
 
-using ATech.Ring.Protocol.v2.Events;
+using Events;
 using System;
 using System.Text;
 
@@ -35,7 +35,8 @@ public enum M : byte
     WORKSPACE_INFO_PUBLISH = 26,
     SERVER_IDLE = 22,
     SERVER_LOADED = 23,
-    SERVER_RUNNING = 24
+    SERVER_RUNNING = 24,
+    SERVER_SHUTDOWN = 25
 }
 
 public interface IAsMessage
@@ -63,11 +64,11 @@ public readonly ref struct Message
 
     public Message(ReadOnlySpan<byte> bytes) => Bytes = bytes.SliceUntilNull();
     public Message(M type, string value) : this(type, Encoding.UTF8.GetBytes(value)) { }
-    public Message(M type, byte value) : this(type, new byte[] {value}) { }
+    public Message(M type, byte value) : this(type, new [] {value}) { }
     public Message(M type, ReadOnlySpan<byte> bytes)
     {
         var trimmedBytes = bytes.SliceUntilNull();
-        byte[] newBytes = new byte[trimmedBytes.Length + 1];
+        var newBytes = new byte[trimmedBytes.Length + 1];
         newBytes[0] = (byte)type;
         Array.Copy(trimmedBytes.ToArray(), 0, newBytes, 1, trimmedBytes.Length);
         Bytes = newBytes;
@@ -75,7 +76,7 @@ public readonly ref struct Message
 
     public Message(M type, ReadOnlySpan<char> chars)
     {
-        byte[] newBytes = new byte[chars.Length + 1];
+        var newBytes = new byte[chars.Length + 1];
         newBytes[0] = (byte)type;
         Encoding.UTF8.GetBytes(chars, newBytes.AsSpan()[1..]);
         Bytes = new ReadOnlySpan<byte>(newBytes).SliceUntilNull();

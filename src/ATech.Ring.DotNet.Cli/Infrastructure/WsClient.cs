@@ -31,8 +31,12 @@ public sealed class WsClient : IAsyncDisposable
     {
         try
         {
-            if (_logger.IsEnabled(LogLevel.Debug)) _logger.LogDebug("{m} > {id}", m.ToString(), Id);
-            return Ws.SendMessageAsync(m);
+            if (!_logger.IsEnabled(LogLevel.Debug)) return Ws.SendMessageAsync(m);
+            var displayMessage = m.ToString();
+            var task = Ws.SendMessageAsync(m);
+            _logger.LogDebug("{m} > {id} ({TaskId})", displayMessage, Id, task.Id);
+            task.ContinueWith(_ => _logger.LogDebug(">> {m} > {id} ({TaskId})", displayMessage, Id, task.Id), TaskContinuationOptions.OnlyOnRanToCompletion);
+            return task;
         }
         catch (WebSocketException wse)
         {
@@ -74,11 +78,11 @@ public sealed class WsClient : IAsyncDisposable
             var cts = CancellationTokenSource.CreateLinkedTokenSource(t, _localCts.Token);
             _backgroundAwaiter = Task.Run(() => AckLongRunning(cts.Token), cts.Token);
             await Ws.ListenAsync(YieldOrQueueLongRunning, cts.Token);
-            _logger.LogInformation("Client {Id} disconnected ({WebSocketState})", Id, Ws.State);
+            _logger.LogInformation("Client disconnected ({Id}) ({WebSocketState})", Id, Ws.State);
         }
         catch (OperationCanceledException)
         {
-            _logger.LogInformation("Client {Id} disconnected ({WebSocketState})", Id, Ws.State);
+            _logger.LogInformation("Client disconnected ({Id}) ({WebSocketState})", Id, Ws.State);
         }
         catch (WebSocketException wx)
         {
@@ -87,7 +91,9 @@ public sealed class WsClient : IAsyncDisposable
         }
         finally
         {
-            if (Ws.State == WebSocketState.Open) await Ws.CloseOutputAsync(WebSocketCloseStatus.EndpointUnavailable, string.Empty, default);
+            _logger.LogDebug("Closing websocket ({Id}) ({WebSocketState})", Id, Ws.State);
+            await Ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, string.Empty, default);
+            _logger.LogDebug("Closed websocket ({Id}) ({WebSocketState})", Id, Ws.State);
         }
 
         Task<Ack>? YieldOrQueueLongRunning(ref Message message, CancellationToken token)

@@ -1,5 +1,6 @@
 ﻿namespace Ring.Test.Integration
 
+open ATech.Ring.Protocol.v2
 open Ring.Test.Integration.DotNet
 open Ring.Test.Integration.DotNet.Types
 open System.Threading
@@ -23,8 +24,10 @@ module RingControl =
     let exec = execCore Dotnet.proc
 
     let client = WsClient {
-      RingUrl = Uri ($"ws://localhost:{port}/ws?clientId={Guid.NewGuid()}")
-      CancelationToken = Some cts.Token
+      RingUrl = Uri ($"ws://localhost:{port}")
+      CancellationToken = Some cts.Token
+      ClientId = Guid.NewGuid()
+      LogOutputDir = options.TestArtifactsDir
     }
 
     member _.Install() = task {
@@ -38,12 +41,17 @@ module RingControl =
     member _.Options = options
     member _.ShowConfig() =
       task {
-        return! execResult ["show-config"]
+        return! execResult ["show-config"] []
       }
-    member _.Headless() =
+    member _.Headless(?debugMode: bool) =
       match ringTask with
       | Some _ -> failwith "Ring is already running"
-      | None -> ringTask <- Some (exec ["headless"; "--no-logo"; "--port"; port |> string ])
+      | None -> 
+        ringTask <- 
+          let args =
+            ["--no-logo"; "--port"; port |> string ]
+            |> Option.foldBack (fun debugMode args -> if debugMode then "--debug"::args else args) debugMode
+          Some(exec ("headless"::args) options.Env) 
 
     member _.Run(?workspacePath:string, ?debugMode: bool) =
       match ringTask with
@@ -51,18 +59,20 @@ module RingControl =
       | None -> 
         ringTask <-
           let args =
-            ["--no-logo"; "--port"; (port |> string)]
+            ["--no-logo"; "--port"; (port |> string); "--startup-delay-seconds"; "10"]
             |> Option.foldBack (fun debugMode args -> if debugMode then "--debug"::args else args) debugMode
             |> Option.foldBack (fun path args -> "-w"::path::args) workspacePath
 
-          Some (exec ("run"::args))
+          Some (exec ("run"::args) options.Env)
 
     member _.Client = client
     interface IAsyncDisposable with
       member _.DisposeAsync(): ValueTask = ValueTask(
         task {
-            if client.IsConnected then do! client.Terminate()
-            do! (client :> IAsyncDisposable).DisposeAsync()
+            if client.HasEverConnected then
+              do! client.Terminate()
+              client.WaitUntilMessage(M.SERVER_SHUTDOWN) |> ignore
+              do! (client :> IAsyncDisposable).DisposeAsync()
             cts.Dispose()
             match ringTask with
             | None -> ()

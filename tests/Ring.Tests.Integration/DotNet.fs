@@ -12,6 +12,8 @@ module Types =
     PackageVersion: string
     LocalTool: LocalTool option
     WorkingDir: string
+    Env: (string * string) list
+    TestArtifactsDir: string
   }
   and LocalTool = {
     InstallPath: string
@@ -21,28 +23,28 @@ module Types =
 module Dotnet =
   open Types
   
-  let createProc name workingDir args =
+  let createProc name workingDir args env =
     Process.setEnableProcessTracing true
-    RawCommand(name,
-    Arguments.OfArgs args)
-    |> CreateProcess.fromCommand
-    |> CreateProcess.withWorkingDirectory workingDir
-    |> CreateProcess.ensureExitCode
+    RawCommand(name, Arguments.OfArgs args)
+      |> CreateProcess.fromCommand
+      |> CreateProcess.withWorkingDirectory workingDir
+      |> CreateProcess.ensureExitCode
+      |> fun cmd -> env |> Seq.fold (fun cmd (k,v) -> cmd |> CreateProcess.setEnvironmentVariable k v) cmd
 
-  let proc name workingDir args =
-    createProc name workingDir args |> Proc.start
+  let proc name workingDir args env =
+    createProc name workingDir args env |> Proc.start
 
-  let procWithResult name workingDir args =
+  let procWithResult name workingDir args env =
     task {
       let! result =
-        createProc name workingDir args
+        createProc name workingDir args env
         |> CreateProcess.redirectOutput
         |> Proc.start
       return result.Result.Output.TrimEnd()
     }
 
   let newToolManifest (workingDir:string) = task {
-    return! (proc "dotnet" workingDir [ "new"; "tool-manifest"])
+    return! (proc "dotnet" workingDir [ "new"; "tool-manifest"] [])
    }
 
   let installTool (tool:Options) = task {
@@ -63,10 +65,10 @@ module Dotnet =
         match tool.LocalTool with
         | None _ ->
           "--global"
-        | Some (manifest) ->
+        | Some manifest ->
           "--tool-manifest"
           manifest.ManifestFilePath
-      ]
+      ] []
   }
 
   let uninstallTool (tool:Options) = task {
@@ -77,8 +79,8 @@ module Dotnet =
         match tool.LocalTool with
         | None _ ->
           "--global"
-        | Some (manifest) ->
+        | Some manifest ->
           "--tool-manifest"
           manifest.ManifestFilePath
-      ]
+      ] []
   }

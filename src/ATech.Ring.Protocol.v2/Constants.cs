@@ -2,5 +2,5 @@
 
 public static class Constants
 {
-    public static int MaxMessageSize = 4096;
+    public const int MaxMessageSize = 4096;
 }

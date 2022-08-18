@@ -22,9 +22,32 @@ let localOptions (dir:TestDir) = {
     ManifestFilePath = ".config/dotnet-tools.json"
   }
   WorkingDir = dir.WorkPath
+  Env = []
+  TestArtifactsDir = "artifacts"
 }
 
+let withEnv vars options =
+  {
+    options with Env = vars
+  }
+  
+let logToFile fileName (options: Options) =
+  let vars = [
+    "Serilog__WriteTo__0__Name", "File"
+    "Serilog__WriteTo__0__Args__path", Path.Combine(Directory.GetCurrentDirectory(), options.TestArtifactsDir , fileName)
+    "Serilog__WriteTo__0__Args__outputTemplate", "{Timestamp:HH:mm:ss.fff}|{Level:u3}|{Phase}|{UniqueId}|{Message}{NewLine}{Exception}"
+    "Serilog__WriteTo__1__Name", ""
+  ] 
+  withEnv vars options
+
+
 let globalOptions (dir:TestDir) = { localOptions dir with LocalTool = None}
+
+let expectEvent (ring:Ring) timeout (typ:M) (maybePayload:string option) =
+  let event = ring.Client.WaitUntilMessage(typ, timeout = timeout)
+
+  let runnable = $"Should receive a {typ} message (within {timeout})" |> Expect.wantSome event
+  maybePayload |> Option.iter( fun p -> $"Runnable Id should be correct" |> Expect.equal runnable.Payload p)
 
 [<Tests>]
 let tests =
@@ -55,32 +78,25 @@ let tests =
     }
 
     testTask "run basic workspace in headless mode" {
-      use ctx = new TestContext(localOptions)
+      use ctx = new TestContext(localOptions >> logToFile "run-basic.ring.log")
       let! (ring : Ring, dir: TestDir) = ctx.Init()
-      ring.Headless()
+      let expectEvent = expectEvent ring (TimeSpan.FromSeconds(60))
+      ring.Headless(debugMode=true)
       do! ring.Client.Connect()
       do! ring.Client.LoadWorkspace (dir.InSourceDir "../resources/basic/netcore.toml")
       do! ring.Client.StartWorkspace()
-      let runnableId = "k8s-debug-poc"
-      let timeout = TimeSpan.FromSeconds(60)
-
-      let expectEvent (typ:M) =
-        let event = ring.Client.WaitUntilMessage(typ, timeout = timeout)
-
-        let runnable = $"Should receive a {typ} message (within {timeout})" |> Expect.wantSome event
-        $"Runnable Id should be correct" |> Expect.equal runnable.Payload runnableId
         
-      expectEvent M.RUNNABLE_INITIATED
-      expectEvent M.RUNNABLE_STARTED
-      expectEvent M.RUNNABLE_HEALTH_CHECK
-      expectEvent M.RUNNABLE_HEALTHY
+      Some "k8s-debug-poc" |> expectEvent M.RUNNABLE_INITIATED
+      Some "k8s-debug-poc" |> expectEvent M.RUNNABLE_STARTED
+      Some "k8s-debug-poc" |> expectEvent M.RUNNABLE_HEALTH_CHECK
+      Some "k8s-debug-poc" |> expectEvent M.RUNNABLE_HEALTHY
       do! ring.Client.Terminate()
-      expectEvent M.RUNNABLE_STOPPED
-      expectEvent M.RUNNABLE_DESTROYED
+      Some "k8s-debug-poc" |> expectEvent M.RUNNABLE_STOPPED
+      Some "k8s-debug-poc" |> expectEvent M.RUNNABLE_DESTROYED
     }
 
     testTask "discover and run default workspace config if exists" {
-      use ctx = new TestContext(localOptions)
+      use ctx = new TestContext(localOptions >> logToFile "run-default.ring.log")
       let! (ring : Ring, dir: TestDir) = ctx.Init()
 
       File.WriteAllLines(dir.WorkPath + "/ring.toml", [
@@ -88,15 +104,17 @@ let tests =
         $"""csproj = '{dir.InSourceDir "../resources/apps/aspnetcore/aspnetcore.csproj"}' """
       ])
 
-      let runnableId = "aspnetcore"
-      let timeout = TimeSpan.FromSeconds(60)
+      let expectEvent = expectEvent ring (TimeSpan.FromSeconds(60))
       let task = ring.Client.Connect()
       ring.Run(debugMode=true)
-      let event = ring.Client.WaitUntilMessage(M.RUNNABLE_HEALTHY, timeout = timeout)
+      Some "aspnetcore" |> expectEvent M.RUNNABLE_INITIATED
+      Some "aspnetcore" |> expectEvent M.RUNNABLE_STARTED
+      Some "aspnetcore" |> expectEvent M.RUNNABLE_HEALTH_CHECK
+      Some "aspnetcore" |> expectEvent M.RUNNABLE_HEALTHY
       
+      do! ring.Client.StopWorkspace()
+      Some "aspnetcore" |> expectEvent M.RUNNABLE_STOPPED
+      Some "aspnetcore" |> expectEvent M.RUNNABLE_DESTROYED
       do! task
-    
-      let runnable = $"Should receive a RunnableHealthy message (within {timeout})" |> Expect.wantSome event
-      $"Runnable Id should be correct" |> Expect.equal runnable.Payload runnableId
     }
   ]

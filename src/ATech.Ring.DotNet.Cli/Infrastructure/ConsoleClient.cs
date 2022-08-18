@@ -1,4 +1,6 @@
-﻿namespace ATech.Ring.DotNet.Cli.Infrastructure;
+﻿using ATech.Ring.DotNet.Cli.Logging;
+
+namespace ATech.Ring.DotNet.Cli.Infrastructure;
 
 using System;
 using System.Net.WebSockets;
@@ -30,8 +32,18 @@ public class ConsoleClient
             _clientSocket = new ClientWebSocket();
             try
             {
+                using (_logger.WithHostScope(Phase.INIT))
+                {
+                    if (consoleOpts.StartupDelaySeconds > 0)
+                    {
+                        _logger.LogDebug("Delaying startup by: {StartupDelaySeconds} seconds",
+                            consoleOpts.StartupDelaySeconds);
+                    }
+                }
+
+                await Task.Delay(TimeSpan.FromSeconds(consoleOpts.StartupDelaySeconds), token);
                 await _clientSocket.ConnectAsync(new Uri($"ws://localhost:{_options.Port}/ws?clientId={ClientId}"), token);
-                await _clientSocket.SendMessageAsync(new(M.LOAD, consoleOpts.WorkspacePath), token);
+                await _clientSocket.SendMessageAsync(new Message(M.LOAD, consoleOpts.WorkspacePath), token);
                 await _clientSocket.SendMessageAsync(M.START, token);
 
             }
@@ -51,7 +63,7 @@ public class ConsoleClient
 
             if (_options is not ConsoleOptions) return;
             await _clientTask;
-            if (_clientSocket is ClientWebSocket s) await s.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "terminating", token);
+            if (_clientSocket is { } s) await s.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "terminating", token);
         }
         catch (OperationCanceledException)
         {
