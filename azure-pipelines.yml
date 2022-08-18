@@ -6,7 +6,7 @@ trigger:
     include:
     - '*'
 
-<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>variables:
+variables:
   ${{ if startsWith(variables['Build.SourceBranch'], 'refs/tags/') }}:
     PKGVER: ${{ variables['Build.SourceBranchName'] }}
   ${{ if not(startsWith(variables['Build.SourceBranch'], 'refs/tags/')) }}:
