@@ -25,7 +25,7 @@ module RingControl =
 
     let client = WsClient {
       RingUrl = Uri ($"ws://localhost:{port}/ws?clientId={Guid.NewGuid()}")
-      CancelationToken = Some cts.Token
+      CancellationToken = Some cts.Token
     }
 
     member _.Install() = task {

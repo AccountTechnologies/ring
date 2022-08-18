@@ -9,7 +9,7 @@ open FSharp.Control
 
 type ClientOptions = {
   RingUrl: Uri
-  CancelationToken: CancellationToken option
+  CancellationToken: CancellationToken option
 }
 
 type Msg = {
@@ -23,7 +23,7 @@ type WsClient(options: ClientOptions) =
   
   let mutable eventLog = AsyncSeq.empty
   
-  let cancellationToken =  options.CancelationToken |> Option.defaultValue CancellationToken.None
+  let cancellationToken =  options.CancellationToken |> Option.defaultValue CancellationToken.None
   let mutable listenTask = Task.CompletedTask
   let mutable terminateRequested = false
   let socket = lazy(task {
@@ -91,7 +91,6 @@ type WsClient(options: ClientOptions) =
       let waitUntil = defaultArg timeout (TimeSpan.FromSeconds(10))
       let asyncFlow =
         x.EventStream
-        |> AsyncSeq.map (fun x -> printfn $"\n----> %A{x.Type} %s{x.Payload} <----\n"; x)
         |> AsyncSeq.skipWhile (fun x ->  x.Type <> typ)
         |> AsyncSeq.tryFirst
       Async.RunSynchronously(asyncFlow, waitUntil.TotalMilliseconds |> int)
