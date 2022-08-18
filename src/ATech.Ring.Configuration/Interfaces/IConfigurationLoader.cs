@@ -2,5 +2,5 @@
 
 public interface IConfigurationLoader
 {
-    T Load<T>(string path);
+    T Load<T>(string path) where T : class, new();
 }

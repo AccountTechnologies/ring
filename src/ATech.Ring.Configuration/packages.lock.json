@@ -2,11 +2,11 @@
   "version": 1,
   "dependencies": {
     ".NETStandard,Version=v2.1": {
-      "Nett": {
+      "Tomlyn": {
         "type": "Direct",
-        "requested": "[0.13.0, )",
-        "resolved": "0.13.0",
-        "contentHash": "s3GMchEhJHuDEddBV4g5UbK7x6r7inTRZ0mOmqPXQPAQ0mr8pODN++5mfnAbAs/s6RI4+qYNuoUymnGBxgbfgQ=="
+        "requested": "[0.15.0, )",
+        "resolved": "0.15.0",
+        "contentHash": "WyEYqnQ7iN2m6N9cZjhAFqSa6Mz+M04AgUfDxXabTh+dToDPNKqh2r8V7oZLoRAIk3f0YEia08R9eYcrW1Txxg=="
       }
     }
   }

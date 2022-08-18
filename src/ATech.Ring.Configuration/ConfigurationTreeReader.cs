@@ -35,10 +35,9 @@ public class ConfigurationTreeReader : IConfigurationTreeReader
                 r.DeclaredPaths.Add(fullPath);
             }
             if (c.import == null) return c;
-            for (var i = 0; i < c.import.Length; i++)
+            for (var i = 0; i < c.import.Count; i++)
             {
-                ref var w = ref c.import[i];
-                w = Populate(w.path, c, new FileInfo(fullPath).DirectoryName);
+                c.import[i] = Populate(c.import[i].path, c, new FileInfo(fullPath).DirectoryName);
             }
 
             return c;

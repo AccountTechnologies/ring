@@ -1,9 +1,8 @@
-﻿using Nett;
+﻿using Tomlyn;
 
 namespace ATech.Ring.Configuration;
 
 public static class TomlConfig
 {
-    public static TomlSettings Settings { get; } = TomlSettings.Create(cfg =>
-        cfg.ConfigurePropertyMapping(p => p.UseTargetPropertySelector(x => x.IgnoreCase)));
+    public static TomlModelOptions Settings { get; } = new(){ ConvertPropertyName = x => x.ToLower() };
 }

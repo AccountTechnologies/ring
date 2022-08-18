@@ -14,14 +14,14 @@ public class WorkspaceConfig : IWorkspaceConfig
     public WorkspaceConfig Parent { get; set; }
 
     public string Id => string.IsNullOrWhiteSpace(path) ? "" : System.IO.Path.GetFullPath(path);
-    public HashSet<string> DeclaredPaths { get; set; } = new HashSet<string>();
+    public HashSet<string> DeclaredPaths { get; set; } = new();
 
     public string path { get; set; }
-    public AspNetCore[] aspnetcore { get; set; } = { };
-    public IISExpress[] iisexpress { get; set; } = { };
-    public IISXCore[] iisxcore { get; set; } = { };
-    public NetExe[] netexe { get; set; } = { };
-    public DockerCompose[] dockercompose { get; set; } = { };
-    public Kustomize[] kustomize { get; set; } = { };
-    public WorkspaceConfig[] import { get; set; } = { };
+    public List<AspNetCore> aspnetcore { get; set; } = new();
+    public List<IISExpress> iisexpress { get; set; } = new();
+    public List<IISXCore> iisxcore { get; set; } = new();
+    public List<NetExe> netexe { get; set; } = new();
+    public List<DockerCompose> dockercompose { get; set; } = new();
+    public List<Kustomize> kustomize { get; set; } = new();
+    public List<WorkspaceConfig> import { get; set; } = new();
 }
