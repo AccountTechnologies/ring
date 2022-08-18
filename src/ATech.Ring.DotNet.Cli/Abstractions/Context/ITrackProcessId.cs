@@ -1,7 +1,6 @@
-﻿namespace ATech.Ring.DotNet.Cli.Abstractions.Context
+﻿namespace ATech.Ring.DotNet.Cli.Abstractions.Context;
+
+public interface ITrackProcessId
 {
-    public interface ITrackProcessId
-    {
-        int ProcessId { get; set; }
-    }
+    int ProcessId { get; set; }
 }

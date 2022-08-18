@@ -1,12 +1,11 @@
 ﻿using ATech.Ring.DotNet.Cli.Abstractions.Context;
 
-namespace ATech.Ring.DotNet.Cli.Runnables.DockerCompose
+namespace ATech.Ring.DotNet.Cli.Runnables.DockerCompose;
+
+public class DockerComposeContext : ITrackProcessId, ITrackRetries
 {
-    public class DockerComposeContext : ITrackProcessId, ITrackRetries
-    {
-        public string ComposeFilePath { get; set; }
-        public int ProcessId { get; set; }
-        public int ConsecutiveFailures { get; set; }
-        public int TotalFailures { get; set; }
-    }
+    public string ComposeFilePath { get; set; }
+    public int ProcessId { get; set; }
+    public int ConsecutiveFailures { get; set; }
+    public int TotalFailures { get; set; }
 }

@@ -8,43 +8,42 @@ using ATech.Ring.Protocol.v2;
 using Microsoft.Extensions.Logging;
 using NetExeConfig = ATech.Ring.Configuration.Runnables.NetExe;
 
-namespace ATech.Ring.DotNet.Cli.Windows.Runnables.NetExe
+namespace ATech.Ring.DotNet.Cli.Windows.Runnables.NetExe;
+
+public class NetExeRunnable : CsProjRunnable<NetExeContext, NetExeConfig>
 {
-    public class NetExeRunnable : CsProjRunnable<NetExeContext, NetExeConfig>
+    private readonly ExeRunner _exeRunner;
+
+    public NetExeRunnable(
+        NetExeConfig config,
+        ExeRunner exeRunner, 
+        ILogger<NetExeRunnable> logger, 
+        ISender sender) : base(config, logger, sender)
     {
-        private readonly ExeRunner _exeRunner;
+        _exeRunner = exeRunner;
+    }
 
-        public NetExeRunnable(
-            NetExeConfig config,
-            ExeRunner exeRunner, 
-            ILogger<NetExeRunnable> logger, 
-            ISender sender) : base(config, logger, sender)
+    protected override NetExeContext CreateContext()
+    {
+        AddDetail(DetailsKeys.CsProjPath, Config.FullPath);
+        var ctx = new NetExeContext
         {
-            _exeRunner = exeRunner;
-        }
+            CsProjPath = Config.CsProj,
+            WorkingDir = Config.GetWorkingDir(),
+            EntryAssemblyPath = $"{Config.GetWorkingDir()}\\bin\\Debug\\{Config.GetProjName()}.exe"
+        };
 
-        protected override NetExeContext CreateContext()
-        {
-            AddDetail(DetailsKeys.CsProjPath, Config.FullPath);
-            var ctx = new NetExeContext
-            {
-                CsProjPath = Config.CsProj,
-                WorkingDir = Config.GetWorkingDir(),
-                EntryAssemblyPath = $"{Config.GetWorkingDir()}\\bin\\Debug\\{Config.GetProjName()}.exe"
-            };
+        AddDetail(DetailsKeys.WorkDir, ctx.WorkingDir);
+        AddDetail(DetailsKeys.ProcessId, ctx.ProcessId);
 
-            AddDetail(DetailsKeys.WorkDir, ctx.WorkingDir);
-            AddDetail(DetailsKeys.ProcessId, ctx.ProcessId);
+        return ctx;
+    }
 
-            return ctx;
-        }
-
-        protected override async Task StartAsync(NetExeContext ctx, CancellationToken token)
-        {
-            _exeRunner.ExePath = ctx.EntryAssemblyPath;
-            var result = await _exeRunner.RunProcessAsync(Config.Args, token);
-            ctx.ProcessId = result.Pid;
-            ctx.Output = result.Output;
-        }
+    protected override async Task StartAsync(NetExeContext ctx, CancellationToken token)
+    {
+        _exeRunner.ExePath = ctx.EntryAssemblyPath;
+        var result = await _exeRunner.RunProcessAsync(Config.Args, token);
+        ctx.ProcessId = result.Pid;
+        ctx.Output = result.Output;
     }
 }
