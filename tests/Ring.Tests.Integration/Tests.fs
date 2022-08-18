@@ -23,6 +23,7 @@ let localOptions (dir:TestDir) = {
   }
   WorkingDir = dir.WorkPath
   Env = []
+  TestArtifactsDir = "artifacts"
 }
 
 let withEnv vars options =
@@ -30,12 +31,14 @@ let withEnv vars options =
     options with Env = vars
   }
   
-let logToFile fileName = withEnv [
-  "Serilog__WriteTo__0__Name", "File"
-  "Serilog__WriteTo__0__Args__path", Path.Combine(Directory.GetCurrentDirectory(), fileName)
-  "Serilog__WriteTo__0__Args__outputTemplate", "{Timestamp:HH:mm:ss.fff}|{Level:u3}|{Phase}|{UniqueId}|{Message}{NewLine}{Exception}"
-  "Serilog__WriteTo__1__Name", ""
-]
+let logToFile fileName (options: Options) =
+  let vars = [
+    "Serilog__WriteTo__0__Name", "File"
+    "Serilog__WriteTo__0__Args__path", Path.Combine(Directory.GetCurrentDirectory(), options.TestArtifactsDir , fileName)
+    "Serilog__WriteTo__0__Args__outputTemplate", "{Timestamp:HH:mm:ss.fff}|{Level:u3}|{Phase}|{UniqueId}|{Message}{NewLine}{Exception}"
+    "Serilog__WriteTo__1__Name", ""
+  ] 
+  withEnv vars options
 
 
 let globalOptions (dir:TestDir) = { localOptions dir with LocalTool = None}

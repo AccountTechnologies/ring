@@ -1,5 +1,6 @@
 ﻿namespace Ring.Client
 
+open System.IO
 open ATech.Ring.Protocol.v2
 open System
 open System.Net.WebSockets
@@ -10,6 +11,8 @@ open FSharp.Control
 type ClientOptions = {
   RingUrl: Uri
   CancellationToken: CancellationToken option
+  ClientId: Guid
+  LogOutputDir: string
 }
 
 type Msg = {
@@ -31,7 +34,7 @@ type WsClient(options: ClientOptions) =
       use connectionTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(20))
       while s.State <> WebSocketState.Open && not <| connectionTimeout.IsCancellationRequested do
         try
-          do! s.ConnectAsync(options.RingUrl, cancellationToken)
+          do! s.ConnectAsync(Uri(options.RingUrl, $"ws?clientId={options.ClientId}"), cancellationToken)
         with
          | :? WebSocketException as ex ->
           printfn $"Test client failed to connect to Ring: {ex.Message}. Reconnecting..."
@@ -118,8 +121,9 @@ type WsClient(options: ClientOptions) =
                     | x -> $"%A{x.Type}|%s{x.Payload}"
                     |> fun pretty -> $"{m.Timestamp:``HH:mm:ss.fff``}|{pretty}"
                    )
-                  |> AsyncSeq.iter (printfn "%s")
-                Async.RunSynchronously(eventLog, 10000)
+                  |> AsyncSeq.toListAsync
+                let log = Async.RunSynchronously(eventLog, 10000)
+                File.AppendAllLines($"{options.LogOutputDir}/{options.ClientId}.client.log", log)
               with
                | :? WebSocketException as wx ->
                  printfn $"%s{wx.ToString()}"

@@ -67,7 +67,7 @@ steps:
 
 - task: PublishPipelineArtifact@1
   inputs:
-    targetPath: $(System.DefaultWorkingDirectory)/tests/Ring.Tests.Integration/bin/Debug/net6.0/*.ring.log
+    targetPath: $(System.DefaultWorkingDirectory)/tests/Ring.Tests.Integration/bin/Debug/*.ring.log
     artifactName: Logs
   
 - bash: dotnet nuget push -s  https://api.nuget.org/v3/index.json -k $(nuget-api-key) $(Build.ArtifactStagingDirectory)/*.nupkg

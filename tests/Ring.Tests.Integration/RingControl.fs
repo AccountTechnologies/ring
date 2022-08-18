@@ -24,8 +24,10 @@ module RingControl =
     let exec = execCore Dotnet.proc
 
     let client = WsClient {
-      RingUrl = Uri ($"ws://localhost:{port}/ws?clientId={Guid.NewGuid()}")
+      RingUrl = Uri ($"ws://localhost:{port}")
       CancellationToken = Some cts.Token
+      ClientId = Guid.NewGuid()
+      LogOutputDir = options.TestArtifactsDir
     }
 
     member _.Install() = task {

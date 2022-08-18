@@ -13,6 +13,7 @@ module Types =
     LocalTool: LocalTool option
     WorkingDir: string
     Env: (string * string) list
+    TestArtifactsDir: string
   }
   and LocalTool = {
     InstallPath: string

@@ -5,6 +5,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <GenerateProgramFile>false</GenerateProgramFile>
 	<LangVersion>preview</LangVersion>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
