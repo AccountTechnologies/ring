@@ -123,6 +123,7 @@ type WsClient(options: ClientOptions) =
                    )
                   |> AsyncSeq.toListAsync
                 let log = Async.RunSynchronously(eventLog, 10000)
+                Directory.CreateDirectory(options.LogOutputDir) |> ignore
                 File.AppendAllLines($"{options.LogOutputDir}/{options.ClientId}.client.log", log)
               with
                | :? WebSocketException as wx ->
