@@ -39,7 +39,7 @@ module RingControl =
     member _.Options = options
     member _.ShowConfig() =
       task {
-        return! execResult ["show-config"]
+        return! execResult ["show-config"] []
       }
     member _.Headless(?debugMode: bool) =
       match ringTask with
@@ -49,7 +49,7 @@ module RingControl =
           let args =
             ["--no-logo"; "--port"; port |> string ]
             |> Option.foldBack (fun debugMode args -> if debugMode then "--debug"::args else args) debugMode
-          Some(exec ("headless"::args)) 
+          Some(exec ("headless"::args) options.Env) 
 
     member _.Run(?workspacePath:string, ?debugMode: bool) =
       match ringTask with
@@ -61,7 +61,7 @@ module RingControl =
             |> Option.foldBack (fun debugMode args -> if debugMode then "--debug"::args else args) debugMode
             |> Option.foldBack (fun path args -> "-w"::path::args) workspacePath
 
-          Some (exec ("run"::args))
+          Some (exec ("run"::args) options.Env)
 
     member _.Client = client
     interface IAsyncDisposable with

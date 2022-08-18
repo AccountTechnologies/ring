@@ -19,7 +19,7 @@ module TestContext =
       let d = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()) |> Directory.CreateDirectory
       d
     member _.WorkPath = dir.FullName
-    member _.InSourceDir (path) = Path.Combine(origDir, path) |> Path.GetFullPath
+    member _.InSourceDir path = Path.Combine(origDir, path) |> Path.GetFullPath
     interface IDisposable with
       member _.Dispose(): unit =
         dir.Delete(true)

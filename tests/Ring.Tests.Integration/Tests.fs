@@ -22,7 +22,21 @@ let localOptions (dir:TestDir) = {
     ManifestFilePath = ".config/dotnet-tools.json"
   }
   WorkingDir = dir.WorkPath
+  Env = []
 }
+
+let withEnv vars options =
+  {
+    options with Env = vars
+  }
+  
+let logToFile fileName = withEnv [
+  "Serilog__WriteTo__0__Name", "File"
+  "Serilog__WriteTo__0__Args__path", Path.Combine(Directory.GetCurrentDirectory(), fileName)
+  "Serilog__WriteTo__0__Args__outputTemplate", "{Timestamp:HH:mm:ss.fff}|{Level:u3}|{Phase}|{UniqueId}|{Message}{NewLine}{Exception}"
+  "Serilog__WriteTo__1__Name", ""
+]
+
 
 let globalOptions (dir:TestDir) = { localOptions dir with LocalTool = None}
 
@@ -61,7 +75,7 @@ let tests =
     }
 
     testTask "run basic workspace in headless mode" {
-      use ctx = new TestContext(localOptions)
+      use ctx = new TestContext(localOptions >> logToFile "run-basic.ring.log")
       let! (ring : Ring, dir: TestDir) = ctx.Init()
       let expectEvent = expectEvent ring (TimeSpan.FromSeconds(60))
       ring.Headless(debugMode=true)
@@ -79,7 +93,7 @@ let tests =
     }
 
     testTask "discover and run default workspace config if exists" {
-      use ctx = new TestContext(localOptions)
+      use ctx = new TestContext(localOptions >> logToFile "run-default.ring.log")
       let! (ring : Ring, dir: TestDir) = ctx.Init()
 
       File.WriteAllLines(dir.WorkPath + "/ring.toml", [
