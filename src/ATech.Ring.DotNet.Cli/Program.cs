@@ -63,7 +63,7 @@ try
     var builder = WebApplication.CreateBuilder(args);
 
     builder.Services.AddSingleton(options);
-    builder.Services.AddSingleton<Func<Uri, HttpClient>>(s => uri => clients.GetOrAdd(uri, new HttpClient { BaseAddress = uri, MaxResponseContentBufferSize = 1 }));
+    builder.Services.AddSingleton<Func<Uri, HttpClient>>(_ => uri => clients.GetOrAdd(uri, new HttpClient { BaseAddress = uri, MaxResponseContentBufferSize = 1 }));
     builder.Services.AddOptions();
     builder.Services.Configure<RingConfiguration>(builder.Configuration.GetSection("ring"));
     builder.Services.AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true));
@@ -96,7 +96,7 @@ try
 
     builder.Host.UseSerilog();
 
-    builder.Host.ConfigureContainer<IServiceContainer>((ctx, container) =>
+    builder.Host.ConfigureContainer<IServiceContainer>((_, container) =>
     {
         var runnableTypes = Assembly.GetEntryAssembly().GetExportedTypes().Where(t => typeof(IRunnable).IsAssignableFrom(t)).ToList();
 
@@ -122,7 +122,7 @@ try
         container.Register<Func<LightInject.Scope>>(x => x.BeginScope);
     });
 
-    builder.Host.ConfigureAppConfiguration((c, b) =>
+    builder.Host.ConfigureAppConfiguration((_, b) =>
     {
         b.AddJsonFile(InstallationDir.AppsettingsJsonPath(), optional: false)
          .AddInMemoryCollection(new Dictionary<string, string> { ["ring:port"] = options.Port.ToString() })
