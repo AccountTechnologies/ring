@@ -1,6 +1,7 @@
 ﻿namespace Ring.Client
 
 open System.IO
+open System.Threading.Channels
 open ATech.Ring.Protocol.v2
 open System
 open System.Net.WebSockets
@@ -22,9 +23,13 @@ type Msg = {
 }
 
 type WsClient(options: ClientOptions) =
-  let buffer = Channels.Channel.CreateUnbounded<Msg>()
-  
-  let mutable eventLog = AsyncSeq.empty
+  let buffer = Channel.CreateUnbounded<Msg>()
+  let cache = Channel.CreateUnbounded<Msg>()
+  let events =
+    buffer.Reader.ReadAllAsync()
+    |> AsyncSeq.ofAsyncEnum
+    |> AsyncSeq.map (fun m -> cache.Writer.TryWrite(m) |> ignore; m)
+  let allEvents = cache.Reader.ReadAllAsync() |> AsyncSeq.ofAsyncEnum |> AsyncSeq.cache
   
   let cancellationToken =  options.CancellationToken |> Option.defaultValue CancellationToken.None
   let mutable listenTask = Task.CompletedTask
@@ -52,12 +57,7 @@ type WsClient(options: ClientOptions) =
       return s
     })
 
-  member _.EventStream =
-    eventLog <-
-      buffer.Reader.ReadAllAsync() |> AsyncSeq.ofAsyncEnum
-      |> AsyncSeq.append eventLog
-      |> AsyncSeq.cache
-    eventLog
+  member _.AllEvents = allEvents
 
   member _.LoadWorkspace(path: string) = task {
     let! s = socket.Value
@@ -93,7 +93,7 @@ type WsClient(options: ClientOptions) =
     try
       let waitUntil = defaultArg timeout (TimeSpan.FromSeconds(10))
       let asyncFlow =
-        x.EventStream
+        events
         |> AsyncSeq.skipWhile (fun x ->  x.Type <> typ)
         |> AsyncSeq.tryFirst
       Async.RunSynchronously(asyncFlow, waitUntil.TotalMilliseconds |> int)
@@ -113,8 +113,9 @@ type WsClient(options: ClientOptions) =
                 do! s.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, String.Empty, cancellationToken)
                 do! listenTask
                 buffer.Writer.Complete()
+                cache.Writer.Complete()
                 let eventLog =
-                  x.EventStream
+                  x.AllEvents
                   |> AsyncSeq.map (fun m ->
                     match m with
                     | x when x.Payload = "" -> m.Type |> string
