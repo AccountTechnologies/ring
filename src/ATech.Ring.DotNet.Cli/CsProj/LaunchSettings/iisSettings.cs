@@ -1,7 +1,6 @@
-﻿namespace ATech.Ring.DotNet.Cli.CsProj.LaunchSettings
+﻿namespace ATech.Ring.DotNet.Cli.CsProj.LaunchSettings;
+
+public class iisSettings
 {
-    public class iisSettings
-    {
-        public iisExpress iisExpress { get; set; }
-    }
+    public iisExpress iisExpress { get; set; }
 }

@@ -1,10 +1,9 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-namespace ATech.Ring.DotNet.Cli.Workspace
+namespace ATech.Ring.DotNet.Cli.Workspace;
+
+public interface IWorkspaceInitHook
 {
-    public interface IWorkspaceInitHook
-    {
-        Task RunAsync(CancellationToken token);
-    }
+    Task RunAsync(CancellationToken token);
 }

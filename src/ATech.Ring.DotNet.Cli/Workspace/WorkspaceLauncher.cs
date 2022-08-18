@@ -14,216 +14,215 @@ using ATech.Ring.Protocol.v2;
 using ATech.Ring.Protocol.v2.Events;
 using Microsoft.Extensions.Logging;
 
-namespace ATech.Ring.DotNet.Cli.Workspace
+namespace ATech.Ring.DotNet.Cli.Workspace;
+
+public sealed class WorkspaceLauncher : IWorkspaceLauncher, IDisposable
 {
-    public sealed class WorkspaceLauncher : IWorkspaceLauncher, IDisposable
+    private readonly IConfigurator _configurator;
+    private readonly ILogger<WorkspaceLauncher> _logger;
+    private readonly Func<IRunnableConfig, IRunnable> _createRunnable;
+    private readonly IWorkspaceInitHook _initHook;
+    private readonly ISender _sender;
+    private readonly ConcurrentDictionary<string, RunnableContainer> _runnables = new();
+    private Task? _startTask;
+    private Task? _stopTask;
+    private Task? _initHookTask;
+    private CancellationTokenSource _cts = new();
+    private WorkspaceInfo CurrentInfo { get; set; } = WorkspaceInfo.Empty;
+    private WorkspaceState CurrentStatus { get; set; }
+    private int _initCounter;
+    private readonly Random _rnd = new();
+
+    public event EventHandler OnInitiated;
+    public string WorkspacePath => _configurator.Current.Path;
+
+    public WorkspaceLauncher(IConfigurator configurator,
+        ILogger<WorkspaceLauncher> logger,
+        Func<IRunnableConfig, IRunnable> createRunnable,
+        IWorkspaceInitHook initHook,
+        ISender sender)
     {
-        private readonly IConfigurator _configurator;
-        private readonly ILogger<WorkspaceLauncher> _logger;
-        private readonly Func<IRunnableConfig, IRunnable> _createRunnable;
-        private readonly IWorkspaceInitHook _initHook;
-        private readonly ISender _sender;
-        private readonly ConcurrentDictionary<string, RunnableContainer> _runnables = new();
-        private Task? _startTask;
-        private Task? _stopTask;
-        private Task? _initHookTask;
-        private CancellationTokenSource _cts = new();
-        private WorkspaceInfo CurrentInfo { get; set; } = WorkspaceInfo.Empty;
-        private WorkspaceState CurrentStatus { get; set; }
-        private int _initCounter;
-        private readonly Random _rnd = new();
+        _configurator = configurator;
+        _logger = logger;
+        _createRunnable = createRunnable;
+        _initHook = initHook;
+        _sender = sender;
+        OnInitiated += WorkspaceLauncher_OnInitiated;
+    }
 
-        public event EventHandler OnInitiated;
-        public string WorkspacePath => _configurator.Current.Path;
+    private void WorkspaceLauncher_OnInitiated(object? sender, EventArgs e)
+    {
+        _initHookTask = _initHook.RunAsync(_cts.Token);
+    }
 
-        public WorkspaceLauncher(IConfigurator configurator,
-                                 ILogger<WorkspaceLauncher> logger,
-                                 Func<IRunnableConfig, IRunnable> createRunnable,
-                                 IWorkspaceInitHook initHook,
-                                 ISender sender)
+    public async Task LoadAsync(ConfiguratorPaths paths, CancellationToken token)
+    {
+        _configurator.OnConfigurationChanged += async (_, args) => { await ApplyConfigChanges(args.Configuration, _cts.Token); };
+
+        var configDirectory = new FileInfo(paths.WorkspacePath).DirectoryName;
+        if (configDirectory == null) 
         {
-            _configurator = configurator;
-            _logger = logger;
-            _createRunnable = createRunnable;
-            _initHook = initHook;
-            _sender = sender;
-            OnInitiated += WorkspaceLauncher_OnInitiated;
+            throw new InvalidOperationException($"Path '{configDirectory}' does not have directory name");
         }
+        Directory.SetCurrentDirectory(configDirectory);
 
-        private void WorkspaceLauncher_OnInitiated(object? sender, EventArgs e)
+        await _configurator.LoadAsync(paths, _cts.Token);
+        using (_logger.WithHostScope(Phase.INIT))
         {
-            _initHookTask = _initHook.RunAsync(_cts.Token);
+            _logger.LogInformation(PhaseStatus.OK);
         }
+    }
 
-        public async Task LoadAsync(ConfiguratorPaths paths, CancellationToken token)
+    public Task StartAsync(CancellationToken token)
+    {
+        _cts = new CancellationTokenSource();
+        _startTask = Task.Factory.StartNew(async () => await ApplyConfigChanges(_configurator.Current, _cts.Token), _cts.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+        return Task.CompletedTask;
+    }
+
+    public async Task UnloadAsync(CancellationToken token)
+    {
+        await _configurator.UnloadAsync(_cts.Token);
+    }
+
+    public async Task StopAsync(CancellationToken token)
+    {
+        _cts.Cancel();
+        if (_initHookTask != null) await _initHookTask;
+        _initCounter = 0;
+        _stopTask = Task.WhenAll(_runnables.Keys.Select(RemoveAsync));
+        await (_startTask ?? throw new InvalidOperationException($"{nameof(_startTask)} must not be null"));
+    }
+
+    public async Task<ExcludeResult> ExcludeAsync(string id, CancellationToken token)
+    {
+        return await RemoveAsync(id) ? ExcludeResult.Ok : ExcludeResult.UnknownRunnable;
+    }
+
+    public async Task<IncludeResult> IncludeAsync(string id, CancellationToken token)
+    {
+        if (!_configurator.TryGet(id, out var cfg)) return IncludeResult.UnknownRunnable;
+        await AddAsync(id, cfg, TimeSpan.Zero, _cts.Token);
+        return IncludeResult.Ok;
+    }
+
+    public void PublishStatus(ServerState serverState) => PublishStatusCore(serverState, force: true);
+
+    private async Task ApplyConfigChanges(IDictionary<string, IRunnableConfig> configs, CancellationToken token)
+    {
+        try
         {
-            _configurator.OnConfigurationChanged += async (_, args) => { await ApplyConfigChanges(args.Configuration, _cts.Token); };
+            var deletions = _runnables.Keys.Except(configs.Keys).ToArray();
+            var deletionsTask = deletions.Select(RemoveAsync);
+            var additions = configs.Keys.Except(_runnables.Keys).ToArray();
+            var additionsTask = additions.Select(key => {
+                var delay = CaclulateDelay(additions.Length);
+                _logger.LogDebug("Starting in {delay}", delay);
+                return AddAsync(key, configs[key], delay, token);
+            });
 
-            var configDirectory = new FileInfo(paths.WorkspacePath).DirectoryName;
-            if (configDirectory == null) 
+            await Task.WhenAll(additionsTask.Concat(deletionsTask));
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogDebug("Workspace cancelled");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error");
+        }
+    }
+
+    private TimeSpan CaclulateDelay(int runnablesCount)
+    {
+        const int spreadFactorMillis = 1_500;
+        lock (_rnd)
+        {
+            return TimeSpan.FromMilliseconds(_rnd.Next(0, Math.Max(runnablesCount - 1, 0) * spreadFactorMillis));
+        }
+    }
+
+    private WorkspaceInfo Create(WorkspaceState state, ServerState serverState)
+    {
+        return new WorkspaceInfo(WorkspacePath,
+            _configurator.Current.Select(entry =>
             {
-                throw new InvalidOperationException($"Path '{configDirectory}' does not have directory name");
-            }
-            Directory.SetCurrentDirectory(configDirectory);
+                var (id, cfg) = entry;
+                var isRunning = _runnables.TryGetValue(id, out var container);
 
-            await _configurator.LoadAsync(paths, _cts.Token);
-            using (_logger.WithHostScope(Phase.INIT))
-            {
-                _logger.LogInformation(PhaseStatus.OK);
-            }
-        }
-
-        public Task StartAsync(CancellationToken token)
-        {
-            _cts = new CancellationTokenSource();
-            _startTask = Task.Factory.StartNew(async () => await ApplyConfigChanges(_configurator.Current, _cts.Token), _cts.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
-            return Task.CompletedTask;
-        }
-
-        public async Task UnloadAsync(CancellationToken token)
-        {
-            await _configurator.UnloadAsync(_cts.Token);
-        }
-
-        public async Task StopAsync(CancellationToken token)
-        {
-            _cts.Cancel();
-            if (_initHookTask != null) await _initHookTask;
-            _initCounter = 0;
-            _stopTask = Task.WhenAll(_runnables.Keys.Select(RemoveAsync));
-            await (_startTask ?? throw new InvalidOperationException($"{nameof(_startTask)} must not be null"));
-        }
-
-        public async Task<ExcludeResult> ExcludeAsync(string id, CancellationToken token)
-        {
-            return await RemoveAsync(id) ? ExcludeResult.Ok : ExcludeResult.UnknownRunnable;
-        }
-
-        public async Task<IncludeResult> IncludeAsync(string id, CancellationToken token)
-        {
-            if (!_configurator.TryGet(id, out var cfg)) return IncludeResult.UnknownRunnable;
-            await AddAsync(id, cfg, TimeSpan.Zero, _cts.Token);
-            return IncludeResult.Ok;
-        }
-
-        public void PublishStatus(ServerState serverState) => PublishStatusCore(serverState, force: true);
-
-        private async Task ApplyConfigChanges(IDictionary<string, IRunnableConfig> configs, CancellationToken token)
-        {
-            try
-            {
-                var deletions = _runnables.Keys.Except(configs.Keys).ToArray();
-                var deletionsTask = deletions.Select(RemoveAsync);
-                var additions = configs.Keys.Except(_runnables.Keys).ToArray();
-                var additionsTask = additions.Select(key => {
-                    var delay = CaclulateDelay(additions.Length);
-                    _logger.LogDebug("Starting in {delay}", delay);
-                    return AddAsync(key, configs[key], delay, token);
-                });
-
-                await Task.WhenAll(additionsTask.Concat(deletionsTask));
-            }
-            catch (OperationCanceledException)
-            {
-                _logger.LogDebug("Workspace cancelled");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error");
-            }
-        }
-
-        private TimeSpan CaclulateDelay(int runnablesCount)
-        {
-            const int spreadFactorMillis = 1_500;
-            lock (_rnd)
-            {
-                return TimeSpan.FromMilliseconds(_rnd.Next(0, Math.Max(runnablesCount - 1, 0) * spreadFactorMillis));
-            }
-        }
-
-        private WorkspaceInfo Create(WorkspaceState state, ServerState serverState)
-        {
-            return new WorkspaceInfo(WorkspacePath,
-                _configurator.Current.Select(entry =>
+                var runnableState = isRunning ? container.Runnable switch
                 {
-                    var (id, cfg) = entry;
-                    var isRunning = _runnables.TryGetValue(id, out var container);
+                    { State: State.Zero } => RunnableState.ZERO,
+                    { State: State.Idle } => RunnableState.INITIATED,
+                    { State: State.ProbingHealth } => RunnableState.HEALTH_CHECK,
+                    { State: State.Healthy } => RunnableState.HEALTHY,
+                    { State: State.Dead } => RunnableState.DEAD,
+                    { State: State.Recovering } => RunnableState.RECOVERING,
+                    { State: State.Pending } => RunnableState.STARTED,
+                    _ => RunnableState.ZERO
+                } : RunnableState.ZERO;
 
-                    var runnableState = isRunning ? container.Runnable switch
-                    {
-                        { State: State.Zero } => RunnableState.ZERO,
-                        { State: State.Idle } => RunnableState.INITIATED,
-                        { State: State.ProbingHealth } => RunnableState.HEALTH_CHECK,
-                        { State: State.Healthy } => RunnableState.HEALTHY,
-                        { State: State.Dead } => RunnableState.DEAD,
-                        { State: State.Recovering } => RunnableState.RECOVERING,
-                        { State: State.Pending } => RunnableState.STARTED,
-                        _ => RunnableState.ZERO
-                    } : RunnableState.ZERO;
+                var details = isRunning ? container.Runnable.Details : DetailsExtractors.Extract(cfg);
 
-                    var details = isRunning ? container.Runnable.Details : DetailsExtractors.Extract(cfg);
+                var runnableInfo = new RunnableInfo(id, cfg.DeclaredPaths.ToArray(), cfg.GetType().Name, runnableState, details);
 
-                    var runnableInfo = new RunnableInfo(id, cfg.DeclaredPaths.ToArray(), cfg.GetType().Name, runnableState, details);
+                return runnableInfo;
 
-                    return runnableInfo;
+            }).OrderBy(x => x.Id).ToArray(), serverState, state);
+    }
 
-                }).OrderBy(x => x.Id).ToArray(), serverState, state);
-        }
+    private async Task AddAsync(string id, IRunnableConfig cfg, TimeSpan delay, CancellationToken token)
+    {
+        if (_runnables.ContainsKey(id)) return;
+        var container = await RunnableContainer.CreateAsync(cfg, _createRunnable, delay, token);
 
-        private async Task AddAsync(string id, IRunnableConfig cfg, TimeSpan delay, CancellationToken token)
-        {
-            if (_runnables.ContainsKey(id)) return;
-            var container = await RunnableContainer.CreateAsync(cfg, _createRunnable, delay, token);
-
-            container.Runnable.OnHealthCheckCompleted += OnPublishStatus;
-            container.Runnable.OnInitExecuted += OnRunnableInitExecuted;
+        container.Runnable.OnHealthCheckCompleted += OnPublishStatus;
+        container.Runnable.OnInitExecuted += OnRunnableInitExecuted;
             
-            _runnables.TryAdd(id, container);
+        _runnables.TryAdd(id, container);
 
-            container.Start();
-        }
+        container.Start();
+    }
 
-        private async Task<bool> RemoveAsync(string key)
-        {
-            if (!_runnables.TryRemove(key, out var container)) return false;
+    private async Task<bool> RemoveAsync(string key)
+    {
+        if (!_runnables.TryRemove(key, out var container)) return false;
 
-            Interlocked.Decrement(ref _initCounter);
-            container.Runnable.OnHealthCheckCompleted -= OnPublishStatus;
-            container.Runnable.OnInitExecuted -= OnRunnableInitExecuted;
-            await container.CancelAsync();
-            container.Dispose();
-            return true;
-        }
+        Interlocked.Decrement(ref _initCounter);
+        container.Runnable.OnHealthCheckCompleted -= OnPublishStatus;
+        container.Runnable.OnInitExecuted -= OnRunnableInitExecuted;
+        await container.CancelAsync();
+        container.Dispose();
+        return true;
+    }
 
-        private void OnRunnableInitExecuted(object? sender, EventArgs e)
-        {
-            if (_configurator.Current.Count != Interlocked.Increment(ref _initCounter)) return;
-            using var _ = _logger.WithHostScope(Phase.INIT);
-            OnInitiated?.Invoke(this, EventArgs.Empty);
-        }
-        private void OnPublishStatus(object? sender, EventArgs args) => PublishStatusCore(ServerState.RUNNING, force: false);
+    private void OnRunnableInitExecuted(object? sender, EventArgs e)
+    {
+        if (_configurator.Current.Count != Interlocked.Increment(ref _initCounter)) return;
+        using var _ = _logger.WithHostScope(Phase.INIT);
+        OnInitiated?.Invoke(this, EventArgs.Empty);
+    }
+    private void OnPublishStatus(object? sender, EventArgs args) => PublishStatusCore(ServerState.RUNNING, force: false);
 
-        private void PublishStatusCore(ServerState serverState, bool force)
-        {
-            var state = serverState == ServerState.IDLE ? WorkspaceState.NONE :
-                        !_runnables.Any() ? WorkspaceState.IDLE :
-                        _runnables.Values.Select(x => x.Runnable).All(r => r.State == State.ProbingHealth || r.State == State.Healthy) ? WorkspaceState.HEALTHY :
-                        WorkspaceState.DEGRADED;
+    private void PublishStatusCore(ServerState serverState, bool force)
+    {
+        var state = serverState == ServerState.IDLE ? WorkspaceState.NONE :
+            !_runnables.Any() ? WorkspaceState.IDLE :
+            _runnables.Values.Select(x => x.Runnable).All(r => r.State == State.ProbingHealth || r.State == State.Healthy) ? WorkspaceState.HEALTHY :
+            WorkspaceState.DEGRADED;
 
-            if (!force && state == CurrentStatus) return;
-            CurrentStatus = state;
-            var info = Create(state, serverState);
-            if (!force && info.Equals(CurrentInfo)) return;
-            CurrentInfo = info;
-            _sender.Enqueue(Message.WorkspaceInfo(CurrentInfo));
-        }
+        if (!force && state == CurrentStatus) return;
+        CurrentStatus = state;
+        var info = Create(state, serverState);
+        if (!force && info.Equals(CurrentInfo)) return;
+        CurrentInfo = info;
+        _sender.Enqueue(Message.WorkspaceInfo(CurrentInfo));
+    }
 
-        public void Dispose() => _cts?.Dispose();
+    public void Dispose() => _cts?.Dispose();
 
-        public async Task WaitUntilStoppedAsync(CancellationToken token)
-        {
-            if (_stopTask != null) await _stopTask;
-        }
+    public async Task WaitUntilStoppedAsync(CancellationToken token)
+    {
+        if (_stopTask != null) await _stopTask;
     }
 }

@@ -1,7 +1,6 @@
-namespace ATech.Ring.DotNet.Cli.Runnables.Dotnet
+namespace ATech.Ring.DotNet.Cli.Runnables.Dotnet;
+
+public class AspNetCoreContext : DotnetContext
 {
-    public class AspNetCoreContext : DotnetContext
-    {
-        public string[] Urls { get; set; } = { };
-    }
+    public string[] Urls { get; set; } = { };
 }

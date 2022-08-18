@@ -1,8 +1,7 @@
-﻿namespace ATech.Ring.DotNet.Cli.Abstractions.Context
+﻿namespace ATech.Ring.DotNet.Cli.Abstractions.Context;
+
+public interface ITrackRetries
 {
-    public interface ITrackRetries
-    {
-        int ConsecutiveFailures{ get; set; }
-        int TotalFailures { get; set; }
-    }
+    int ConsecutiveFailures{ get; set; }
+    int TotalFailures { get; set; }
 }

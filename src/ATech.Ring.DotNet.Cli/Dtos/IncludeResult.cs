@@ -1,8 +1,7 @@
-﻿namespace ATech.Ring.DotNet.Cli.Dtos
+﻿namespace ATech.Ring.DotNet.Cli.Dtos;
+
+public enum IncludeResult
 {
-    public enum IncludeResult
-    {
-        Ok,
-        UnknownRunnable
-    }
+    Ok,
+    UnknownRunnable
 }

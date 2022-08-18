@@ -1,7 +1,6 @@
-﻿namespace ATech.Ring.DotNet.Cli.CsProj.LaunchSettings
+﻿namespace ATech.Ring.DotNet.Cli.CsProj.LaunchSettings;
+
+public class Root
 {
-    public class Root
-    {
-        public iisSettings iisSettings { get; set; }
-    }
+    public iisSettings iisSettings { get; set; }
 }
