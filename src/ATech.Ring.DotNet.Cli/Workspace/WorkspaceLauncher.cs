@@ -9,10 +9,12 @@ using ATech.Ring.Configuration;
 using ATech.Ring.Configuration.Interfaces;
 using ATech.Ring.DotNet.Cli.Abstractions;
 using ATech.Ring.DotNet.Cli.Dtos;
+using ATech.Ring.DotNet.Cli.Infrastructure;
 using ATech.Ring.DotNet.Cli.Logging;
 using ATech.Ring.Protocol.v2;
 using ATech.Ring.Protocol.v2.Events;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace ATech.Ring.DotNet.Cli.Workspace;
 
@@ -23,6 +25,7 @@ public sealed class WorkspaceLauncher : IWorkspaceLauncher, IDisposable
     private readonly Func<IRunnableConfig, IRunnable> _createRunnable;
     private readonly IWorkspaceInitHook _initHook;
     private readonly ISender _sender;
+    private readonly int _spreadFactorMilliseconds;
     private readonly ConcurrentDictionary<string, RunnableContainer> _runnables = new();
     private Task? _startTask;
     private Task? _stopTask;
@@ -40,13 +43,15 @@ public sealed class WorkspaceLauncher : IWorkspaceLauncher, IDisposable
         ILogger<WorkspaceLauncher> logger,
         Func<IRunnableConfig, IRunnable> createRunnable,
         IWorkspaceInitHook initHook,
-        ISender sender)
+        ISender sender,
+        IOptions<RingConfiguration> options)
     {
         _configurator = configurator;
         _logger = logger;
         _createRunnable = createRunnable;
         _initHook = initHook;
         _sender = sender;
+        _spreadFactorMilliseconds = options.Value.SpreadFactorMilliseconds;
         OnInitiated += WorkspaceLauncher_OnInitiated;
     }
 
@@ -116,7 +121,7 @@ public sealed class WorkspaceLauncher : IWorkspaceLauncher, IDisposable
             var deletionsTask = deletions.Select(RemoveAsync);
             var additions = configs.Keys.Except(_runnables.Keys).ToArray();
             var additionsTask = additions.Select(key => {
-                var delay = CaclulateDelay(additions.Length);
+                var delay = CalculateDelay(additions.Length);
                 _logger.LogDebug("Starting in {delay}", delay);
                 return AddAsync(key, configs[key], delay, token);
             });
@@ -133,12 +138,11 @@ public sealed class WorkspaceLauncher : IWorkspaceLauncher, IDisposable
         }
     }
 
-    private TimeSpan CaclulateDelay(int runnablesCount)
+    private TimeSpan CalculateDelay(int runnablesCount)
     {
-        const int spreadFactorMillis = 1_500;
         lock (_rnd)
         {
-            return TimeSpan.FromMilliseconds(_rnd.Next(0, Math.Max(runnablesCount - 1, 0) * spreadFactorMillis));
+            return TimeSpan.FromMilliseconds(_rnd.Next(0, Math.Max(runnablesCount - 1, 0) * _spreadFactorMilliseconds));
         }
     }
 

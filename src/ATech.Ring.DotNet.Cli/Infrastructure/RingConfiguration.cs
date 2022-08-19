@@ -7,6 +7,7 @@ public class RingConfiguration
     public string? GitCloneRootPath { get; set; }
     public string? KustomizeCacheRootPath { get; set; }
     public HooksConfiguration? Hooks { get; set; }
+    public int SpreadFactorMilliseconds { get; set; } = 1500;
 }
 
 public class InitHookConfig

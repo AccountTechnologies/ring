@@ -12,6 +12,8 @@ cat "$(ring show-config -n)" > "$($env:APPDATA)\ATech\ring\appsettings.json"
 * `ring:kustomizeCacheRootPath` - the path of kustomize cache. Defaults to: `/tmp/kustomize-cache`
 * `ring:hooks:init:command` - a command to be run on the workspace init hook event
 * `ring:hooks:init:args` - arguments to be passed to the above command
+* `ring:spreadFactorMilliseconds` - it can be used to tweak the pace runnables start at. Increase it to reduce the load during workspace startup. Default: 1500 ms
+
 
 ## Example configuration
 
