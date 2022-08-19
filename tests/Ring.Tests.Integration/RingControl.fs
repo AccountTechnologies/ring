@@ -1,8 +1,8 @@
-﻿namespace Ring.Test.Integration
+﻿namespace Ring.Tests.Integration
 
 open ATech.Ring.Protocol.v2
-open Ring.Test.Integration.DotNet
-open Ring.Test.Integration.DotNet.Types
+open Ring.Tests.Integration.DotNet
+open Ring.Tests.Integration.DotNet.Types
 open System.Threading
 open Ring.Client
 open System

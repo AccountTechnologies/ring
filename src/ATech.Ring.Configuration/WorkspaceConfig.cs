@@ -23,5 +23,6 @@ public class WorkspaceConfig : IWorkspaceConfig
     public NetExe[] netexe { get; set; } = { };
     public DockerCompose[] dockercompose { get; set; } = { };
     public Kustomize[] kustomize { get; set; } = { };
-    public WorkspaceConfig[] import { get; set; } = { };
+    public string[] imports { get; set; } = { };
+    public List<WorkspaceConfig> import { get; set; } = new();
 }

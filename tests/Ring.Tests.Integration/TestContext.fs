@@ -1,9 +1,9 @@
-﻿namespace Ring.Test.Integration
+﻿namespace Ring.Tests.Integration
 
 open System.IO
 open System
-open Ring.Test.Integration.DotNet.Types
-open Ring.Test.Integration.RingControl
+open Ring.Tests.Integration.DotNet.Types
+open Ring.Tests.Integration.RingControl
 open System.Threading.Tasks
 
 module TestContext =
