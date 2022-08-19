@@ -3,7 +3,7 @@
 ## 3.2.0
 
 * feat: simplified import syntax (#38)
-* fix: drain pub-sub before terminate (ensure all messages are reaching the clients) (#29)
+* fix: drain pub-sub before terminate (ensure all messages reach the clients) (#29)
 * fix: configuration sources priority (environment vars should always take precedence) (#39)
 * fix: could not use Urls override in aspnetcore runnable on Windows when running as exe (#39)
 * chore: more reliable integration tests 
