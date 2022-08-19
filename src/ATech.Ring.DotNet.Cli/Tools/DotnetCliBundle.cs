@@ -30,7 +30,7 @@ public class DotnetCliBundle : ITool
         if (File.Exists(ctx.ExePath))
         {
             _exeRunner.ExePath = ctx.ExePath;
-            return await _exeRunner.RunProcessAsync(ctx.WorkingDir, null, null, token);
+            return await _exeRunner.RunProcessAsync(ctx.WorkingDir, DefaultEnvVars, null, token);
         }
         if (File.Exists(ctx.EntryAssemblyPath))
         {
