@@ -1,0 +1,3 @@
+[[aspnetcore]]
+csproj = "apps/aspnetcore/aspnetcore.csproj"
+urls = ["http://+:7123"]

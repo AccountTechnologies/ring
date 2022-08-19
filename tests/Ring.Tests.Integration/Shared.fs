@@ -45,13 +45,6 @@ let logToFile fileName (options: Options) =
 let globalOptions (dir:TestDir) = { localOptions dir with LocalTool = None}
 
 
-type Ring with
-
-  member x.expect (typ:M) =
-    let timeout = TimeSpan.FromSeconds(60)
-    x.Client.WaitUntilMessage(typ, timeout = timeout), typ
-    
-  
 module Expect =
   let forId (id: string) (events: (Msg option * M) seq) =
     
@@ -59,3 +52,13 @@ module Expect =
       let event, typ = event
       let runnable = $"Should receive a message of type {typ}" |> Expect.wantSome event
       "Runnable Id should be correct" |> Expect.equal runnable.Payload id
+
+type Ring with
+
+  member x.expect (typ:M) =
+    let timeout = TimeSpan.FromSeconds(60)
+    x.Client.WaitUntilMessage(typ, timeout = timeout), typ
+  
+  member x.waitUntilHealthy (id: string) =
+    [ x.expect M.RUNNABLE_HEALTHY ]
+    |> Expect.forId id

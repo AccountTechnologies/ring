@@ -61,8 +61,7 @@ let tests =
         M.RUNNABLE_DESTROYED
       ]
       |> Seq.map ring.expect
-      |> Expect.forId "k8s-debug-poc"
-      
+      |> Expect.forId "k8s-debug-poc"  
     }
 
     testTask "discover and run default workspace config if exists" {
