@@ -13,15 +13,16 @@
     <Compile Include="TestContext.fs" />
     <Compile Include="Shared.fs" />
     <Compile Include="Tests.Smoke.fs" />
+    <Compile Include="Tests.AspNetCore.fs" />
     <Compile Include="Tests.WorkspaceConfig.fs" />
     <Compile Include="Main.fs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Expecto" Version="9.*" />
-    <PackageReference Include="Fake.Core.Environment" Version="5.20.4" />
-    <PackageReference Include="Fake.Core.Process" Version="5.20.4" />
-    <PackageReference Include="FSharp.Control.Reactive" Version="5.0.2" />
+    <PackageReference Include="Fake.Core.Environment" Version="5.*" />
+    <PackageReference Include="Fake.Core.Process" Version="5.*" />
+    <PackageReference Include="FsHttp" Version="9.1.2" />
     <PackageReference Include="YoloDev.Expecto.TestSdk" Version="0.*" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
     <PackageReference Update="FSharp.Core" Version="6.*" />
