@@ -38,7 +38,7 @@ Ring groups *runnables* (processes/services) into *workspaces*. Workspaces are d
 
 ## Ring dotnet tool
 ```
-dotnet tool install --global ATech.Ring.DotNet.Cli --version 3.1.2
+dotnet tool install --global ATech.Ring.DotNet.Cli --version 3.2.0
 ```
 
 ## Visual Studio Extension
@@ -88,9 +88,27 @@ Workspaces are written in [TOML](https://github.com/toml-lang/toml) and they mos
 
 *Imports another workspace*
 
+Simplified syntax:
+
+```toml
+imports = [
+  "path/to/workspace/a.toml",
+  "path/to/workspace/b.toml",
+  "path/to/yet/another/workspace/c.toml"
+]
+```
+
+Classic syntax:
+
 ```toml
 [[import]]
-path = "path/to/another/workspace.toml"
+path = "path/to/workspace/a.toml"
+
+[[import]]
+path = "path/to/workspace/b.toml"
+
+[[import]]
+path = "path/to/yet/another/workspace/c.toml"
 ```
 
 *Runs IIS Express hosted full .NET Framework service (e.g. AspNet MVC or WCF)*

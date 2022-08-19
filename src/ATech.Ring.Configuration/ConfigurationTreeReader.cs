@@ -25,7 +25,10 @@ public class ConfigurationTreeReader : IConfigurationTreeReader
             var fullPath = Path.IsPathRooted(path) ? path : Path.Combine(currentDirectory, path);
             var c = _loader.Load<WorkspaceConfig>(fullPath);
             if (c == null) return new WorkspaceConfig();
-
+            foreach (var import in c.imports)
+            {
+                c.import.Add(new WorkspaceConfig{path = import});
+            }
             c.Parent = parent;
             c.path = fullPath;
 
@@ -35,12 +38,10 @@ public class ConfigurationTreeReader : IConfigurationTreeReader
                 r.DeclaredPaths.Add(fullPath);
             }
             if (c.import == null) return c;
-            for (var i = 0; i < c.import.Length; i++)
+            for (var i = 0; i < c.import.Count; i++)
             {
-                ref var w = ref c.import[i];
-                w = Populate(w.path, c, new FileInfo(fullPath).DirectoryName);
+                c.import[i] = Populate(c.import[i].path, c, new FileInfo(fullPath).DirectoryName);
             }
-
             return c;
         }
     }

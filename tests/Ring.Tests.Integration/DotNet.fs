@@ -1,4 +1,4 @@
-﻿namespace Ring.Test.Integration.DotNet
+﻿namespace Ring.Tests.Integration.DotNet
 
 open Fake.Core
 

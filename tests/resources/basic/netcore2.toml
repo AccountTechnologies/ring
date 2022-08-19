@@ -1,0 +1,3 @@
+[[aspnetcore]]
+sshRepoUrl = "git@github.com:dummy/project.git"
+csproj = "src/dummy.csproj"
