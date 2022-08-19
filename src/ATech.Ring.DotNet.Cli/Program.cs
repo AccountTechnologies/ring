@@ -126,18 +126,17 @@ try
         container.Register<Func<LightInject.Scope>>(x => x.BeginScope);
     });
 
-    builder.Host.ConfigureAppConfiguration((c, b) =>
+    builder.Host.ConfigureAppConfiguration((_, b) =>
     {
-        b.AddJsonFile(InstallationDir.AppsettingsJsonPath(), optional: false)
-         .AddInMemoryCollection(new Dictionary<string, string> { ["ring:port"] = options.Port.ToString() })
-         .AddUserSettingsFile()
-         .AddEnvironmentVariables();
-
+        b.AddJsonFile(InstallationDir.AppsettingsJsonPath(), optional: false);
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             b.AddJsonFile(InstallationDir.AppsettingsJsonPath("Windows"), optional: false);
         }
+        b.AddUserSettingsFile();
         b.AddJsonFile(Path.Combine(originalWorkingDir, ".ring", "appsettings.json"), optional: true);
+        b.AddInMemoryCollection(new Dictionary<string, string> { ["ring:port"] = options.Port.ToString() });
+        b.AddEnvironmentVariables();
     });
     builder.Host.UseServiceProviderFactory(new LightInjectServiceProviderFactory());
     builder.WebHost.UseLightInject(container);
