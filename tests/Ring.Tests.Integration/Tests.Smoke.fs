@@ -12,27 +12,27 @@ open System.IO
 [<Tests>]
 let tests =
   testList "Smoke tests" [
-    testTask "show-config -- global" {
+    testTask "config-path -- global tool" {
       use ctx = new TestContext(globalOptions)
       let! (ring : Ring, _) = ctx.Init()
       let pkgVer = ring.Options.PackageVersion
-      let! actualPath = ring.ShowConfig()
+      let! actualPath = ring.ConfigPath("--global")
       let expectedPath =
         if Environment.isWindows
-        then $"""{env "USERPROFILE"}\.dotnet\tools\.store\atech.ring.dotnet.cli\{pkgVer}\atech.ring.dotnet.cli\{pkgVer}\tools\net6.0\any\appsettings.json"""
-        else $"""{env "HOME"}/.dotnet/tools/.store/atech.ring.dotnet.cli/{pkgVer}/atech.ring.dotnet.cli/{pkgVer}/tools/net6.0/any/appsettings.json"""
+        then $"""{env "USERPROFILE"}\.dotnet\tools\.store\atech.ring.dotnet.cli\{pkgVer}\atech.ring.dotnet.cli\{pkgVer}\tools\net6.0\any\appsettings.toml"""
+        else $"""{env "HOME"}/.dotnet/tools/.store/atech.ring.dotnet.cli/{pkgVer}/atech.ring.dotnet.cli/{pkgVer}/tools/net6.0/any/appsettings.toml"""
       "Config path should be correct" |> Expect.equal actualPath expectedPath
     }
 
-    testTask "show-config -- local" {
+    testTask "config-path -- local tool" {
       use ctx = new TestContext(localOptions)
       let! (ring : Ring, _) = ctx.Init()
       let pkgVer = ring.Options.PackageVersion
-      let! actualPath = ring.ShowConfig()
+      let! actualPath = ring.ConfigPath("--global")
       let expectedPath =
         if Environment.isWindows
-        then $"""{env "USERPROFILE"}\.nuget\packages\atech.ring.dotnet.cli\{pkgVer}\tools\net6.0\any\appsettings.json"""
-        else $"""{env "HOME"}/.nuget/packages/atech.ring.dotnet.cli/{pkgVer}/tools/net6.0/any/appsettings.json"""
+        then $"""{env "USERPROFILE"}\.nuget\packages\atech.ring.dotnet.cli\{pkgVer}\tools\net6.0\any\appsettings.toml"""
+        else $"""{env "HOME"}/.nuget/packages/atech.ring.dotnet.cli/{pkgVer}/tools/net6.0/any/appsettings.toml"""
 
       "Config path should be correct" |> Expect.equal actualPath expectedPath
     }
@@ -72,7 +72,6 @@ let tests =
         "[[aspnetcore]]"
         $"""csproj = '{dir.InSourceDir "../resources/apps/aspnetcore/aspnetcore.csproj"}' """
       ])
-
 
       let task = ring.Client.Connect()
       ring.Run(debugMode=true)

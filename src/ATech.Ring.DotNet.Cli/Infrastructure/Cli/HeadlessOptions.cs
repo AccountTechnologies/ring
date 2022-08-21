@@ -3,4 +3,4 @@
 using CommandLine;
 
 [Verb("headless", HelpText = "Runs ring! server in headless mode")]
-public class HeadlessOptions : BaseOptions { }
+public class HeadlessOptions : ServeOptions { }

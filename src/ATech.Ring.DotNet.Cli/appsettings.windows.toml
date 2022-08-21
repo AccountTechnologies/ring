@@ -1,0 +1,5 @@
+# the default path where ring clones repositories of runnables supporting it
+gitCloneRootPath = "%HOME%\\.ring\\repos"
+
+# kustomize runnables only - the default path where ring keeps cache of kustomize build
+kustomizeCacheRootPath = "%HOME%\\.ring\\kustomize-cache"

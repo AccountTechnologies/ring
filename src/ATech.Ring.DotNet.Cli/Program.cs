@@ -29,6 +29,7 @@ using Microsoft.Extensions.Logging;
 using Nett;
 using Serilog;
 using Serilog.Events;
+using Tomlyn.Extensions.Configuration;
 
 static string Ring(string ver) => $"       _ _\n     *'   '*\n    * .*'*. 3\n   '  @   a  ;     ring! v{ver}\n    * '*.*' *\n     *. _ .*\n";
 var originalWorkingDir = Directory.GetCurrentDirectory();
@@ -64,9 +65,10 @@ try
     var builder = WebApplication.CreateBuilder(args);
 
     builder.Services.AddSingleton(options);
-    builder.Services.AddSingleton<Func<Uri, HttpClient>>(s => uri => clients.GetOrAdd(uri, new HttpClient { BaseAddress = uri, MaxResponseContentBufferSize = 1 }));
+    if (options is ServeOptions) builder.Services.AddSingleton(f => (ServeOptions)f.GetRequiredService<BaseOptions>());
+    builder.Services.AddSingleton<Func<Uri, HttpClient>>(_ => uri => clients.GetOrAdd(uri, new HttpClient { BaseAddress = uri, MaxResponseContentBufferSize = 1 }));
     builder.Services.AddOptions();
-    builder.Services.Configure<RingConfiguration>(builder.Configuration.GetSection("ring"));
+    builder.Services.Configure<RingConfiguration>(builder.Configuration);
     builder.Services.AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true));
     builder.Services.AddSingleton<IServer, Server>();
     builder.Services.AddSingleton<WebsocketsHandler>();
@@ -118,7 +120,7 @@ try
             return (IRunnable)ctor.Invoke(args);
         });
 
-        container.Register(f => TomlSettings.Create(cfg =>
+        container.Register(_ => TomlSettings.Create(cfg =>
         {
             cfg.ConfigurePropertyMapping(p => p.UseTargetPropertySelector(x => x.IgnoreCase));
         }), new PerContainerLifetime());
@@ -128,15 +130,17 @@ try
 
     builder.Host.ConfigureAppConfiguration((_, b) =>
     {
-        b.AddJsonFile(InstallationDir.AppsettingsJsonPath(), optional: false);
+        b.Sources.Clear();
+        b.AddTomlFile(Directories.Installation.AppsettingsPath(), optional: false);
+        b.AddTomlFile(Directories.Installation.AppsettingsPath("logging"), optional: false);
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            b.AddJsonFile(InstallationDir.AppsettingsJsonPath("Windows"), optional: false);
+            b.AddTomlFile(Directories.Installation.AppsettingsPath("windows"), optional: false);
         }
-        b.AddUserSettingsFile();
-        b.AddJsonFile(Path.Combine(originalWorkingDir, ".ring", "appsettings.json"), optional: true);
-        b.AddInMemoryCollection(new Dictionary<string, string> { ["ring:port"] = options.Port.ToString() });
-        b.AddEnvironmentVariables();
+        b.AddTomlFile(Directories.User.AppsettingsPath, optional: true);
+        b.AddTomlFile(Directories.Working(originalWorkingDir).AppsettingsPath, optional: true);
+        b.AddEnvironmentVariables("RING_");
+        if (options is ServeOptions { Port: var port }) b.AddInMemoryCollection(new Dictionary<string, string> { ["ring:port"] = port.ToString() });
     });
     builder.Host.UseServiceProviderFactory(new LightInjectServiceProviderFactory());
     builder.WebHost.UseLightInject(container);
@@ -154,9 +158,9 @@ try
 
     using (logger.WithHostScope(Phase.INIT))
     {
-        logger.LogInformation("Listening on port {Port}", options.Port);
+        if (options is ServeOptions { Port: var port }) logger.LogInformation("Listening on port {Port}", port.ToString());
     }
-
+    
     app.UseWebSockets();
     app.UseMiddleware<RingMiddleware>();
 

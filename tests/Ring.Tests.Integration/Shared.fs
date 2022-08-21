@@ -34,16 +34,14 @@ let withEnv vars options =
   
 let logToFile fileName (options: Options) =
   let vars = [
-    "Serilog__WriteTo__0__Name", "File"
-    "Serilog__WriteTo__0__Args__path", Path.Combine(Directory.GetCurrentDirectory(), options.TestArtifactsDir , fileName)
-    "Serilog__WriteTo__0__Args__outputTemplate", "{Timestamp:HH:mm:ss.fff}|{Level:u3}|{Phase}|{UniqueId}|{Message}{NewLine}{Exception}"
-    "Serilog__WriteTo__1__Name", ""
+    "RING_Serilog__WriteTo__0__Name", "File"
+    "RING_Serilog__WriteTo__0__Args__path", Path.Combine(Directory.GetCurrentDirectory(), options.TestArtifactsDir , fileName)
+    "RING_Serilog__WriteTo__0__Args__outputTemplate", "{Timestamp:HH:mm:ss.fff}|{Level:u3}|{Phase}|{UniqueId}|{Message}{NewLine}{Exception}"
+    "RING_Serilog__WriteTo__1__Name", ""
   ] 
   withEnv vars options
 
-
 let globalOptions (dir:TestDir) = { localOptions dir with LocalTool = None}
-
 
 module Expect =
   let forId (id: string) (events: (Msg option * M) seq) =
