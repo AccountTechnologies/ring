@@ -17,7 +17,7 @@ public class ConfigPath : BaseOptions
     public bool User { get; set; }
     
     [Option(Group = "scope", MetaValue = "global")]
-    public bool Global { get; set; }
+    public bool Default { get; set; }
 }
 
 [Verb("config-create", HelpText = "Creates configuration files")]

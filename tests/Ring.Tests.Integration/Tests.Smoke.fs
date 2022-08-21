@@ -16,7 +16,7 @@ let tests =
       use ctx = new TestContext(globalOptions)
       let! (ring : Ring, _) = ctx.Init()
       let pkgVer = ring.Options.PackageVersion
-      let! actualPath = ring.ConfigPath("--global")
+      let! actualPath = ring.ConfigPath("--default")
       let expectedPath =
         if Environment.isWindows
         then $"""{env "USERPROFILE"}\.dotnet\tools\.store\atech.ring.dotnet.cli\{pkgVer}\atech.ring.dotnet.cli\{pkgVer}\tools\net6.0\any\appsettings.toml"""
@@ -28,7 +28,7 @@ let tests =
       use ctx = new TestContext(localOptions)
       let! (ring : Ring, _) = ctx.Init()
       let pkgVer = ring.Options.PackageVersion
-      let! actualPath = ring.ConfigPath("--global")
+      let! actualPath = ring.ConfigPath("--default")
       let expectedPath =
         if Environment.isWindows
         then $"""{env "USERPROFILE"}\.nuget\packages\atech.ring.dotnet.cli\{pkgVer}\tools\net6.0\any\appsettings.toml"""

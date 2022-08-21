@@ -68,7 +68,7 @@ public static class CliParser
                 var path =
                     opts.Local ? Directories.Working(originalWorkingDir).AppsettingsPath :
                     opts.User ? Directories.User.AppsettingsPath :
-                    opts.Global ? Directories.Installation.AppsettingsPath() : throw new ArgumentOutOfRangeException();
+                    opts.Default ? Directories.Installation.AppsettingsPath() : throw new InvalidOperationException("Unknown scope");
 
                 Console.WriteLine(path);
                 Environment.Exit(0);
