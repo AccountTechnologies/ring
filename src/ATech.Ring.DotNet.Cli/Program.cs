@@ -160,7 +160,7 @@ try
     {
         if (options is ServeOptions { Port: var port }) logger.LogInformation("Listening on port {Port}", port.ToString());
     }
-    
+
     app.UseWebSockets();
     app.UseMiddleware<RingMiddleware>();
 
