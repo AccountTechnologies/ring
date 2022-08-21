@@ -17,7 +17,7 @@ public class WorkspaceInitHook : IWorkspaceInitHook
         _logger = logger;
         _runner = runner;
         var config = opts?.Value?.Hooks?.Init;
-        if (!(config is { Command: string c, Args: string[] args })) return;
+        if (config is not { Command: { } c, Args: { } args }) return;
         _configured = true;
         _runner.ExePath = c;
         _runner.DefaultArgs = args;
@@ -32,7 +32,7 @@ public class WorkspaceInitHook : IWorkspaceInitHook
         }
         else
         {
-            _logger.LogDebug("Workspace Init Hook not configurred. Skipping.");
+            _logger.LogDebug("Workspace Init Hook not configured. Skipping.");
         }
     }
 }
