@@ -38,7 +38,10 @@ public class GitClone : ITool
         var pathChunks = new List<string> { rootPathOverride ?? _ringCfg.GitCloneRootPath };
         var inRepoPath = chunks[1].Replace(".git", "").Split("/");
         pathChunks.AddRange(inRepoPath);
-        var targetPath = Environment.ExpandEnvironmentVariables(Path.Combine(pathChunks.ToArray()));
+        var targetPath = Path.Combine(pathChunks.ToArray());
+        // non-Windows OS hack for https://github.com/dotnet/runtime/issues/25792
+        targetPath = targetPath.Replace("$HOME", "%HOME%").Replace("~", "%HOME%");
+        targetPath = Environment.ExpandEnvironmentVariables(targetPath);
         return Path.IsPathRooted(targetPath) ? targetPath : Path.GetFullPath(targetPath);
     }
 

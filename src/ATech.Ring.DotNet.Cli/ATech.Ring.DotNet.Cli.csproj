@@ -28,9 +28,9 @@
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.*" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.*" />
     <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.*" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.*" />
     <PackageReference Include="Serilog.AspNetCore" Version="6.*" />
     <PackageReference Include="Stateless" Version="5.*" />
+    <PackageReference Include="Tomlyn.Extensions.Configuration" Version="1.0.5" />
   </ItemGroup>
 
   <ItemGroup>
@@ -39,8 +39,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
-    <Content Update="appsettings.Windows.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="appsettings.toml" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="appsettings.logging.toml" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="appsettings.windows.toml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

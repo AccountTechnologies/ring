@@ -39,9 +39,9 @@ module RingControl =
       ()
     }
     member _.Options = options
-    member _.ShowConfig() =
+    member _.ConfigPath(scope: string) =
       task {
-        return! execResult ["show-config"] []
+        return! execResult ["config-path"; scope] []
       }
     member _.Headless(?debugMode: bool) =
       match ringTask with
