@@ -12,6 +12,14 @@ internal static class Directories
     internal static readonly InstallationDir Installation = new();
     internal static readonly UserSettingsDir User = new();
     internal static WorkingDir Working(string path) => new (path);
+
+    internal static string GetOsPath()
+    {
+        return RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "linux" :
+            RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "osx" :
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "windows" : 
+            throw new NotSupportedException("Platform not supported");
+    }
 }
 
 internal class InstallationDir
@@ -20,17 +28,14 @@ internal class InstallationDir
         GetDirectoryName(Assembly.GetExecutingAssembly().Location)
         ?? throw new InvalidOperationException("Can't determine the executing assembly location");
 
-    internal string AppsettingsPath(string? variant = null)
-    {
-        var variantString = variant != null ? $".{variant}" : RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".windows" : string.Empty;
-        return Combine(Path, $"appsettings{variantString}.toml");
-    }
+    internal string SettingsPath => Combine(Path, $"app.{Directories.GetOsPath()}.toml");
+    internal string LoggingPath => Combine(Path,  $"logging.{Directories.GetOsPath()}.toml");
 }
 
 internal class UserSettingsDir
 {
     private string Path => Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".ring");
-    internal string AppsettingsPath => Combine(Path, "appsettings.toml");
+    internal string SettingsPath => Combine(Path, "settings.toml");
 }
 
 internal class WorkingDir
@@ -38,5 +43,5 @@ internal class WorkingDir
     private readonly string _path;
     internal WorkingDir(string path) => _path = path;
     private string Path => Combine(_path, ".ring");
-    internal string AppsettingsPath => Combine(Path, "appsettings.toml");
+    internal string SettingsPath => Combine(Path, "settings.toml");
 }

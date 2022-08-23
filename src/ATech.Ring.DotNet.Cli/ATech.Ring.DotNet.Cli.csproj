@@ -39,9 +39,24 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="appsettings.toml" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="appsettings.logging.toml" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="appsettings.windows.toml" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Settings\app.linux.toml" Link="app.linux.toml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Settings\app.osx.toml" Link="app.osx.toml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Settings\app.windows.toml" Link="app.windows.toml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Settings\logging.linux.toml" Link="logging.linux.toml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Settings\logging.osx.toml" Link="logging.osx.toml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Settings\logging.windows.toml" Link="logging.windows.toml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

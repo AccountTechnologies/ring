@@ -132,10 +132,10 @@ try
     builder.Host.ConfigureAppConfiguration((_, b) =>
     {
         b.Sources.Clear();
-        b.AddTomlFile(Directories.Installation.AppsettingsPath(), optional: false);
-        b.AddTomlFile(Directories.Installation.AppsettingsPath("logging"), optional: false);
-        b.AddTomlFile(Directories.User.AppsettingsPath, optional: true);
-        b.AddTomlFile(Directories.Working(originalWorkingDir).AppsettingsPath, optional: true);
+        b.AddTomlFile(Directories.Installation.SettingsPath, optional: false);
+        b.AddTomlFile(Directories.Installation.LoggingPath, optional: false);
+        b.AddTomlFile(Directories.User.SettingsPath, optional: true);
+        b.AddTomlFile(Directories.Working(originalWorkingDir).SettingsPath, optional: true);
         b.AddEnvironmentVariables("RING_");
         if (options is ServeOptions { Port: var port }) b.AddInMemoryCollection(new Dictionary<string, string> { ["ring:port"] = port.ToString() });
     });
