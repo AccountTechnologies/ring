@@ -27,7 +27,13 @@ public class RingConfiguration
     public GitSettings Git { get; set; }
     public KustomizeSettings Kustomize { get; set; }
     public KubernetesSettings Kubernetes { get; set; }
+    public WorkspaceSettings Workspace { get; set; }
     public HooksConfiguration? Hooks { get; set; }
+}
+
+public class WorkspaceSettings
+{
+    public int StartupSpreadFactor { get; set; }
 }
 
 public class GitSettings

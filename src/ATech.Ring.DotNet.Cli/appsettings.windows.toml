@@ -11,3 +11,6 @@ allowedContexts = [
     "rancher-desktop",
     "minikube"
 ]
+
+[workspace]
+startupSpreadFactor = 1500
