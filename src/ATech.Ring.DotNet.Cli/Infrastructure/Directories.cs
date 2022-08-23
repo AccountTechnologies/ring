@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Runtime.InteropServices;
 
 namespace ATech.Ring.DotNet.Cli.Infrastructure;
 
@@ -21,7 +22,7 @@ internal class InstallationDir
 
     internal string AppsettingsPath(string? variant = null)
     {
-        var variantString = variant != null ? $".{variant}" : string.Empty;
+        var variantString = variant != null ? $".{variant}" : RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".windows" : string.Empty;
         return Combine(Path, $"appsettings{variantString}.toml");
     }
 }

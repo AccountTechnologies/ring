@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Threading;
 using ATech.Ring.Configuration;
 using ATech.Ring.Configuration.Interfaces;
@@ -14,7 +13,6 @@ using ATech.Ring.DotNet.Cli.Abstractions.Tools;
 using ATech.Ring.DotNet.Cli.Infrastructure;
 using ATech.Ring.DotNet.Cli.Infrastructure.Cli;
 using ATech.Ring.DotNet.Cli.Logging;
-using ATech.Ring.DotNet.Cli.Windows.Tools;
 using ATech.Ring.DotNet.Cli.Workspace;
 using ATech.Ring.Protocol.v2;
 using k8s;
@@ -26,6 +24,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Nett;
 using Serilog;
 using Serilog.Events;
@@ -83,8 +82,10 @@ try
     builder.Services.AddSingleton<IReceiver>(f => f.GetRequiredService<ATech.Ring.Protocol.v2.Queue>());
     builder.Services.AddSingleton(f =>
     {
-        var kubeConfigPath = f.GetRequiredService<Wsl>().ResolveToWindows("~/.kube/config").GetAwaiter().GetResult();
-        return new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeConfigPath));
+        var configuredPath = f.GetRequiredService<IOptions<RingConfiguration>>().Value.Kubernetes.ConfigPath;
+        var maybeKubeconfigEnv = Environment.GetEnvironmentVariable("KUBECONFIG");
+        var configPath = maybeKubeconfigEnv ?? configuredPath ?? throw new InvalidOperationException("Kubernetes config path is not set"); 
+        return new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(configPath));
     });
 
     builder.Services.AddHostedService<WebsocketsInitializer>();
@@ -133,10 +134,6 @@ try
         b.Sources.Clear();
         b.AddTomlFile(Directories.Installation.AppsettingsPath(), optional: false);
         b.AddTomlFile(Directories.Installation.AppsettingsPath("logging"), optional: false);
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            b.AddTomlFile(Directories.Installation.AppsettingsPath("windows"), optional: false);
-        }
         b.AddTomlFile(Directories.User.AppsettingsPath, optional: true);
         b.AddTomlFile(Directories.Working(originalWorkingDir).AppsettingsPath, optional: true);
         b.AddEnvironmentVariables("RING_");

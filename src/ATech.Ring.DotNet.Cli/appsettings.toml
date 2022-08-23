@@ -1,5 +1,13 @@
-# the default path where ring clones repositories of runnables supporting it
-gitCloneRootPath = "$HOME/.ring/repos"
+[git]
+clonePath = "$HOME/.ring/repos"
 
-# kustomize runnables only - the default path where ring keeps cache of kustomize build
-kustomizeCacheRootPath = "$HOME/.ring/kustomize-cache"
+[kustomize]
+cachePath = "$HOME/.ring/kustomize-cache"
+
+[kubernetes]
+configPath = "$HOME/.kube/config"
+allowedContexts = [
+    "docker-desktop",
+    "rancher-desktop",
+    "minikube"
+]

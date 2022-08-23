@@ -35,13 +35,11 @@ public class GitClone : ITool
             throw new InvalidOperationException(
                 $"Git Ssh Url is expected to be split by a colon into two parts. {gitCfg.SshRepoUrl}");
 
-        var pathChunks = new List<string> { rootPathOverride ?? _ringCfg.GitCloneRootPath };
+        var pathChunks = new List<string> { rootPathOverride ?? _ringCfg.Git.ClonePath };
         var inRepoPath = chunks[1].Replace(".git", "").Split("/");
         pathChunks.AddRange(inRepoPath);
         var targetPath = Path.Combine(pathChunks.ToArray());
-        // non-Windows OS hack for https://github.com/dotnet/runtime/issues/25792
-        targetPath = targetPath.Replace("$HOME", "%HOME%").Replace("~", "%HOME%");
-        targetPath = Environment.ExpandEnvironmentVariables(targetPath);
+        targetPath = Env.ExpandPath(targetPath);
         return Path.IsPathRooted(targetPath) ? targetPath : Path.GetFullPath(targetPath);
     }
 
