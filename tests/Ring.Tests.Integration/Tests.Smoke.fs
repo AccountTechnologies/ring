@@ -43,7 +43,7 @@ let tests =
       let! actualPath = ring.ConfigPath("--user")
       let expectedPath =
        if Environment.isWindows
-        then $"""{env "USERPROFILE"}\.ring\settings.toml"""
+        then $"""{env "USERPROFILE"}\AppData\Roaming\.ring\settings.toml"""
         else $"""{env "HOME"}/.config/.ring/settings.toml"""
       "Config path should (user) be correct" |> Expect.equal actualPath expectedPath
       
