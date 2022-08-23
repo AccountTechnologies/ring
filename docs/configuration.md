@@ -31,7 +31,10 @@ You can verify how the fully-built configuration store looks like via `ring conf
 :information_source: When configuring the below via environment variables use `RING_` prefix and replace `.` by `__` (double underscore). For example:
 `hooks.init.command` becomes `RING_HOOKS__INIT__COMMAND`.
 
-* `gitCloneRootPath` - the path where ring clones the repos of runnables that support it. Default: `$HOME/.ring/repos`
-* `kustomizeCacheRootPath` - the path of kustomize cache. Default: `$HOME/.ring/kustomize-cache`
+* `git.clonePath` - the path where ring clones the repos of runnables that support it. Default: `$HOME/.ring/repos`
+* `kustomize.CachePath` - the path of kustomize cache. Default: `$HOME/.ring/kustomize-cache`
+* `workspace.startupSpreadFactor` - controls how quickly ring launches runnables. Increase to spread launching over time. Default: `1500`
+* `kubernetes.configPath` - which config path to use. `KUBECONFIG` env var takes precedence if set. Default: `$HOME/.kube/config`
+* `kubernetes.allowedContexts` - making any changes to the cluster fails if the current context is not one from this list. Default: `["docker-desktop", "rancher-desktop", "minikube"]`
 * `hooks.init.command` - a command to be run on the workspace init hook event. Default: N/A
 * `hooks.init.args` - arguments to be passed to the above command. Default: N/A
