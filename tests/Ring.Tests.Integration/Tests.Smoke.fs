@@ -19,7 +19,7 @@ let tests =
       let! actualPath = ring.ConfigPath("--default")
       let expectedPath =
         if Environment.isWindows
-        then $"""{env "USERPROFILE"}\.dotnet\tools\.store\atech.ring.dotnet.cli\{pkgVer}\atech.ring.dotnet.cli\{pkgVer}\tools\net6.0\any\appsettings.toml"""
+        then $"""{env "USERPROFILE"}\.dotnet\tools\.store\atech.ring.dotnet.cli\{pkgVer}\atech.ring.dotnet.cli\{pkgVer}\tools\net6.0\any\appsettings.windows.toml"""
         else $"""{env "HOME"}/.dotnet/tools/.store/atech.ring.dotnet.cli/{pkgVer}/atech.ring.dotnet.cli/{pkgVer}/tools/net6.0/any/appsettings.toml"""
       "Config path should be correct" |> Expect.equal actualPath expectedPath
     }
@@ -31,7 +31,7 @@ let tests =
       let! actualPath = ring.ConfigPath("--default")
       let expectedPath =
         if Environment.isWindows
-        then $"""{env "USERPROFILE"}\.nuget\packages\atech.ring.dotnet.cli\{pkgVer}\tools\net6.0\any\appsettings.toml"""
+        then $"""{env "USERPROFILE"}\.nuget\packages\atech.ring.dotnet.cli\{pkgVer}\tools\net6.0\any\appsettings.windows.toml"""
         else $"""{env "HOME"}/.nuget/packages/atech.ring.dotnet.cli/{pkgVer}/tools/net6.0/any/appsettings.toml"""
 
       "Config path should be correct" |> Expect.equal actualPath expectedPath
