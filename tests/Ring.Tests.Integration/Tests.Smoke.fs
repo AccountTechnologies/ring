@@ -19,22 +19,41 @@ let tests =
       let! actualPath = ring.ConfigPath("--default")
       let expectedPath =
         if Environment.isWindows
-        then $"""{env "USERPROFILE"}\.dotnet\tools\.store\atech.ring.dotnet.cli\{pkgVer}\atech.ring.dotnet.cli\{pkgVer}\tools\net6.0\any\appsettings.windows.toml"""
-        else $"""{env "HOME"}/.dotnet/tools/.store/atech.ring.dotnet.cli/{pkgVer}/atech.ring.dotnet.cli/{pkgVer}/tools/net6.0/any/appsettings.toml"""
+        then $"""{env "USERPROFILE"}\.dotnet\tools\.store\atech.ring.dotnet.cli\{pkgVer}\atech.ring.dotnet.cli\{pkgVer}\tools\net6.0\any\app.windows.toml"""
+        else if Environment.isMacOS
+        then $"""{env "HOME"}/.dotnet/tools/.store/atech.ring.dotnet.cli/{pkgVer}/atech.ring.dotnet.cli/{pkgVer}/tools/net6.0/any/app.osx.toml"""
+        else $"""{env "HOME"}/.dotnet/tools/.store/atech.ring.dotnet.cli/{pkgVer}/atech.ring.dotnet.cli/{pkgVer}/tools/net6.0/any/app.linux.toml"""
       "Config path should be correct" |> Expect.equal actualPath expectedPath
     }
 
     testTask "config-path -- local tool" {
       use ctx = new TestContext(localOptions)
-      let! (ring : Ring, _) = ctx.Init()
+      let! (ring : Ring, dir:TestDir) = ctx.Init()
       let pkgVer = ring.Options.PackageVersion
       let! actualPath = ring.ConfigPath("--default")
       let expectedPath =
         if Environment.isWindows
-        then $"""{env "USERPROFILE"}\.nuget\packages\atech.ring.dotnet.cli\{pkgVer}\tools\net6.0\any\appsettings.windows.toml"""
-        else $"""{env "HOME"}/.nuget/packages/atech.ring.dotnet.cli/{pkgVer}/tools/net6.0/any/appsettings.toml"""
-
-      "Config path should be correct" |> Expect.equal actualPath expectedPath
+        then $"""{env "USERPROFILE"}\.nuget\packages\atech.ring.dotnet.cli\{pkgVer}\tools\net6.0\any\app.windows.toml"""
+        else if Environment.isMacOS
+        then $"""{env "HOME"}/.nuget/packages/atech.ring.dotnet.cli/{pkgVer}/tools/net6.0/any/app.osx.toml"""
+        else $"""{env "HOME"}/.nuget/packages/atech.ring.dotnet.cli/{pkgVer}/tools/net6.0/any/app.linux.toml"""
+        
+      "Config path should (default) be correct" |> Expect.equal actualPath expectedPath
+      
+      let! actualPath = ring.ConfigPath("--user")
+      let expectedPath =
+       if Environment.isWindows
+        then $"""{env "USERPROFILE"}\.ring\settings.toml"""
+        else $"""{env "HOME"}/.config/.ring/settings.toml"""
+      "Config path should (user) be correct" |> Expect.equal actualPath expectedPath
+      
+      let! actualPath = ring.ConfigPath("--local")
+      let expectedPath =
+       if Environment.isWindows
+        then $"""{dir.WorkPath}\.ring\settings.toml"""
+        else if Environment.isMacOS then $"""/private{dir.WorkPath}/.ring/settings.toml"""
+        else $"""{dir.WorkPath}/.ring/settings.toml"""
+      "Config path should (local) be correct" |> Expect.equal actualPath expectedPath
     }
 
     testTask "run basic workspace in headless mode" {
