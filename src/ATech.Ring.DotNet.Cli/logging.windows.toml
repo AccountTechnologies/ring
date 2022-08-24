@@ -20,7 +20,7 @@ outputtemplate = "[{Timestamp:HH:mm:ss} {Level:u3}] | {Phase} | {UniqueId} | {Me
 name = "File"
 
 [serilog.writeto.args]
-path = "%USERPROFILE%/.ring/logs/ring.log"
+path = "%USERPROFILE%\\.ring\\logs\\ring.log"
 rollinginterval = "Hour"
 outputtemplate = "[{Timestamp:HH:mm:ss} {Level:u3}] | {Phase} | {UniqueId} | {Message}{NewLine}{Exception}"
 hooks = "ATech.Ring.DotNet.Cli.Logging.NewLogFileNotifier::Current, ATech.Ring.DotNet.Cli"

@@ -1,11 +1,11 @@
 [git]
-clonePath = "%USERPROFILE%/.ring/repos"
+clonePath = "%USERPROFILE%\\.ring\\repos"
 
 [kustomize]
-cachePath = "%USERPROFILE%/.ring/kustomize-cache"
+cachePath = "%USERPROFILE%\\.ring\\kustomize-cache"
 
 [kubernetes]
-configPath = "%USERPROFILE%/.kube/config"
+configPath = "%USERPROFILE%\\.kube\\config"
 allowedContexts = [
     "docker-desktop",
     "rancher-desktop",
