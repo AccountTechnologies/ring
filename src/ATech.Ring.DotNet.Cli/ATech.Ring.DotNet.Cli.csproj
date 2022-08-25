@@ -38,22 +38,22 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Settings\app.linux.toml" Link="app.linux.toml">
+    <Content Include="app.linux.toml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Settings\app.osx.toml" Link="app.osx.toml">
+    <Content Include="app.osx.toml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Settings\app.windows.toml" Link="app.windows.toml">
+    <Content Include="app.windows.toml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Settings\logging.linux.toml" Link="logging.linux.toml">
+    <Content Include="logging.linux.toml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Settings\logging.osx.toml" Link="logging.osx.toml">
+    <Content Include="logging.osx.toml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Settings\logging.windows.toml" Link="logging.windows.toml">
+    <Content Include="logging.windows.toml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
