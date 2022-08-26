@@ -6,7 +6,7 @@ Ring brings order into the messy world of developing and debugging a cloud-ready
 
 # What is it?
 
-Ring consists of the following part:
+Ring consists of the following parts:
 
 * the meta-orchestrator (a dotnet CLI tool)
 * [Visual Studio Extension](https://marketplace.visualstudio.com/items?itemName=account-technologies.ring-vsix) (2022, also versions pre 4.0 support 2017, and 2019)
@@ -33,6 +33,9 @@ turning services off/on for build/debugging if they're a part of the currently l
 * [kustomize](docs/runnables/kustomize.md) - Kubernetes apps managed by [Kustomize](https://kustomize.io/)
 * `dockercompose` - docker-compose files
 * [aspnetcore](docs/runnables/aspnetcore.md) - .NET Core apps running in console (like ASP.NET Core in Kestrel)
+
+Windows-only:
+
 * `iisxcore` - ASP.NET Core apps in IIS Express
 * [iisexpress](docs/runnables/iisexpress.md) - WCF and other .NET Framework services hosted in IIS Express
 * `netexe` - full .NET Framework console apps (like TopShelf)
