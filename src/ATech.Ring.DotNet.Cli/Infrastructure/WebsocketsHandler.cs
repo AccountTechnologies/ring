@@ -107,6 +107,7 @@ public class WebsocketsHandler
                 (M.STOP, _) => _server.StopAsync(token),
                 (M.RUNNABLE_INCLUDE, var runnableId) => _server.IncludeAsync(runnableId.AsUtf8String(), token),
                 (M.RUNNABLE_EXCLUDE, var runnableId) => _server.ExcludeAsync(runnableId.AsUtf8String(), token),
+                (M.WORKSPACE_APPLY_FLAVOUR, var flavour) => _server.ApplyFlavourAsync(flavour.AsUtf8String(), token),
                 (M.WORKSPACE_INFO_RQ, _) => Task.FromResult(_server.RequestWorkspaceInfo()),
                 (M.PING, _) => Task.FromResult(Ack.Alive),
                 _ => Task.FromResult(Ack.NotSupported)

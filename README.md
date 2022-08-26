@@ -1,21 +1,24 @@
 # Ring [![Build Status](https://dev.azure.com/AccountTechnologies/Ring/_apis/build/status/AccountTechnologies.ring?branchName=master)](https://dev.azure.com/AccountTechnologies/Ring/_build/latest?definitionId=2&branchName=master) [![NuGet Badge](https://buildstats.info/nuget/ATech.Ring.Dotnet.Cli?includePreReleases=true)](https://www.nuget.org/packages/ATech.Ring.Dotnet.Cli)
 
-
-Process launcher and monitor
+## Meta-orchestrator for developers (cross-platform)
 
 Ring brings order into the messy world of developing and debugging a cloud-ready microservice system side by side with maintaining and migrating legacy ones where you may have many different types of services (ASP.NET Core, Topshelf, WCF, ...) hosted in many different ways (Kubernetes, Docker, IIS Express, WindowsService, Exe) and scattered across many solutions and repositories. 
 
 # What is it?
 
-Ring consists of the following part:
+Ring consists of the following parts:
 
-* process launcher and monitor (a dotnet CLI tool)
+* the meta-orchestrator (a dotnet CLI tool)
 * [Visual Studio Extension](https://marketplace.visualstudio.com/items?itemName=account-technologies.ring-vsix) (2022, also versions pre 4.0 support 2017, and 2019)
 * [Visual Studio Code Extension](https://marketplace.visualstudio.com/items?itemName=account-technologies.ring-vscode) (WIP)
 
 # How it works
 
-Ring groups *runnables* (processes/services) into *workspaces*. Workspaces are defined in [TOML](https://github.com/toml-lang/toml) files. Workspaces are composed from runnables and other workspaces. A workspace can be loaded and started. Ring periodically runs a health check for every runnable, tries restarting the unhealthy ones, and reports the dead ones. Ring also exposes a web socket interface. Visual Studio extensions use it mainly for visualizing workspace/runnables states, turning services off/on for build/debugging if they're a part of the currently loaded project/solution.
+Ring groups *apps* into *workspaces*. Workspaces are defined in [TOML](https://github.com/toml-lang/toml) files. 
+Workspaces are composed from apps and other workspaces. A workspace can be loaded and started. 
+Ring periodically runs a health check for every app, tries restarting the unhealthy ones, and reports the dead ones.
+Ring also exposes a web socket interface. Visual Studio extensions use it mainly for visualizing workspace/apps states,
+turning services off/on for build/debugging if they're a part of the currently loaded project/solution.
 
 # Basic facts
 
@@ -30,6 +33,9 @@ Ring groups *runnables* (processes/services) into *workspaces*. Workspaces are d
 * [kustomize](docs/runnables/kustomize.md) - Kubernetes apps managed by [Kustomize](https://kustomize.io/)
 * `dockercompose` - docker-compose files
 * [aspnetcore](docs/runnables/aspnetcore.md) - .NET Core apps running in console (like ASP.NET Core in Kestrel)
+
+Windows-only:
+
 * `iisxcore` - ASP.NET Core apps in IIS Express
 * [iisexpress](docs/runnables/iisexpress.md) - WCF and other .NET Framework services hosted in IIS Express
 * `netexe` - full .NET Framework console apps (like TopShelf)
@@ -64,105 +70,32 @@ ring run -w .\path\to\your\workspace.toml -d
 * `run` - runs a specified workspace in a stand-alone mode.
 * `headless` - starts and awaits clients (VS Code / VS extension) connections. Once connected a client can load a workspace and interact with it.
 * `clone` - loads a workspace and clones configured repos for each runnable. The runnables must have the `sshRepoUrl` parameter configured otherwise they'll be skipped.
-* `show-config` - displays the path of the default [configuration file](./docs/configuration.md)
+* `config-*` commands - more info here - [configuration files](./docs/configuration.md).
 
 # Vocabulary
 
-* *runnable* - a service/process ring manages.
-* *workspace* - a logical grouping of runnables defined in TOML file(s). Workspaces can be composed of other workspaces using the `import` tag. Ring can only run a single workspace at a time. Example workspace:
+* *app* (aka *runnable* - an application/service/process ring manages.
+* *workspace* - a logical grouping of apps defined in TOML file(s). 
+  Workspaces can be composed of other workspaces using the `import` tag. 
+  Ring can only run a single workspace at a time. 
+
+## Example workspace
+
 ```toml
 # your workspace.toml
-[[iisexpress]]
-csproj = "path/to/your/amazing.name.cool.csproj"
-
-[[iisexpress]]
-csproj = "path/to/your/another.name.csproj"
-
-[[import]]
-path = "../a/relative/path/to/your/workspace.toml"
-```
-
-# Authoring workspaces
-
-Workspaces are written in [TOML](https://github.com/toml-lang/toml) and they mostly use the [arrays of tables](https://github.com/toml-lang/toml#array-of-tables) to define workspace's components. The following syntax is supported:
-
-*Imports another workspace*
-
-Simplified syntax:
-
-```toml
-imports = [
-  "path/to/workspace/a.toml",
-  "path/to/workspace/b.toml",
-  "path/to/yet/another/workspace/c.toml"
-]
-```
-
-Classic syntax:
-
-```toml
-[[import]]
-path = "path/to/workspace/a.toml"
-
-[[import]]
-path = "path/to/workspace/b.toml"
-
-[[import]]
-path = "path/to/yet/another/workspace/c.toml"
-```
-
-*Runs IIS Express hosted full .NET Framework service (e.g. AspNet MVC or WCF)*
-
-```toml
-[[iisexpress]]
-csproj = "path/to/your/project.csproj"
-```
-
-*Runs IIS Express hosted ASP.NET Core app*
-
-```toml
-[[iisxcore]]
-csproj = "path/to/your/project.csproj"
-```
-
-*Runs full .NET Framework executable project*
-
-```toml
-[[netexe]]
-csproj = "path/to/your/project.csproj"
-```
-
-*Runs NET Core web project (e.g. AspNet Core MVC)*
-
-```toml
-[[aspnetcore]]
-csproj = "/path/to/your/project.csproj"
-```
-
-*Runs Docker Compose file*
-```toml
-[[dockercompose]]
-path = "path/to/docker-compose.yml"
-```
-
-*Runs Kustomize app*
-```toml
 [[kustomize]]
-path = "path/to/app"
+path = "your/app"
+
+[[dockercompose]]
+path = "app/2"
+
+[[import]]
+path = "relative/path/to/your/workspace.toml"
 ```
 
-*Comments*
+## Authoring workspaces
 
-```toml
-# This is a comment
-# [[aspnetcore]]
-# csproj = "/path/to/your/project.csproj"
-```
-
-If the same service is declared multiple times in imported workspaces they will be deduplicated and only one instance of a service (based on the project path) will be launched.
-
-# How to contribute
-Coming soon
+[Authoring workspaces docs](docs/authoring-workspaces.md)
 
 # Release notes
 

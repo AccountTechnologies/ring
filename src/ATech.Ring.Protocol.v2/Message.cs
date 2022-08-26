@@ -3,7 +3,7 @@
 using Events;
 using System;
 using System.Text;
-
+// ReSharper disable InconsistentNaming
 public enum M : byte
 {
     EMPTY = 255,
@@ -33,6 +33,7 @@ public enum M : byte
     WORKSPACE_HEALTHY = 20,
     WORKSPACE_STOPPED = 21,
     WORKSPACE_INFO_PUBLISH = 26,
+    WORKSPACE_APPLY_FLAVOUR = 27,
     SERVER_IDLE = 22,
     SERVER_LOADED = 23,
     SERVER_RUNNING = 24,
