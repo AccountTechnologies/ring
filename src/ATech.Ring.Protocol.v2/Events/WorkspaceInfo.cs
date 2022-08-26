@@ -37,7 +37,12 @@ public class WorkspaceInfo : IEquatable<WorkspaceInfo>
     {
         if (other is null) return false;
         if (ReferenceEquals(this, other)) return true;
-        return string.Equals(Path, other.Path) && Runnables.SequenceEqual(other.Runnables) && ServerState == other.ServerState && WorkspaceState == other.WorkspaceState;
+        return string.Equals(Path, other.Path) 
+               && Runnables.SequenceEqual(other.Runnables) 
+               && Flavours.SequenceEqual(other.Flavours)
+               && CurrentFlavour == other.CurrentFlavour
+               && ServerState == other.ServerState 
+               && WorkspaceState == other.WorkspaceState;
     }
 
     public override bool Equals(object? obj)
@@ -48,7 +53,7 @@ public class WorkspaceInfo : IEquatable<WorkspaceInfo>
         return Equals((WorkspaceInfo)obj);
     }
 
-    public override int GetHashCode() => HashCode.Combine(Path, Runnables, ServerState, WorkspaceState);
+    public override int GetHashCode() => HashCode.Combine(Path, Runnables, Flavours, CurrentFlavour, ServerState, WorkspaceState);
     public static WorkspaceInfo Empty { get; } = new(string.Empty, Array.Empty<RunnableInfo>(), Array.Empty<string>(), string.Empty, ServerState.IDLE, WorkspaceState.NONE);
     public ReadOnlySpan<byte> Serialize() => JsonSerializer.SerializeToUtf8Bytes(this, SerializerOptions.Value);
 

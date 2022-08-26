@@ -64,7 +64,7 @@ ring run -w .\path\to\your\workspace.toml -d
 * `run` - runs a specified workspace in a stand-alone mode.
 * `headless` - starts and awaits clients (VS Code / VS extension) connections. Once connected a client can load a workspace and interact with it.
 * `clone` - loads a workspace and clones configured repos for each runnable. The runnables must have the `sshRepoUrl` parameter configured otherwise they'll be skipped.
-* `show-config` - displays the path of the default [configuration file](./docs/configuration.md)
+* `config-*` commands - more info here - [configuration files](./docs/configuration.md).
 
 # Vocabulary
 
@@ -110,6 +110,73 @@ path = "path/to/workspace/b.toml"
 [[import]]
 path = "path/to/yet/another/workspace/c.toml"
 ```
+
+*Workspace flavours*
+
+Sometimes the user may have multiple workspaces that significantly overlap. Stopping one workspace and starting another may
+be quite slow if there are tens of runnables. *Flavours* help to solve that problem with only stopping runnables that are not 
+included in the new workspace and only starting the ones that were not running in the previous one. All the runnables existing in both
+keep happily running.
+
+Example:
+
+Flavours are specified with `tags` and each runnable can have multiple.
+The below workspace has 3 flavours: `a`, `b`, and `backend`. 
+
+Given we run flavour `a`:
+
+- `app-x`
+- `app-common-1`
+- `app-common-2`
+- `app-common-3`
+- `ui-a`
+
+When we apply flavour `b`:
+
+It stops:
+
+- `app-x`
+- `ui-a`
+
+It starts:
+
+- `app-y`
+- `ui-b`
+
+All the 3 common apps keep running.
+
+```toml
+[[kustomize]]
+path = "app-x"
+tags = ["a", "backend"]
+
+[[kustomize]]
+path = "app-y"
+tags = ["b", "backend"]
+
+[[kustomize]]
+path = "app-common-1"
+tags = ["a", "b", "backend"]
+
+[[kustomize]]
+path = "app-common-2"
+tags = ["a", "b", "backend"]
+
+[[kustomize]]
+path = "app-common-3"
+tags = ["a", "b", "backend"]
+
+[[kustomize]]
+path = "ui-a"
+tags = ["a"]
+
+[[kustomize]]
+path = "ui-b"
+tags = ["b"]
+
+```
+
+
 
 *Runs IIS Express hosted full .NET Framework service (e.g. AspNet MVC or WCF)*
 

@@ -155,7 +155,7 @@ try
 
     using (logger.WithHostScope(Phase.INIT))
     {
-        if (options is ServeOptions { Port: var port }) logger.LogInformation("Listening on port {Port}", port.ToString());
+        if (options is ServeOptions { Port: var port }) logger.LogInformation("Listening on port {Port}", port);
     }
 
     app.UseWebSockets();

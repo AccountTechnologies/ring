@@ -56,6 +56,7 @@ public sealed class WorkspaceLauncher : IWorkspaceLauncher, IDisposable
         }
 
         CurrentFlavour = flavour;
+        PublishStatusCore(ServerState.RUNNING, force: true);
         return ApplyFlavourResult.Ok;
     }
 
@@ -176,7 +177,7 @@ public sealed class WorkspaceLauncher : IWorkspaceLauncher, IDisposable
             var isRunning = _runnables.TryGetValue(id, out var container);
 
             var runnableState = isRunning
-                ? container.Runnable switch
+                ? container!.Runnable switch
                 {
                     { State: State.Zero } => RunnableState.ZERO,
                     { State: State.Idle } => RunnableState.INITIATED,
@@ -189,9 +190,13 @@ public sealed class WorkspaceLauncher : IWorkspaceLauncher, IDisposable
                 }
                 : RunnableState.ZERO;
 
-            var details = isRunning ? container.Runnable.Details : DetailsExtractors.Extract(cfg);
+            var details = isRunning ? container!.Runnable.Details : DetailsExtractors.Extract(cfg);
 
-            var runnableInfo = new RunnableInfo(id, cfg.DeclaredPaths.ToArray(), cfg.GetType().Name, runnableState,
+            var runnableInfo = new RunnableInfo(id, 
+                cfg.DeclaredPaths.ToArray(), 
+                cfg.GetType().Name, 
+                runnableState, 
+                cfg.Tags.ToArray(),
                 details);
 
             return runnableInfo;
