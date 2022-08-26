@@ -12,7 +12,7 @@ urls = ["http://localhost:6201/"]
 ```
 ## Config keys
 
-* `sshRepoUrl` (optional `string`) - if set Ring clones the default branch (usually `master`) of the specified repo and attempts to build and execute the project specified by the `csproj` key.
+* `sshRepoUrl` (optional `string`) - if set Ring clones the default branch (usually `main`) of the specified repo and attempts to build and execute the project specified by the `csproj` key.
 Ring clones are located at `%TEMP%/ring/repos/path/to/repo`. If the clone already exists Ring preforms `git pull` instead.
 
 * `csproj` (mandatory `string`) - if `sshRepoUrl` is used then `csproj` must be a relative path and the project is loaded from `%TEMP%/ring/repos/path/to/repo/${csProj}`. If `sshRepoUrl` is not set then

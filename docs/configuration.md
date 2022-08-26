@@ -1,6 +1,6 @@
 # Configuration
 
-This section is about configuring the tool itself rather than authoring workspaces.
+This section is about configuring the tool itself rather than [authoring workspaces](authoring-workspaces.md).
 
 Ring can be configured using `appsettings.toml` and/or environment variables.
 
