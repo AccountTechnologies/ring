@@ -37,6 +37,24 @@ public sealed class WorkspaceLauncher : IWorkspaceLauncher, IDisposable
     private readonly Random _rnd = new();
 
     public event EventHandler OnInitiated;
+    public async Task<ApplyFlavourResult> ApplyFlavourAsync(string flavour, CancellationToken token)
+    {
+        if (!CurrentInfo.Flavours.Contains(flavour)) return ApplyFlavourResult.UnknownFlavour;
+        var candidates = _configurator.Current.Select(x => (x.Key, x.Value.Tags.Contains(flavour)));
+        foreach (var (key, inFlavour) in candidates)
+        {
+            if (inFlavour)
+            {
+                await IncludeAsync(key, token);
+            }
+            else
+            {
+                await ExcludeAsync(key, token);
+            }
+        }
+        return ApplyFlavourResult.Ok;
+    }
+
     public string WorkspacePath => _configurator.Current.Path;
 
     public WorkspaceLauncher(IConfigurator configurator,
@@ -223,7 +241,7 @@ public sealed class WorkspaceLauncher : IWorkspaceLauncher, IDisposable
         _sender.Enqueue(Message.WorkspaceInfo(CurrentInfo));
     }
 
-    public void Dispose() => _cts?.Dispose();
+    public void Dispose() => _cts.Dispose();
 
     public async Task WaitUntilStoppedAsync(CancellationToken token)
     {

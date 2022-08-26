@@ -16,6 +16,7 @@ public interface IWorkspaceLauncher
     Task UnloadAsync(CancellationToken token);
     Task<ExcludeResult> ExcludeAsync(string id, CancellationToken token);
     Task<IncludeResult> IncludeAsync(string id, CancellationToken token);
+    Task<ApplyFlavourResult> ApplyFlavourAsync(string flavour, CancellationToken token);
     string WorkspacePath { get; }
     void PublishStatus(ServerState serverState);
     event EventHandler OnInitiated;
