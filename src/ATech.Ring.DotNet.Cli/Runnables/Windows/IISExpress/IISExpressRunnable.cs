@@ -9,13 +9,12 @@ using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Abstractions;
 using ATech.Ring.DotNet.Cli.CsProj;
 using ATech.Ring.DotNet.Cli.Dtos;
-using ATech.Ring.DotNet.Cli.Runnables;
-using ATech.Ring.DotNet.Cli.Windows.Tools;
+using ATech.Ring.DotNet.Cli.Tools.Windows;
 using ATech.Ring.Protocol.v2;
 using Microsoft.Extensions.Logging;
 using IISExpressConfig = ATech.Ring.Configuration.Runnables.IISExpress;
 
-namespace ATech.Ring.DotNet.Cli.Windows.Runnables.IISExpress;
+namespace ATech.Ring.DotNet.Cli.Runnables.Windows.IISExpress;
 
 public class IISExpressRunnable : CsProjRunnable<IISExpressContext, IISExpressConfig>
 {

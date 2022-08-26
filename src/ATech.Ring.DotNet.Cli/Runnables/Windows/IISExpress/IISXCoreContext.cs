@@ -4,7 +4,7 @@ using ATech.Ring.DotNet.Cli.Abstractions.Context;
 using ATech.Ring.DotNet.Cli.CsProj;
 using ATech.Ring.DotNet.Cli.Runnables.Dotnet;
 
-namespace ATech.Ring.DotNet.Cli.Windows.Runnables.IISExpress;
+namespace ATech.Ring.DotNet.Cli.Runnables.Windows.IISExpress;
 
 public class IISXCoreContext : DotnetContext, ITrackUri
 {

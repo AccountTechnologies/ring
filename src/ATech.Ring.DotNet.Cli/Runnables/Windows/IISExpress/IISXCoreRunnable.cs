@@ -2,14 +2,13 @@
 using System.Threading;
 using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Dtos;
-using ATech.Ring.DotNet.Cli.Runnables;
 using ATech.Ring.DotNet.Cli.Tools;
-using ATech.Ring.DotNet.Cli.Windows.Tools;
+using ATech.Ring.DotNet.Cli.Tools.Windows;
 using ATech.Ring.Protocol.v2;
 using Microsoft.Extensions.Logging;
 using IISXCoreConfig = ATech.Ring.Configuration.Runnables.IISXCore;
 
-namespace ATech.Ring.DotNet.Cli.Windows.Runnables.IISExpress;
+namespace ATech.Ring.DotNet.Cli.Runnables.Windows.IISExpress;
 
 public class IISXCoreRunnable : CsProjRunnable<IISXCoreContext, IISXCoreConfig>
 {

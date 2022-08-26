@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Abstractions.Tools;
-using ATech.Ring.DotNet.Cli.Windows.Tools;
+using ATech.Ring.DotNet.Cli.Tools.Windows;
 using Microsoft.Extensions.Logging;
 
 namespace ATech.Ring.DotNet.Cli.Tools;

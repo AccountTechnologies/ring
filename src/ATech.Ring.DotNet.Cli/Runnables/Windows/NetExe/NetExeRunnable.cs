@@ -2,13 +2,12 @@
 using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.CsProj;
 using ATech.Ring.DotNet.Cli.Dtos;
-using ATech.Ring.DotNet.Cli.Runnables;
 using ATech.Ring.DotNet.Cli.Tools;
 using ATech.Ring.Protocol.v2;
 using Microsoft.Extensions.Logging;
 using NetExeConfig = ATech.Ring.Configuration.Runnables.NetExe;
 
-namespace ATech.Ring.DotNet.Cli.Windows.Runnables.NetExe;
+namespace ATech.Ring.DotNet.Cli.Runnables.Windows.NetExe;
 
 public class NetExeRunnable : CsProjRunnable<NetExeContext, NetExeConfig>
 {

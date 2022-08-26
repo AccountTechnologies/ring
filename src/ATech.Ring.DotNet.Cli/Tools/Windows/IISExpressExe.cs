@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Abstractions.Tools;
-using ATech.Ring.DotNet.Cli.Tools;
 using Microsoft.Extensions.Logging;
 
-namespace ATech.Ring.DotNet.Cli.Windows.Tools;
+namespace ATech.Ring.DotNet.Cli.Tools.Windows;
 
 public class IISExpressExe : ITool
 {
