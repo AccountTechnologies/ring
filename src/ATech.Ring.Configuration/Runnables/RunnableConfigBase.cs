@@ -11,7 +11,7 @@ public abstract class RunnableConfigBase : IRunnableConfig
     public string FriendlyName { get; set; }
     public HashSet<string> DeclaredPaths { get; set; } = new();
 
-    public string[] Tags { get; set; } = Array.Empty<string>();
+    public List<string> Tags { get; set; } = new();
 
     public static string GetFullPath(string workDir, string path)
     {

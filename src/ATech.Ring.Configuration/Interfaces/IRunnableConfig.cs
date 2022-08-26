@@ -5,5 +5,5 @@ namespace ATech.Ring.Configuration.Interfaces;
 public interface IRunnableConfig : IWorkspaceConfig
 {
     string FriendlyName { get; }
-    string[] Tags { get; }
+    List<string> Tags { get; }
 }

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace ATech.Ring.Protocol.v2.Events;
 
@@ -12,12 +12,14 @@ public class WorkspaceInfo : IEquatable<WorkspaceInfo>
     public WorkspaceInfo(string path, 
         RunnableInfo[] runnables,
         string[] flavours,
+        string currentFlavour,
         ServerState serverState,
         WorkspaceState workspaceState)
     {
         Path = path;
         Runnables = runnables;
         Flavours = flavours;
+        CurrentFlavour = currentFlavour;
         ServerState = serverState;
         WorkspaceState = workspaceState;
     }
@@ -27,6 +29,9 @@ public class WorkspaceInfo : IEquatable<WorkspaceInfo>
     public ServerState ServerState { get; }
     public WorkspaceState WorkspaceState { get; }
     public string[] Flavours { get; }
+
+    [DisallowNull]
+    public string? CurrentFlavour { get; }
 
     public bool Equals(WorkspaceInfo? other)
     {
@@ -44,7 +49,7 @@ public class WorkspaceInfo : IEquatable<WorkspaceInfo>
     }
 
     public override int GetHashCode() => HashCode.Combine(Path, Runnables, ServerState, WorkspaceState);
-    public static WorkspaceInfo Empty { get; } = new(string.Empty, Array.Empty<RunnableInfo>(), Array.Empty<string>(), ServerState.IDLE, WorkspaceState.NONE);
+    public static WorkspaceInfo Empty { get; } = new(string.Empty, Array.Empty<RunnableInfo>(), Array.Empty<string>(), string.Empty, ServerState.IDLE, WorkspaceState.NONE);
     public ReadOnlySpan<byte> Serialize() => JsonSerializer.SerializeToUtf8Bytes(this, SerializerOptions.Value);
 
     private static readonly Lazy<JsonSerializerOptions> SerializerOptions = new(() =>

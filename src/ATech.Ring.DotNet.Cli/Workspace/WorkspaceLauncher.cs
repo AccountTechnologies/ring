@@ -33,12 +33,14 @@ public sealed class WorkspaceLauncher : IWorkspaceLauncher, IDisposable
     private CancellationTokenSource _cts = new();
     private WorkspaceInfo CurrentInfo { get; set; } = WorkspaceInfo.Empty;
     private WorkspaceState CurrentStatus { get; set; }
+    private string CurrentFlavour { get; set; } = ConfigSet.AllFlavours;
     private int _initCounter;
     private readonly Random _rnd = new();
 
     public event EventHandler OnInitiated;
     public async Task<ApplyFlavourResult> ApplyFlavourAsync(string flavour, CancellationToken token)
     {
+        if (CurrentFlavour == flavour) return ApplyFlavourResult.Ok;
         if (!CurrentInfo.Flavours.Contains(flavour)) return ApplyFlavourResult.UnknownFlavour;
         var candidates = _configurator.Current.Select(x => (x.Key, x.Value.Tags.Contains(flavour)));
         foreach (var (key, inFlavour) in candidates)
@@ -52,6 +54,8 @@ public sealed class WorkspaceLauncher : IWorkspaceLauncher, IDisposable
                 await ExcludeAsync(key, token);
             }
         }
+
+        CurrentFlavour = flavour;
         return ApplyFlavourResult.Ok;
     }
 
@@ -166,13 +170,13 @@ public sealed class WorkspaceLauncher : IWorkspaceLauncher, IDisposable
 
     private WorkspaceInfo Create(WorkspaceState state, ServerState serverState)
     {
-        return new WorkspaceInfo(WorkspacePath,
-            _configurator.Current.Select(entry =>
-            {
-                var (id, cfg) = entry;
-                var isRunning = _runnables.TryGetValue(id, out var container);
+        var runnables = _configurator.Current.Select(entry =>
+        {
+            var (id, cfg) = entry;
+            var isRunning = _runnables.TryGetValue(id, out var container);
 
-                var runnableState = isRunning ? container.Runnable switch
+            var runnableState = isRunning
+                ? container.Runnable switch
                 {
                     { State: State.Zero } => RunnableState.ZERO,
                     { State: State.Idle } => RunnableState.INITIATED,
@@ -182,15 +186,19 @@ public sealed class WorkspaceLauncher : IWorkspaceLauncher, IDisposable
                     { State: State.Recovering } => RunnableState.RECOVERING,
                     { State: State.Pending } => RunnableState.STARTED,
                     _ => RunnableState.ZERO
-                } : RunnableState.ZERO;
+                }
+                : RunnableState.ZERO;
 
-                var details = isRunning ? container.Runnable.Details : DetailsExtractors.Extract(cfg);
+            var details = isRunning ? container.Runnable.Details : DetailsExtractors.Extract(cfg);
 
-                var runnableInfo = new RunnableInfo(id, cfg.DeclaredPaths.ToArray(), cfg.GetType().Name, runnableState, details);
+            var runnableInfo = new RunnableInfo(id, cfg.DeclaredPaths.ToArray(), cfg.GetType().Name, runnableState,
+                details);
 
-                return runnableInfo;
+            return runnableInfo;
 
-            }).OrderBy(x => x.Id).ToArray(), _configurator.Current.Flavours.ToArray(), serverState, state);
+        }).OrderBy(x => x.Id).ToArray();
+        
+        return new WorkspaceInfo(WorkspacePath, runnables, _configurator.Current.Flavours.ToArray(), CurrentFlavour, serverState, state);
     }
 
     private async Task AddAsync(string id, IRunnableConfig cfg, TimeSpan delay, CancellationToken token)
