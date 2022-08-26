@@ -10,7 +10,7 @@ public class DockerCompose : ITool
 {
     public DockerCompose(ILogger<ITool> logger) => Logger = logger;
 
-    public string ExePath { get; set; } = "docker-compose";
+    public string Command { get; set; } = "docker-compose";
     public string[] DefaultArgs { get; set; } = Array.Empty<string>();
     public ILogger<ITool> Logger { get; }
 

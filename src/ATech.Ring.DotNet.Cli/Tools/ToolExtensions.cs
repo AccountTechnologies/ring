@@ -79,7 +79,7 @@ public static class ToolExtensions
 
             var s = new ProcessStartInfo
             {
-                FileName = tool.ExePath,
+                FileName = tool.Command,
                 Arguments = allArgs,
                 UseShellExecute = false,
                 CreateNoWindow = true,
@@ -99,13 +99,13 @@ public static class ToolExtensions
             if (workingDirectory != null) s.WorkingDirectory = workingDirectory;
             var ringWorkingDir = Directory.GetCurrentDirectory();
 
-            tool.Logger.LogDebug("{procUid} - Starting process: {Tool} {Args} ({ProcessWorkingDir})", procUid, tool.ExePath, allArgs, workingDirectory ?? ringWorkingDir);
+            tool.Logger.LogDebug("{procUid} - Starting process: {Tool} {Args} ({ProcessWorkingDir})", procUid, tool.Command, allArgs, workingDirectory ?? ringWorkingDir);
 
             var p = Process.Start(s);
 
             if (p == null)
             {
-                tool.Logger.LogError("{procUid} - Process failed: {Tool} {Args} ({ProcessWorkingDir})", procUid, tool.ExePath, allArgs, workingDirectory ?? ringWorkingDir);
+                tool.Logger.LogError("{procUid} - Process failed: {Tool} {Args} ({ProcessWorkingDir})", procUid, tool.Command, allArgs, workingDirectory ?? ringWorkingDir);
                 return new ExecutionInfo();
             }
                

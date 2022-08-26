@@ -13,7 +13,7 @@ public class KustomizeTool : ITool
     {
         Logger = logger;
     }
-    public string ExePath { get; set; } = "kustomize";
+    public string Command { get; set; } = "kustomize";
     public string[] DefaultArgs { get; set; } = Array.Empty<string>();
     public ILogger<ITool> Logger { get; }
     
