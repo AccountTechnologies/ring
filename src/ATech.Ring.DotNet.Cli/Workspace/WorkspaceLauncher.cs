@@ -53,7 +53,6 @@ public sealed class WorkspaceLauncher : IWorkspaceLauncher, IDisposable
         _sender = sender;
         _spreadFactor = options.Value.Workspace.StartupSpreadFactor;
         OnInitiated += WorkspaceLauncher_OnInitiated;
-        
     }
 
     private void WorkspaceLauncher_OnInitiated(object? sender, EventArgs e)
@@ -173,7 +172,7 @@ public sealed class WorkspaceLauncher : IWorkspaceLauncher, IDisposable
 
                 return runnableInfo;
 
-            }).OrderBy(x => x.Id).ToArray(), serverState, state);
+            }).OrderBy(x => x.Id).ToArray(), _configurator.Current.Flavours.ToArray(), serverState, state);
     }
 
     private async Task AddAsync(string id, IRunnableConfig cfg, TimeSpan delay, CancellationToken token)

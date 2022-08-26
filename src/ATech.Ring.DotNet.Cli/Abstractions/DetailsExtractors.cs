@@ -18,7 +18,7 @@ public static class DetailsExtractors
         };
 
         if (cfg.FriendlyName != null) details.Add(DetailsKeys.FriendlyName, cfg.FriendlyName);
-
+        details.Add(DetailsKeys.Tags, cfg.Tags);
         return new RunnableDetails(details);
     }
 }

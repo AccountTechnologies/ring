@@ -10,4 +10,5 @@ public static class DetailsKeys
     public const string Uri = "uri";
     public const string Pods = "kubernetesPods";
     public const string FriendlyName = "friendlyName";
+    public const string Tags = "tags";
 }
