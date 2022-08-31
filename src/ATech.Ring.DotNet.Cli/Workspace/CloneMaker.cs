@@ -30,7 +30,7 @@ public class CloneMaker : ICloneMaker
 
         foreach (var invalidCfg in haveValidGitUrl[false].Cast<IRunnableConfig>())
         {
-            _logger.LogInformation("{parameter} is not specified for {runnableId}. Skipping.", nameof(IFromGit.SshRepoUrl), invalidCfg.Id);
+            _logger.LogInformation("{parameter} is not specified for {runnableId}. Skipping.", nameof(IFromGit.SshRepoUrl), invalidCfg.UniqueId);
         }
 
         foreach (var gitCfg in haveValidGitUrl[true].GroupBy(x => _gitClone.ResolveFullClonePath(x, outputDir)).Select(x => x.First()))

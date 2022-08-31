@@ -1,15 +1,13 @@
 module Ring.Tests.Integration.AspNetCore
 
 open Expecto
-
+open FSharp.Control
 open FsHttp
-open FsHttp.Dsl
-open FsHttp.DslCE
+open Ring.Client.Patterns
+open Ring.Tests.Integration.Async
 open Ring.Tests.Integration.RingControl
-open ATech.Ring.Protocol.v2
 open Ring.Tests.Integration.Shared
 open Ring.Tests.Integration.TestContext
-
 
 [<Tests>]
 let tests =
@@ -24,8 +22,12 @@ let tests =
       do! ring.Client.LoadWorkspace (dir.InSourceDir "../resources/aspnetcore-urls.toml")
       do! ring.Client.StartWorkspace()
       
-      ring.waitUntilHealthy "aspnetcore"
+      let! healthy =
+        ring.Client.NewEvents
+        |> AsyncSeq.exists (Runnable.healthy "aspnetcore")
+        |> Async.AsTaskTimeout
       
+      "Aspnetcore runnable expected healthy" |> Expect.isTrue healthy
       let response =
         http {
           GET "http://localhost:7123"

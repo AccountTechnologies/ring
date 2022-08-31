@@ -1,11 +1,15 @@
 module Ring.Tests.Integration.Smoke
 
-open Expecto
-open Fake.Core
-open Ring.Tests.Integration.DotNet.Types
-open Ring.Tests.Integration.RingControl
 open ATech.Ring.Protocol.v2
+open Expecto
+open FSharp.Control
+open Fake.Core
+open Ring.Client
+open Ring.Tests.Integration.DotNet.Types
+open Ring.Tests.Integration.Async
+open Ring.Tests.Integration.RingControl
 open Ring.Tests.Integration.Shared
+open Ring.Client.Patterns
 open Ring.Tests.Integration.TestContext
 open System.IO
 
@@ -64,23 +68,34 @@ let tests =
       do! ring.Client.Connect()
       do! ring.Client.LoadWorkspace (dir.InSourceDir "../resources/basic/netcore.toml")
       do! ring.Client.StartWorkspace()
-      [
+      
+      let! events = (ring.Stream
+        |> AsyncSeq.filter (Runnable.byId "k8s-debug-poc")
+        |> AsyncSeq.takeWhileInclusive(not << Runnable.healthy())
+        |> AsyncSeq.map (fun m -> m.Type)
+        |> AsyncSeq.toListAsync
+        |> Async.AsTaskTimeout)
+      
+      "Unexpected events sequence" |> Expect.sequenceEqual events [
         M.RUNNABLE_INITIATED
         M.RUNNABLE_STARTED
         M.RUNNABLE_HEALTH_CHECK
         M.RUNNABLE_HEALTHY
       ]
-      |> Seq.map ring.expect
-      |> Expect.forId "k8s-debug-poc"
       
       do! ring.Client.Terminate()
       
-      [
+      let! events = (ring.Stream
+        |> AsyncSeq.filter (Runnable.byId "k8s-debug-poc")
+        |> AsyncSeq.takeWhileInclusive(not << Runnable.destroyed())
+        |> AsyncSeq.map (fun m -> m.Type)
+        |> AsyncSeq.toListAsync
+        |> Async.AsTaskTimeout)
+      
+      "Unexpected events sequence" |> Expect.sequenceEqual events [
         M.RUNNABLE_STOPPED
         M.RUNNABLE_DESTROYED
-      ]
-      |> Seq.map ring.expect
-      |> Expect.forId "k8s-debug-poc"  
+      ] 
     }
 
     testTask "discover and run default workspace config if exists" {
@@ -92,24 +107,36 @@ let tests =
         $"""csproj = '{dir.InSourceDir "../resources/apps/aspnetcore/aspnetcore.csproj"}' """
       ])
 
-      let task = ring.Client.Connect()
+     
       ring.Run(debugMode=true)
-      [
-        M.RUNNABLE_INITIATED 
+      do! ring.Client.Connect()
+            
+      let! events = (ring.Stream
+        |> AsyncSeq.filter (Runnable.byId "aspnetcore")
+        |> AsyncSeq.takeWhileInclusive(not << Runnable.healthy())
+        |> AsyncSeq.map (fun m -> m.Type)
+        |> AsyncSeq.toListAsync
+        |> Async.AsTaskTimeout)
+      
+      "Unexpected events sequence" |> Expect.sequenceEqual events [
+        M.RUNNABLE_INITIATED
         M.RUNNABLE_STARTED
         M.RUNNABLE_HEALTH_CHECK
         M.RUNNABLE_HEALTHY
       ]
-      |> Seq.map ring.expect
-      |> Expect.forId "aspnetcore"
       
       do! ring.Client.StopWorkspace()
-      [
+      
+      let! events = (ring.Stream
+        |> AsyncSeq.filter (Runnable.byId "aspnetcore")
+        |> AsyncSeq.takeWhileInclusive(not << Runnable.destroyed())
+        |> AsyncSeq.map (fun m -> m.Type)
+        |> AsyncSeq.toListAsync
+        |> Async.AsTaskTimeout)
+      
+      "Unexpected events sequence" |> Expect.sequenceEqual events [
         M.RUNNABLE_STOPPED
         M.RUNNABLE_DESTROYED
       ]
-      |> Seq.map ring.expect
-      |> Expect.forId "aspnetcore"
-      do! task
     }
   ]

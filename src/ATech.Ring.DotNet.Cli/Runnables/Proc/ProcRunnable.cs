@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using ATech.Ring.Protocol.v2;
-using ATech.Ring.DotNet.Cli.Abstractions.Tools;
+using ATech.Ring.DotNet.Cli.Tools;
 
 namespace ATech.Ring.DotNet.Cli.Runnables.Proc;
 
@@ -14,26 +14,24 @@ public class ProcContext : ITrackProcessId
 
 public class ProcRunnable : ProcessRunnable<ProcContext, Configuration.Runnables.Proc>
 {
-    private readonly ITool _tool;
+    private readonly ProcessRunner _runner;
 
     public ProcRunnable(Configuration.Runnables.Proc config,
         ILogger<ProcessRunnable<ProcContext, Configuration.Runnables.Proc>> logger, 
         ISender sender,
-        ITool tool) : base(config, logger, sender)
+        ProcessRunner runner) : base(config, logger, sender)
     {
-        _tool = tool;
+        _runner = runner;
+        _runner.Command = config.Command;
     }
 
-    public override string UniqueId => Config.Id;
+    public override string UniqueId => Config.UniqueId;
 
-    protected override Task<ProcContext> InitAsync(CancellationToken token)
-    {
-        throw new System.NotImplementedException();
-    }
+    protected override Task<ProcContext> InitAsync(CancellationToken token) => Task.FromResult(new ProcContext());
 
-    protected override Task StartAsync(ProcContext ctx, CancellationToken token)
+    protected override async Task StartAsync(ProcContext ctx, CancellationToken token)
     {
-        //_tool.RunProcessAsync()
-        return Task.CompletedTask;
+        var info = await _runner.RunProcessAsync(Config.WorkingDir, Config.Env, Config.Args, token);
+        ctx.ProcessId = info.Pid;
     }
 }

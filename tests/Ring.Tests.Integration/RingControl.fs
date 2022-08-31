@@ -1,8 +1,9 @@
 ﻿namespace Ring.Tests.Integration
 
-open ATech.Ring.Protocol.v2
+open FSharp.Control
 open Ring.Tests.Integration.DotNet
 open Ring.Tests.Integration.DotNet.Types
+open Ring.Tests.Integration.Async
 open System.Threading
 open Ring.Client
 open System
@@ -71,7 +72,10 @@ module RingControl =
         task {
             if client.HasEverConnected then
               do! client.Terminate()
-              client.WaitUntilMessage(M.SERVER_SHUTDOWN) |> ignore
+              let! _ =
+                client.NewEvents
+                |> AsyncSeq.exists Server.shutdown
+                |> Async.AsTaskTimeout
               do! (client :> IAsyncDisposable).DisposeAsync()
             cts.Dispose()
             match ringTask with
