@@ -45,7 +45,11 @@ public class KustomizeRunnable : Runnable<KustomizeContext, KustomizeConfig>
     protected override int MaxTotalFailuresUntilDead => 10;
     protected override int MaxConsecutiveFailuresUntilDead => 5;
 
-    private string GetCachePath(string inputDir) => $"{_cacheDir}/{Regex.Replace(inputDir, "[@\\.:/\\\\]", "-")}.yaml";
+    private string GetCachePath(string inputDir)
+    {
+        var fileName = Regex.Replace(inputDir, "[@\\.:/\\\\]", "-");
+        return Path.Combine(_cacheDir, $"{fileName}.yaml");
+    }
 
     private async Task<bool> WaitAllPodsAsync(KustomizeContext ctx, CancellationToken token, params string[] statuses) =>
         (await Task.WhenAll(
