@@ -1,4 +1,6 @@
-# Configuration
+---
+title: "Configuration"
+---
 
 This section is about configuring the tool itself rather than [authoring workspaces](authoring-workspaces.md).
 
@@ -28,8 +30,10 @@ You can verify how the fully-built configuration store looks like via `ring conf
 
 ## Configuration keys
 
-:information_source: When configuring the below via environment variables use `RING_` prefix and replace `.` by `__` (double underscore). For example:
-`hooks.init.command` becomes `RING_HOOKS__INIT__COMMAND`.
+!!! note
+
+    When configuring the below via environment variables use `RING_` prefix and replace `.` by `__` (double underscore). For example:
+    `hooks.init.command` becomes `RING_HOOKS__INIT__COMMAND`.
 
 * `git.clonePath` - the path where ring clones the repos of runnables that support it. Default: `$HOME/.ring/repos`
 * `kustomize.CachePath` - the path of kustomize cache. Default: `$HOME/.ring/kustomize-cache`
