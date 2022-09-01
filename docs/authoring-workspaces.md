@@ -35,6 +35,18 @@ Requirements:
 csproj = "/path/to/your/project.csproj"
 ```
 
+### Process
+
+```toml
+[[proc]]
+command = "sleep"
+args = ["30"]
+
+[proc.vars]
+    MY_TEST_ENV_VAR = "NONSENSE"
+    YET_ANOTHER = "QUIT"
+```
+
 ### Legacy formats
 
 #### ASP.NET Core (in IIS Express)

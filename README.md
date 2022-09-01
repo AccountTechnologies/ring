@@ -33,6 +33,7 @@ turning services off/on for build/debugging if they're a part of the currently l
 * [kustomize](docs/runnables/kustomize.md) - Kubernetes apps managed by [Kustomize](https://kustomize.io/)
 * `dockercompose` - docker-compose files
 * [aspnetcore](docs/runnables/aspnetcore.md) - .NET Core apps running in console (like ASP.NET Core in Kestrel)
+* `proc` - arbitrary native processes
 
 Windows-only:
 

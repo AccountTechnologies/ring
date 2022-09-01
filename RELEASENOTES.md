@@ -1,5 +1,13 @@
 # Release notes
 
+## 4.0.0
+
+* BREAKING feat: use toml for configuring the ring itself
+* BREAKING feat: make Kustomize runnables run directly in the OS ring runs in
+* feat: process runnble - ability to run arbitrary processes
+* feat: [workspace flavours](docs/authoring-workspaces.md#workspace-flavours)
+* feat: allow overriding runnable `id` so it's now possible to run many instances of the same runnable
+
 ## 3.2.0
 
 * feat: simplified import syntax (#38)
