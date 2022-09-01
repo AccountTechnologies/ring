@@ -12,15 +12,15 @@ namespace ATech.Ring.DotNet.Cli.Tools;
 public class DotnetCliBundle : ITool
 {
     private const string UrlsEnvVar = "ASPNETCORE_URLS";
-    private readonly ExeRunner _exeRunner;
+    private readonly ProcessRunner _processRunner;
     public ILogger<ITool> Logger { get; }
-    public string ExePath { get; set; } = "dotnet";
+    public string Command { get; set; } = "dotnet";
     public string[] DefaultArgs { get; set; } = Array.Empty<string>();
     public Dictionary<string, string> DefaultEnvVars = new() { ["ASPNETCORE_ENVIRONMENT"] = "Development"};
         
-    public DotnetCliBundle(ExeRunner exeRunner, ILogger<DotnetCliBundle> logger)
+    public DotnetCliBundle(ProcessRunner processRunner, ILogger<DotnetCliBundle> logger)
     {
-        _exeRunner = exeRunner;
+        _processRunner = processRunner;
         Logger = logger;
     }
 
@@ -29,8 +29,8 @@ public class DotnetCliBundle : ITool
         HandleUrls();
         if (File.Exists(ctx.ExePath))
         {
-            _exeRunner.ExePath = ctx.ExePath;
-            return await _exeRunner.RunProcessAsync(ctx.WorkingDir, DefaultEnvVars, null, token);
+            _processRunner.Command = ctx.ExePath;
+            return await _processRunner.RunProcessAsync(ctx.WorkingDir, DefaultEnvVars, null, token);
         }
         if (File.Exists(ctx.EntryAssemblyPath))
         {

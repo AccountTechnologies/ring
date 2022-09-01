@@ -13,10 +13,11 @@ public class WorkspaceConfig : IWorkspaceConfig
     public T[] Elements<T>() => Properties<T>().SelectMany(x => (IEnumerable<T>)x.GetValue(this) ?? new T[] { }).ToArray();
     public WorkspaceConfig Parent { get; set; }
 
-    public string Id => string.IsNullOrWhiteSpace(path) ? "" : System.IO.Path.GetFullPath(path);
+    public string UniqueId => string.IsNullOrWhiteSpace(path) ? "" : System.IO.Path.GetFullPath(path);
     public HashSet<string> DeclaredPaths { get; set; } = new HashSet<string>();
 
     public string path { get; set; }
+    public Proc[] proc { get; set; } = { };
     public AspNetCore[] aspnetcore { get; set; } = { };
     public IISExpress[] iisexpress { get; set; } = { };
     public IISXCore[] iisxcore { get; set; } = { };

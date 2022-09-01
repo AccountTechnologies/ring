@@ -25,7 +25,7 @@ public class KubectlBundle : ITool
         _allowedContexts = config.Value.Kubernetes.AllowedContexts ?? Array.Empty<string>();
     }
 
-    public string ExePath { get; set; } = "kubectl";
+    public string Command { get; set; } = "kubectl";
     public string[] DefaultArgs { get; set; } = Array.Empty<string>();
     public ILogger<ITool> Logger { get; }
 

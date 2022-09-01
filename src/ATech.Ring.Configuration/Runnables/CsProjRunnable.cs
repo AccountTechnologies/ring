@@ -11,5 +11,5 @@ public abstract class CsProjRunnable : RunnableConfigBase, IUseCsProjFile, IFrom
     public string FullPath => GetFullPath(WorkingDir, CsProj);
     public string LaunchSettingsJsonPath => Path.Combine(Path.GetDirectoryName(FullPath), "Properties/launchSettings.json");
     private string _id;
-    public override string Id => _id ??= Path.GetFileNameWithoutExtension(CsProj);
+    public override string UniqueId => _id ??= Id ?? Path.GetFileNameWithoutExtension(CsProj);
 }

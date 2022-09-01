@@ -8,13 +8,13 @@ public static class WorkspaceConfigExtensions
 {
     public static ConfigSet ToEffectiveConfig(this WorkspaceConfig root)
     {
-        return new ConfigSet(root.path, GetEffectiveConfig(root).ToDictionary(x => x.Id, x => x));
+        return new ConfigSet(root.path, GetEffectiveConfig(root).ToDictionary(x => x.UniqueId, x => x));
 
         IEnumerable<IRunnableConfig> GetEffectiveConfig(WorkspaceConfig node)
         {
             if (node == null) return new IRunnableConfig[] { };
             var configs = node.Elements<IRunnableConfig>()
-                .GroupBy(x => x.Id)
+                .GroupBy(x => x.UniqueId)
                 .Select(x => x.First())
                 .ToArray();
 

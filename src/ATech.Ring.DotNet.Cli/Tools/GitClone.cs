@@ -15,7 +15,7 @@ namespace ATech.Ring.DotNet.Cli.Tools;
 public class GitClone : ITool
 {
     private readonly RingConfiguration _ringCfg;
-    public string ExePath { get; set; } = "git";
+    public string Command { get; set; } = "git";
     public string[] DefaultArgs { get; set; } = Array.Empty<string>();
     public ILogger<ITool> Logger { get; }
     public GitClone(ILogger<GitClone> logger, IOptions<RingConfiguration> ringCfg)

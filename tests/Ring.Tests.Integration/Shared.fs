@@ -1,6 +1,5 @@
 module Ring.Tests.Integration.Shared
 
-open System
 open System.IO
 open ATech.Ring.Protocol.v2
 open Expecto
@@ -53,10 +52,5 @@ module Expect =
 
 type Ring with
 
-  member x.expect (typ:M) =
-    let timeout = TimeSpan.FromSeconds(60)
-    x.Client.WaitUntilMessage(typ, timeout = timeout), typ
-  
-  member x.waitUntilHealthy (id: string) =
-    [ x.expect M.RUNNABLE_HEALTHY ]
-    |> Expect.forId id
+  member x.Stream =
+    x.Client.NewEvents
