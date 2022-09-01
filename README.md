@@ -102,12 +102,16 @@ path = "relative/path/to/your/workspace.toml"
 
 [Here](RELEASENOTES.md)
 
-# Known Issues
-## Permission Issue on Apple Silicon
-Running Ring! on Apple Silicone with .NET 6 (x64) installed can result in permission errors such as this one:
+# Working with the docs
 
-```
-[‘/etc/dotnet/install_location_x64’] failed to open: Permission denied.
+Serve locally:
+
+```bash
+docker run -p 8089:8089 --rm -it -v ~/.ssh:/root/.ssh -v ${PWD}:/docs squidfunk/mkdocs-material serve -a 0.0.0.0:8089
 ```
 
-To resolve this issue add your user to the `dotnet` directory (and its encolsed items) with `Read & Write` permissions.
+Publish
+
+```bash
+docker run --rm -it -v ~/.ssh:/root/.ssh -v ${PWD}:/docs squidfunk/mkdocs-material gh-deploy 
+```

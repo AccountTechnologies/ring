@@ -1,13 +1,17 @@
-# Authoring workspaces
+---
+title: "Authoring workspaces"
+---
 
-Workspaces are [TOML](https://github.com/toml-lang/toml) files and they mostly use the [arrays of tables](https://github.com/toml-lang/toml#array-of-tables) to define workspace's components.
+Workspaces are [TOML](https://github.com/toml-lang/toml) files and they mostly use the [arrays of tables](https://github.com/toml-lang/toml#array-of-tables) to define workspace components.
 
 ## Apps
 
 ### Kustomize app
 
 Requirements:
-* kubectl (configured with a local cluster access - like Docker Desktop or minikube)
+
+* local Kubernetes cluster
+* kubectl
 * kustomize
 
 ```toml
@@ -18,6 +22,7 @@ path = "path/to/app"
 ### Docker Compose app
 
 Requirements:
+
 * Docker Desktop
 
 ```toml
@@ -28,7 +33,8 @@ path = "path/to/docker-compose.yml"
 ### Dotnet app
 
 Requirements:
-* dotnet SDK
+
+* Dotnet SDK
 
 ```toml
 [[aspnetcore]]
@@ -49,17 +55,20 @@ args = ["30"]
 
 ### Legacy formats
 
-#### ASP.NET Core (in IIS Express)
+#### ASP.NET Core (IIS Express)
 
 Requirements:
-* dotnet SDK
+
+* Dotnet SDK
 
 ```toml
 [[iisxcore]]
 csproj = "path/to/your/project.csproj"
 ```
 
-#### IIS Express hosted .NET Framework service (e.g. AspNet MVC or WCF)
+#### .NET Framework web service (IIS Express)
+
+Legacy Windows web services like AspNet MVC or WCF
 
 Requirements:
 
@@ -71,6 +80,8 @@ csproj = "path/to/your/project.csproj"
 ```
 
 #### .NET Framework executable project
+
+Legacy Windows services like TopShelf
 
 Requirements:
 
@@ -117,18 +128,40 @@ path = "path/to/yet/another/workspace/c.toml"
 # csproj = "/path/to/your/project.csproj"
 ```
 
+## Running multiple instances of a app
+
+:warning: v4 only
+
+If there are two (or more) apps with the same identifier Ring
+de-duplicates them and only runs a single instance. Sometimes the user
+may want run multiple instances of a single app. Each instance can be 
+configured with an `id` key as follows:
+
+```toml
+[[proc]]
+command = "sleep"
+args = ["30"]
+id = "sleep-1"
+
+[[proc]]
+command = "sleep"
+args = ["60"]
+id = "sleep-2"
+```
+Now ring runs two `sleep` processes.
+
 ## Workspace flavours
 
-:information_source: v4 only
+:warning: v4 only
 
 Sometimes the user may have multiple workspaces that significantly overlap. Stopping one workspace and starting another may
-be quite slow if there are tens of runnables. *Flavours* help to solve that problem with only stopping runnables that are not
-included in the new workspace and only starting the ones that were not running in the previous one. All the runnables existing in both
+be quite slow if there are tens of apps. *Flavours* help to solve that problem with only stopping apps that are not
+included in the new workspace and only starting the ones that were not running in the previous one. All the apps existing in both
 keep happily running.
 
-Example:
+:bulb: Example
 
-Flavours are specified with `tags` and each runnable can have multiple.
+Flavours are specified with `tags` and each app can have multiple.
 The below workspace has 3 flavours: `a`, `b`, and `backend`.
 
 Given we run flavour `a`:
