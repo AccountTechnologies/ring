@@ -31,7 +31,8 @@ let tests =
         ring.Stream
         |> AsyncSeq.exists (Runnable.healthy "proc-2")
         |> Async.AsTaskTimeout
-      do! Task.WhenAll([|proc1Healthy; proc2Healthy|])
+      do! Task.WhenAll(proc1Healthy, proc2Healthy)
+
       let! proc1Result = proc1Healthy
       "Proc 1 should be healthy" |> Expect.isTrue proc1Result
       let! proc2Result = proc2Healthy
