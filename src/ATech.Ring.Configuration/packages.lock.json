@@ -1,7 +1,7 @@
 {
   "version": 1,
   "dependencies": {
-    ".NETStandard,Version=v2.1": {
+    "net7.0": {
       "Nett": {
         "type": "Direct",
         "requested": "[0.13.0, )",
