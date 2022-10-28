@@ -100,6 +100,10 @@ public class KustomizeRunnable : Runnable<KustomizeContext, KustomizeConfig>
             var kustomizeResult = await _bundle.KustomizeBuildAsync(kustomizationDir, ctx.CachePath, token);
             _logger.LogDebug(kustomizeResult.Output);
         }
+        else
+        {
+            _logger.LogInformation("Found cached manifest: {CachedManifestPath}", ctx.CachePath);
+        }
 
         var applyResult = await _bundle.TryAsync(10, TimeSpan.FromSeconds(2),
             async t => await _bundle.ApplyJsonPathAsync(ctx.CachePath, NamespacesPath, token), token);
