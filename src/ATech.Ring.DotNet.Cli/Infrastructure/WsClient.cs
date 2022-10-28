@@ -34,10 +34,20 @@ public sealed class WsClient : IAsyncDisposable
         {
             if (!_logger.IsEnabled(LogLevel.Debug)) return Ws.SendMessageAsync(m);
             var type = m.Type;
-            var payload = Regex.Unescape(m.PayloadString);
+            string? payloadForLogging = null;
+
+            try
+            {
+                payloadForLogging = Regex.Unescape(m.PayloadString);
+            }
+            catch
+            {
+                payloadForLogging = m.PayloadString;
+            }
+
             var task = Ws.SendMessageAsync(m);
-            _logger.LogDebug("{Type} : {Payload:l} > {Id} ({TaskId})", type, payload, Id, task.Id);
-            task.ContinueWith(_ => _logger.LogDebug("{Type} : {Payload:l} >> {Id} ({TaskId})", type, payload, Id, task.Id), TaskContinuationOptions.OnlyOnRanToCompletion);
+            _logger.LogDebug("{Type} : {Payload:l} > {Id} ({TaskId})", type, payloadForLogging, Id, task.Id);
+            task.ContinueWith(_ => _logger.LogDebug("{Type} : {Payload:l} >> {Id} ({TaskId})", type, payloadForLogging, Id, task.Id), TaskContinuationOptions.OnlyOnRanToCompletion);
             return task;
         }
         catch (WebSocketException wse)
