@@ -36,7 +36,7 @@ You can verify how the fully-built configuration store looks like via `ring conf
     `hooks.init.command` becomes `RING_HOOKS__INIT__COMMAND`.
 
 * `git.clonePath` - the path where ring clones the repos of apps that support it. Default: `$HOME/.ring/repos`
-* `kustomize.CachePath` - the path of kustomize cache. Default: `$HOME/.ring/kustomize-cache`
+* `kustomize.cachePath` - the path of kustomize cache. Default: `$HOME/.ring/kustomize-cache`
 * `workspace.startupSpreadFactor` - controls how quickly ring launches apps. Increase to spread launching over time. Default: `1500`
 * `kubernetes.configPath` - which config path to use. `KUBECONFIG` env var takes precedence if set. Default: `$HOME/.kube/config`
 * `kubernetes.allowedContexts` - making any changes to the cluster fails if the current context is not one from this list. Default: `["docker-desktop", "rancher-desktop", "minikube"]`
