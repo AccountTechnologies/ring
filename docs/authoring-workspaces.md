@@ -128,7 +128,7 @@ path = "path/to/yet/another/workspace/c.toml"
 # csproj = "/path/to/your/project.csproj"
 ```
 
-## Running multiple instances of a app
+## Running multiple instances of an app
 
 :warning: v4 only
 
