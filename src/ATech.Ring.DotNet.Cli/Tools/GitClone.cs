@@ -43,53 +43,59 @@ public class GitClone : ITool
         return Path.IsPathRooted(targetPath) ? targetPath : Path.GetFullPath(targetPath);
     }
 
+    private Func<CancellationToken,Task<ExecutionInfo>> Git(params string[] args)
+    {
+        return (token) => this.TryAsync(3, TimeSpan.FromSeconds(10), t => t.RunProcessWaitAsync(args, token), token);
+    }
+
     public async Task<ExecutionInfo> CloneOrPullAsync(IFromGit gitCfg, CancellationToken token, bool shallow = false, bool defaultBranchOnly = false, string? rootPathOverride = null)
     {
         using var _ = Logger.WithScope(gitCfg.SshRepoUrl, Phase.GIT);
         var depthArg = shallow ? "--depth=1" : "";
         var singleBranchArg = defaultBranchOnly ? "--single-branch" : "";
-        var cloneFullPath = ResolveFullClonePath(gitCfg, rootPathOverride);
+        var repoFullPath = ResolveFullClonePath(gitCfg, rootPathOverride);
 
         async Task<ExecutionInfo> CloneAsync()
         {
-            Logger.LogDebug("Cloning to {OutputPath}", cloneFullPath);
-
-            return await this.TryAsync(3, TimeSpan.FromSeconds(10),
-                async t =>
-                {
-                    var result = await t.RunProcessWaitAsync(new object[] { "clone", singleBranchArg, depthArg, "--", gitCfg.SshRepoUrl, cloneFullPath }, token);
-                    Logger.LogInformation(result.IsSuccess ? PhaseStatus.OK : PhaseStatus.FAILED);
-                    return result;
-                }, token);
+            Logger.LogDebug("Cloning to {OutputPath}", repoFullPath);
+            var result = await Git("clone", singleBranchArg, depthArg, "--", gitCfg.SshRepoUrl, repoFullPath)(token);
+            Logger.LogInformation(result.IsSuccess ? PhaseStatus.OK : PhaseStatus.FAILED);
+            return result;
         }
 
-        if (!Directory.Exists(cloneFullPath)) return await CloneAsync();
+        if (!Directory.Exists(repoFullPath)) return await CloneAsync();
 
-        var output = await this.RunProcessWaitAsync(new object[] { "-C", cloneFullPath, "status" }, token);
+        var output = await Git("-C", repoFullPath, "status", "--short", "--branch")(token);
+       
         if (output.IsSuccess)
         {
-            Logger.LogInformation("Pulling at {OutputPath}", cloneFullPath);
-            return await this.TryAsync(3, TimeSpan.FromSeconds(10),
-                async t =>
-                {
-                    var result = await t.RunProcessWaitAsync(new object[] {"-C", cloneFullPath, "pull", depthArg }, token);
-                    Logger.LogInformation(result.IsSuccess ? PhaseStatus.OK : PhaseStatus.FAILED);
-                    return result;
-                }, token);
+            Logger.LogInformation("Updating repository at {OutputPath}", repoFullPath);
+
+            if (shallow)
+            {
+                var remoteBranchName = output.Output[(output.Output.LastIndexOf('.') + 1) ..];
+                await Git("-C", repoFullPath, "fetch", depthArg)(token);
+                await Git("-C", repoFullPath, "reset", "--hard", remoteBranchName)(token);
+                return await Git("-C", repoFullPath, "clean", "-fdx")(token);
+            }
+
+            var result = await Git("-C", repoFullPath, "pull", depthArg)(token);
+            Logger.LogInformation(result.IsSuccess ? PhaseStatus.OK : PhaseStatus.FAILED);
+            return result;
         }
 
         var tryLeft = 3;
-        while (Directory.Exists(cloneFullPath) && tryLeft > 0)
+        while (Directory.Exists(repoFullPath) && tryLeft > 0)
         {
             try
             {
-                Logger.LogInformation("Deleting an invalid clone at {OutputPath}", cloneFullPath);
-                SafeDelete(cloneFullPath);
+                Logger.LogInformation("Deleting an invalid clone at {OutputPath}", repoFullPath);
+                SafeDelete(repoFullPath);
                 break;
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "Could not delete {CloneFullPath}", cloneFullPath);
+                Logger.LogError(ex, "Could not delete {CloneFullPath}", repoFullPath);
                 await Task.Delay(TimeSpan.FromSeconds(10), token);
                 tryLeft--;
             }
