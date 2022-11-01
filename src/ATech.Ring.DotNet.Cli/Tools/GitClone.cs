@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using ATech.Ring.Configuration.Interfaces;
@@ -73,10 +75,14 @@ public class GitClone : ITool
 
             if (shallow)
             {
-                var remoteBranchName = output.Output[(output.Output.LastIndexOf('.') + 1) ..];
-                await Git("-C", repoFullPath, "fetch", depthArg)(token);
-                await Git("-C", repoFullPath, "reset", "--hard", remoteBranchName)(token);
-                return await Git("-C", repoFullPath, "clean", "-fdx")(token);
+                var remoteBranchName = Regex.Match(output.Output, @".*\.\.\.([^\s]+).*");
+                if (remoteBranchName.Success)
+                {
+                    await Git("-C", repoFullPath, "fetch", depthArg)(token);
+                    await Git("-C", repoFullPath, "reset", "--hard", remoteBranchName.Groups[1].Value)(token);
+                    return await Git("-C", repoFullPath, "clean", "-fdx")(token);
+                }
+                throw new InvalidOperationException($"Could not get branch name from git status output: {output.Output}");
             }
 
             var result = await Git("-C", repoFullPath, "pull", depthArg)(token);
