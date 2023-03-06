@@ -1,6 +1,5 @@
 module Ring.Tests.Integration.Shared
 
-open System
 open System.IO
 open ATech.Ring.Protocol.v2
 open Expecto
@@ -34,16 +33,14 @@ let withEnv vars options =
   
 let logToFile fileName (options: Options) =
   let vars = [
-    "Serilog__WriteTo__0__Name", "File"
-    "Serilog__WriteTo__0__Args__path", Path.Combine(Directory.GetCurrentDirectory(), options.TestArtifactsDir , fileName)
-    "Serilog__WriteTo__0__Args__outputTemplate", "{Timestamp:HH:mm:ss.fff}|{Level:u3}|{Phase}|{UniqueId}|{Message}{NewLine}{Exception}"
-    "Serilog__WriteTo__1__Name", ""
+    "RING_Serilog__WriteTo__0__Name", "File"
+    "RING_Serilog__WriteTo__0__Args__path", Path.Combine(Directory.GetCurrentDirectory(), options.TestArtifactsDir , fileName)
+    "RING_Serilog__WriteTo__0__Args__outputTemplate", "{Timestamp:HH:mm:ss.fff}|{Level:u3}|{Phase}|{UniqueId}|{Message}{NewLine}{Exception}"
+    "RING_Serilog__WriteTo__1__Name", ""
   ] 
   withEnv vars options
 
-
 let globalOptions (dir:TestDir) = { localOptions dir with LocalTool = None}
-
 
 module Expect =
   let forId (id: string) (events: (Msg option * M) seq) =
@@ -55,10 +52,5 @@ module Expect =
 
 type Ring with
 
-  member x.expect (typ:M) =
-    let timeout = TimeSpan.FromSeconds(60)
-    x.Client.WaitUntilMessage(typ, timeout = timeout), typ
-  
-  member x.waitUntilHealthy (id: string) =
-    [ x.expect M.RUNNABLE_HEALTHY ]
-    |> Expect.forId id
+  member x.Stream =
+    x.Client.NewEvents

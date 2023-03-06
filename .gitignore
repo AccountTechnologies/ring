@@ -352,3 +352,6 @@ MigrationBackup/
 .ionide/
 testResults.xml
 **/.idea
+**/.DS_Store
+
+site/

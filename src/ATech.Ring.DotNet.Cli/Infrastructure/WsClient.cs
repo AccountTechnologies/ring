@@ -5,8 +5,9 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using ATech.Ring.DotNet.Cli.Logging;
-using ATech.Ring.Protocol.v2;
+using System.Text.RegularExpressions;
+using Logging;
+using Protocol.v2;
 using Microsoft.Extensions.Logging;
 
 public delegate Task<Ack> Dispatch(Message m, CancellationToken t);
@@ -32,10 +33,21 @@ public sealed class WsClient : IAsyncDisposable
         try
         {
             if (!_logger.IsEnabled(LogLevel.Debug)) return Ws.SendMessageAsync(m);
-            var displayMessage = m.ToString();
+            var type = m.Type;
+            string? payloadForLogging = null;
+
+            try
+            {
+                payloadForLogging = Regex.Unescape(m.PayloadString);
+            }
+            catch
+            {
+                payloadForLogging = m.PayloadString;
+            }
+
             var task = Ws.SendMessageAsync(m);
-            _logger.LogDebug("{m} > {id} ({TaskId})", displayMessage, Id, task.Id);
-            task.ContinueWith(_ => _logger.LogDebug(">> {m} > {id} ({TaskId})", displayMessage, Id, task.Id), TaskContinuationOptions.OnlyOnRanToCompletion);
+            _logger.LogDebug("{Type} : {Payload:l} > {Id} ({TaskId})", type, payloadForLogging, Id, task.Id);
+            task.ContinueWith(_ => _logger.LogDebug("{Type} : {Payload:l} >> {Id} ({TaskId})", type, payloadForLogging, Id, task.Id), TaskContinuationOptions.OnlyOnRanToCompletion);
             return task;
         }
         catch (WebSocketException wse)

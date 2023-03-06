@@ -1,3 +1,4 @@
 [[aspnetcore]]
 sshRepoUrl = "git@github.com:queil/k8s-debug-poc.git"
 csproj = "src/k8s-debug-poc.fsproj"
+tags = ["poc"]

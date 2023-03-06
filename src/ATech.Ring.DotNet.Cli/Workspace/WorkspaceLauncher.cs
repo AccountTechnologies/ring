@@ -9,10 +9,12 @@ using ATech.Ring.Configuration;
 using ATech.Ring.Configuration.Interfaces;
 using ATech.Ring.DotNet.Cli.Abstractions;
 using ATech.Ring.DotNet.Cli.Dtos;
+using ATech.Ring.DotNet.Cli.Infrastructure;
 using ATech.Ring.DotNet.Cli.Logging;
 using ATech.Ring.Protocol.v2;
 using ATech.Ring.Protocol.v2.Events;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace ATech.Ring.DotNet.Cli.Workspace;
 
@@ -23,6 +25,7 @@ public sealed class WorkspaceLauncher : IWorkspaceLauncher, IDisposable
     private readonly Func<IRunnableConfig, IRunnable> _createRunnable;
     private readonly IWorkspaceInitHook _initHook;
     private readonly ISender _sender;
+    private readonly int _spreadFactor;
     private readonly ConcurrentDictionary<string, RunnableContainer> _runnables = new();
     private Task? _startTask;
     private Task? _stopTask;
@@ -30,23 +33,48 @@ public sealed class WorkspaceLauncher : IWorkspaceLauncher, IDisposable
     private CancellationTokenSource _cts = new();
     private WorkspaceInfo CurrentInfo { get; set; } = WorkspaceInfo.Empty;
     private WorkspaceState CurrentStatus { get; set; }
+    private string CurrentFlavour { get; set; } = ConfigSet.AllFlavours;
     private int _initCounter;
     private readonly Random _rnd = new();
 
     public event EventHandler OnInitiated;
+    public async Task<ApplyFlavourResult> ApplyFlavourAsync(string flavour, CancellationToken token)
+    {
+        if (CurrentFlavour == flavour) return ApplyFlavourResult.Ok;
+        if (!CurrentInfo.Flavours.Contains(flavour)) return ApplyFlavourResult.UnknownFlavour;
+        var candidates = _configurator.Current.Select(x => (x.Key, x.Value.Tags.Contains(flavour)));
+        foreach (var (key, inFlavour) in candidates)
+        {
+            if (inFlavour)
+            {
+                await IncludeAsync(key, token);
+            }
+            else
+            {
+                await ExcludeAsync(key, token);
+            }
+        }
+
+        CurrentFlavour = flavour;
+        PublishStatusCore(ServerState.RUNNING, force: true);
+        return ApplyFlavourResult.Ok;
+    }
+
     public string WorkspacePath => _configurator.Current.Path;
 
     public WorkspaceLauncher(IConfigurator configurator,
         ILogger<WorkspaceLauncher> logger,
         Func<IRunnableConfig, IRunnable> createRunnable,
         IWorkspaceInitHook initHook,
-        ISender sender)
+        ISender sender,
+        IOptions<RingConfiguration> options)
     {
         _configurator = configurator;
         _logger = logger;
         _createRunnable = createRunnable;
         _initHook = initHook;
         _sender = sender;
+        _spreadFactor = options.Value.Workspace.StartupSpreadFactor;
         OnInitiated += WorkspaceLauncher_OnInitiated;
     }
 
@@ -116,7 +144,7 @@ public sealed class WorkspaceLauncher : IWorkspaceLauncher, IDisposable
             var deletionsTask = deletions.Select(RemoveAsync);
             var additions = configs.Keys.Except(_runnables.Keys).ToArray();
             var additionsTask = additions.Select(key => {
-                var delay = CaclulateDelay(additions.Length);
+                var delay = CalculateDelay(additions.Length);
                 _logger.LogDebug("Starting in {delay}", delay);
                 return AddAsync(key, configs[key], delay, token);
             });
@@ -133,24 +161,23 @@ public sealed class WorkspaceLauncher : IWorkspaceLauncher, IDisposable
         }
     }
 
-    private TimeSpan CaclulateDelay(int runnablesCount)
+    private TimeSpan CalculateDelay(int runnablesCount)
     {
-        const int spreadFactorMillis = 1_500;
         lock (_rnd)
         {
-            return TimeSpan.FromMilliseconds(_rnd.Next(0, Math.Max(runnablesCount - 1, 0) * spreadFactorMillis));
+            return TimeSpan.FromMilliseconds(runnablesCount <= 7 ? 1000 : _rnd.Next(0, Math.Max(runnablesCount - 1, 0) * _spreadFactor));
         }
     }
 
     private WorkspaceInfo Create(WorkspaceState state, ServerState serverState)
     {
-        return new WorkspaceInfo(WorkspacePath,
-            _configurator.Current.Select(entry =>
-            {
-                var (id, cfg) = entry;
-                var isRunning = _runnables.TryGetValue(id, out var container);
+        var runnables = _configurator.Current.Select(entry =>
+        {
+            var (id, cfg) = entry;
+            var isRunning = _runnables.TryGetValue(id, out var container);
 
-                var runnableState = isRunning ? container.Runnable switch
+            var runnableState = isRunning
+                ? container!.Runnable switch
                 {
                     { State: State.Zero } => RunnableState.ZERO,
                     { State: State.Idle } => RunnableState.INITIATED,
@@ -160,15 +187,23 @@ public sealed class WorkspaceLauncher : IWorkspaceLauncher, IDisposable
                     { State: State.Recovering } => RunnableState.RECOVERING,
                     { State: State.Pending } => RunnableState.STARTED,
                     _ => RunnableState.ZERO
-                } : RunnableState.ZERO;
+                }
+                : RunnableState.ZERO;
 
-                var details = isRunning ? container.Runnable.Details : DetailsExtractors.Extract(cfg);
+            var details = isRunning ? container!.Runnable.Details : DetailsExtractors.Extract(cfg);
 
-                var runnableInfo = new RunnableInfo(id, cfg.DeclaredPaths.ToArray(), cfg.GetType().Name, runnableState, details);
+            var runnableInfo = new RunnableInfo(id, 
+                cfg.DeclaredPaths.ToArray(), 
+                cfg.GetType().Name, 
+                runnableState, 
+                cfg.Tags.ToArray(),
+                details);
 
-                return runnableInfo;
+            return runnableInfo;
 
-            }).OrderBy(x => x.Id).ToArray(), serverState, state);
+        }).OrderBy(x => x.Id).ToArray();
+        
+        return new WorkspaceInfo(WorkspacePath, runnables, _configurator.Current.Flavours.ToArray(), CurrentFlavour, serverState, state);
     }
 
     private async Task AddAsync(string id, IRunnableConfig cfg, TimeSpan delay, CancellationToken token)
@@ -219,7 +254,7 @@ public sealed class WorkspaceLauncher : IWorkspaceLauncher, IDisposable
         _sender.Enqueue(Message.WorkspaceInfo(CurrentInfo));
     }
 
-    public void Dispose() => _cts?.Dispose();
+    public void Dispose() => _cts.Dispose();
 
     public async Task WaitUntilStoppedAsync(CancellationToken token)
     {

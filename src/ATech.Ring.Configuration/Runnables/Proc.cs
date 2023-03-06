@@ -1,8 +1,13 @@
-﻿namespace ATech.Ring.Configuration.Runnables;
+﻿using System;
+using System.Collections.Generic;
+
+namespace ATech.Ring.Configuration.Runnables;
 
 public class Proc : RunnableConfigBase
 {
-    public string Path { get; set; }
-    public string[] Env { get; set; } = { };
-    public override string Id => Path;
+    public string Command { get; set; }
+    public string WorkingDir { get; set; }
+    public Dictionary<string,string> Env { get; set; } = new();
+    public string[] Args { get; set; } = Array.Empty<string>();
+    public override string UniqueId => Id ?? Command;
 }

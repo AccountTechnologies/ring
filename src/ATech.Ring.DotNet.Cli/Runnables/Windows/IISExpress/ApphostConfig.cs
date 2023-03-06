@@ -2,7 +2,7 @@
 using System.IO;
 using System.Xml;
 
-namespace ATech.Ring.DotNet.Cli.Windows.Runnables.IISExpress;
+namespace ATech.Ring.DotNet.Cli.Runnables.Windows.IISExpress;
 
 public class ApphostConfig
 {

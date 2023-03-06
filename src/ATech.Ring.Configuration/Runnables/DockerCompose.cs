@@ -4,7 +4,7 @@ namespace ATech.Ring.Configuration.Runnables;
 
 public class DockerCompose : RunnableConfigBase, IUseWorkingDir, IFromGit
 {
-    public override string Id => Path;
+    public override string UniqueId => Id ?? Path;
     public string Path { get; set; }
     public string WorkingDir { get; set; }
     public string FullPath => GetFullPath(WorkingDir, Path);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 using ATech.Ring.DotNet.Cli.Abstractions;
 using ATech.Ring.DotNet.Cli.Dtos;
 using ATech.Ring.DotNet.Cli.Infrastructure;
-using ATech.Ring.DotNet.Cli.Windows.Tools;
+using ATech.Ring.DotNet.Cli.Tools;
 using ATech.Ring.Protocol.v2;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -36,7 +37,7 @@ public class KustomizeRunnable : Runnable<KustomizeContext, KustomizeConfig>
     {
         _logger = logger;
         _bundle = bundle;
-        _cacheDir = ringCfg?.Value?.KustomizeCacheRootPath ?? throw new ArgumentNullException(nameof(RingConfiguration.KustomizeCacheRootPath));
+        _cacheDir = ringCfg?.Value?.Kustomize.CachePath ?? throw new ArgumentNullException(nameof(RingConfiguration.Kustomize.CachePath));
     }
 
     public override string UniqueId => Config.Path;
@@ -44,7 +45,11 @@ public class KustomizeRunnable : Runnable<KustomizeContext, KustomizeConfig>
     protected override int MaxTotalFailuresUntilDead => 10;
     protected override int MaxConsecutiveFailuresUntilDead => 5;
 
-    private string GetCachePath(string inputDir) => $"{_cacheDir}/{Regex.Replace(inputDir, "[@\\.:/\\\\]", "-")}.yaml";
+    private string GetCachePath(string inputDir)
+    {
+        var fileName = Regex.Replace(inputDir, "[@\\.:/\\\\]", "-");
+        return Path.Combine(_cacheDir, $"{fileName}.yaml");
+    }
 
     private async Task<bool> WaitAllPodsAsync(KustomizeContext ctx, CancellationToken token, params string[] statuses) =>
         (await Task.WhenAll(
@@ -88,13 +93,16 @@ public class KustomizeRunnable : Runnable<KustomizeContext, KustomizeConfig>
             KustomizationDir = kustomizationDir,
             CachePath = GetCachePath(kustomizationDir)
         };
-
-        await _bundle.RunProcessWaitAsync(new object[] { "mkdir", "-p", _cacheDir }, token);
-
-        if (!await _bundle.FileExistsAsync(ctx.CachePath, token) || !await _bundle.IsValidManifestAsync(ctx.CachePath, token))
+        Directory.CreateDirectory(_cacheDir);
+        
+        if (!File.Exists(ctx.CachePath) || !await _bundle.IsValidManifestAsync(ctx.CachePath, token))
         {
             var kustomizeResult = await _bundle.KustomizeBuildAsync(kustomizationDir, ctx.CachePath, token);
             _logger.LogDebug(kustomizeResult.Output);
+        }
+        else
+        {
+            _logger.LogInformation("Found cached manifest: {CachedManifestPath}", ctx.CachePath);
         }
 
         var applyResult = await _bundle.TryAsync(10, TimeSpan.FromSeconds(2),

@@ -15,5 +15,6 @@ public interface IServer
     Task<Ack> UnloadAsync(CancellationToken token);
     Task<Ack> ExcludeAsync(string id, CancellationToken token);
     Task<Ack> IncludeAsync(string id, CancellationToken token);
+    Task<Ack> ApplyFlavourAsync(string flavour, CancellationToken token);
     Ack RequestWorkspaceInfo();
 }

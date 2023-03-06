@@ -13,11 +13,11 @@ using Microsoft.Extensions.Logging;
 public class ConsoleClient
 {
     private readonly ILogger<ConsoleClient> _logger;
-    private readonly BaseOptions _options;
+    private readonly ServeOptions _options;
     private Task _clientTask = Task.CompletedTask;
     private ClientWebSocket? _clientSocket;
     private static readonly Guid ClientId = Guid.Parse("842fcc9e-c1bb-420d-b1e7-b3465aafa4e2");
-    public ConsoleClient(ILogger<ConsoleClient> logger, BaseOptions options)
+    public ConsoleClient(ILogger<ConsoleClient> logger, ServeOptions options)
     {
         _logger = logger;
         _options = options;
@@ -60,7 +60,6 @@ public class ConsoleClient
     {
         try
         {
-
             if (_options is not ConsoleOptions) return;
             await _clientTask;
             if (_clientSocket is { } s) await s.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "terminating", token);

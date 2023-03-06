@@ -1,0 +1,34 @@
+site_name: Ring
+repo_url: https://github.com/AccountTechnologies/ring
+site_url: https://accounttechnologies.github.io/ring
+nav:
+  - Home: index.md
+  - Authoring Workspaces: authoring-workspaces.md
+  - Configuration: configuration.md
+  - Use cases: use-cases.md
+  - Known issues: known-issues.md
+theme:
+  name: material
+  logo: assets/ring-mono.svg
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      primary: 'blue grey'
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: deep orange
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg

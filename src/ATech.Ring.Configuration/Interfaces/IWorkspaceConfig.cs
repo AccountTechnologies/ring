@@ -4,6 +4,6 @@ namespace ATech.Ring.Configuration.Interfaces;
 
 public interface IWorkspaceConfig
 {
-    string Id { get; }
+    string UniqueId { get; }
     HashSet<string> DeclaredPaths { get; set; }
 }

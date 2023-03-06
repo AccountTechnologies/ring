@@ -7,7 +7,9 @@ open System
 open System.Net.WebSockets
 open System.Threading
 open System.Threading.Tasks
+open ATech.Ring.Protocol.v2.Events
 open FSharp.Control
+open Newtonsoft.Json
 
 type ClientOptions = {
   RingUrl: Uri
@@ -20,7 +22,97 @@ type Msg = {
   Timestamp: DateTime
   Payload: string
   Type: M
-}
+  Scope: MsgScope
+} and MsgScope = | Server | Workspace | Runnable of id: string | Unknown
+
+module Patterns =
+    
+  let (|Runnable|_|) =
+    function | { Scope = Runnable id } -> Some id | _ -> None
+  let (|RunnableHealthy|_|)  =
+    function | { Type = M.RUNNABLE_HEALTHY; Payload = p } -> Some p | _ -> None
+
+  let (|RunnableHealthCheck|_|) =
+    function | { Type = M.RUNNABLE_HEALTH_CHECK; Payload = p } -> Some p | _ -> None
+  
+  let (|RunnableInitiated|_|)  =
+    function | { Type = M.RUNNABLE_INITIATED; Payload = p } -> Some p | _ -> None
+  
+  let (|RunnableStarted|_|)  =
+    function | { Type = M.RUNNABLE_STARTED; Payload = p } -> Some p | _ -> None
+  
+  let (|RunnableStopped|_|)  =
+    function | { Type = M.RUNNABLE_STOPPED; Payload = p } -> Some p | _ -> None
+  
+  let (|RunnableDestroyed|_|)  =
+    function | { Type = M.RUNNABLE_DESTROYED; Payload = p } -> Some p | _ -> None
+  
+  let (|RunnableRecovering|_|)  =
+    function | { Type = M.RUNNABLE_RECOVERING; Payload = p } -> Some p | _ -> None
+  
+  
+  let (|WorkspaceInfo|_|) (msg:Msg) =
+   match msg with
+   | {Type = M.WORKSPACE_INFO_PUBLISH} ->
+     Some (JsonConvert.DeserializeObject<WorkspaceInfo>(msg.Payload))
+   | _ -> None
+   
+  let (|ServerShutdown|_|) (msg:Msg) =
+   match msg with
+   | {Type = M.SERVER_SHUTDOWN} ->
+     Some ()
+   | _ -> None 
+   
+  type Runnable =
+
+     static member private idOrAny actual expected =
+       match expected with
+       | Some id -> id = actual
+       | _ -> true
+     static member healthy(?expectedId) =
+       function
+       | RunnableHealthy actualId when Runnable.idOrAny actualId expectedId -> true
+       | _ -> false
+     static member started(?expectedId) =
+       function
+       | RunnableStarted actualId when Runnable.idOrAny actualId expectedId -> true
+       | _ -> false
+     static member healthCheck(?expectedId) =
+       function
+       | RunnableHealthCheck actualId when Runnable.idOrAny actualId expectedId -> true
+       | _ -> false
+     static member stopped(?expectedId) =
+       function
+       | RunnableStopped actualId when Runnable.idOrAny actualId expectedId -> true
+       | _ -> false
+     static member initiated(?expectedId) =
+       function
+       | RunnableInitiated actualId when Runnable.idOrAny actualId expectedId -> true
+       | _ -> false
+     static member destroyed(?expectedId) =
+       function
+       | RunnableDestroyed actualId when Runnable.idOrAny actualId expectedId -> true
+       | _ -> false
+     
+     static member byId expectedId =
+       function
+       | Runnable x when x = expectedId -> true
+       | _ -> false
+
+[<RequireQualifiedAccess>]
+module Workspace =
+  open Patterns
+  let infoLike predicate =
+    function | WorkspaceInfo info when predicate info -> true | _ -> false
+  
+  let info = 
+    function | WorkspaceInfo info -> Some info | _ -> None
+
+[<RequireQualifiedAccess>]
+module Server =
+  open Patterns
+  let shutdown =
+    function | ServerShutdown _ -> true | _ -> false
 
 type WsClient(options: ClientOptions) =
   let buffer = Channel.CreateUnbounded<Msg>()
@@ -49,7 +141,28 @@ type WsClient(options: ClientOptions) =
 
       listenTask <- s.ListenAsync(WebSocketExtensions.HandleMessage(
       fun m t ->
-        let msg = { Timestamp = DateTime.Now.ToLocalTime(); Type = m.Type; Payload = m.PayloadString }
+        let msg =
+          {
+            Timestamp = DateTime.Now.ToLocalTime()
+            Type = m.Type
+            Payload = m.PayloadString
+            Scope =
+              match m.Type with
+              | M.RUNNABLE_HEALTHY
+              | M.RUNNABLE_HEALTH_CHECK
+              | M.RUNNABLE_STARTED
+              | M.RUNNABLE_STOPPED
+              | M.RUNNABLE_DESTROYED
+              | M.RUNNABLE_INITIATED
+              | M.RUNNABLE_RECOVERING
+              | M.RUNNABLE_UNRECOVERABLE -> MsgScope.Runnable m.PayloadString
+              | M.WORKSPACE_INFO_PUBLISH -> Workspace
+              | M.SERVER_IDLE
+              | M.SERVER_LOADED
+              | M.SERVER_RUNNING
+              | M.SERVER_SHUTDOWN -> Server
+              | _ -> Unknown
+          }
         if not <| buffer.Writer.TryWrite(msg)
         then failwithf $"Could not write: %A{msg}"
         Task.CompletedTask
@@ -59,6 +172,8 @@ type WsClient(options: ClientOptions) =
 
   member _.AllEvents = allEvents
 
+  member _.NewEvents = events
+  
   member _.LoadWorkspace(path: string) = task {
     let! s = socket.Value
     do! s.SendMessageAsync(Message(M.LOAD, path))
@@ -89,20 +204,6 @@ type WsClient(options: ClientOptions) =
 
   member _.HasEverConnected = socket.IsValueCreated
   
-  member x.WaitUntilMessage(typ: M, ?timeout: TimeSpan) : Msg option =
-    try
-      let waitUntil = defaultArg timeout (TimeSpan.FromSeconds(10))
-      let asyncFlow =
-        events
-        |> AsyncSeq.skipWhile (fun x ->  x.Type <> typ)
-        |> AsyncSeq.tryFirst
-      Async.RunSynchronously(asyncFlow, waitUntil.TotalMilliseconds |> int)
-      
-    with
-     | :? TimeoutException -> None
-     | :? InvalidOperationException as x when x.Message = "Sequence contains no elements." ->
-       None
-
   interface IAsyncDisposable with
     member x.DisposeAsync() = 
       ValueTask (task {

@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 // ReSharper disable InconsistentNaming
 
-namespace ATech.Ring.DotNet.Cli.Windows.Tools;
+namespace ATech.Ring.DotNet.Cli.Tools.Windows;
 
 /// <summary>
 /// Allows processes to be automatically killed if this parent process unexpectedly quits.

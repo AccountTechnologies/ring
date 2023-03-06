@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Threading;
 using ATech.Ring.Configuration;
 using ATech.Ring.Configuration.Interfaces;
@@ -14,7 +13,6 @@ using ATech.Ring.DotNet.Cli.Abstractions.Tools;
 using ATech.Ring.DotNet.Cli.Infrastructure;
 using ATech.Ring.DotNet.Cli.Infrastructure.Cli;
 using ATech.Ring.DotNet.Cli.Logging;
-using ATech.Ring.DotNet.Cli.Windows.Tools;
 using ATech.Ring.DotNet.Cli.Workspace;
 using ATech.Ring.Protocol.v2;
 using k8s;
@@ -26,9 +24,11 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Nett;
 using Serilog;
 using Serilog.Events;
+using Tomlyn.Extensions.Configuration;
 
 static string Ring(string ver) => $"       _ _\n     *'   '*\n    * .*'*. 3\n   '  @   a  ;     ring! v{ver}\n    * '*.*' *\n     *. _ .*\n";
 var originalWorkingDir = Directory.GetCurrentDirectory();
@@ -64,9 +64,10 @@ try
     var builder = WebApplication.CreateBuilder(args);
 
     builder.Services.AddSingleton(options);
-    builder.Services.AddSingleton<Func<Uri, HttpClient>>(s => uri => clients.GetOrAdd(uri, new HttpClient { BaseAddress = uri, MaxResponseContentBufferSize = 1 }));
+    if (options is ServeOptions) builder.Services.AddSingleton(f => (ServeOptions)f.GetRequiredService<BaseOptions>());
+    builder.Services.AddSingleton<Func<Uri, HttpClient>>(_ => uri => clients.GetOrAdd(uri, new HttpClient { BaseAddress = uri, MaxResponseContentBufferSize = 1 }));
     builder.Services.AddOptions();
-    builder.Services.Configure<RingConfiguration>(builder.Configuration.GetSection("ring"));
+    builder.Services.Configure<RingConfiguration>(builder.Configuration);
     builder.Services.AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true));
     builder.Services.AddSingleton<IServer, Server>();
     builder.Services.AddSingleton<WebsocketsHandler>();
@@ -81,8 +82,10 @@ try
     builder.Services.AddSingleton<IReceiver>(f => f.GetRequiredService<ATech.Ring.Protocol.v2.Queue>());
     builder.Services.AddSingleton(f =>
     {
-        var kubeConfigPath = f.GetRequiredService<Wsl>().ResolveToWindows("~/.kube/config").GetAwaiter().GetResult();
-        return new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeConfigPath));
+        var configuredPath = f.GetRequiredService<IOptions<RingConfiguration>>().Value.Kubernetes.ConfigPath;
+        var maybeKubeconfigEnv = Environment.GetEnvironmentVariable("KUBECONFIG");
+        var configPath = maybeKubeconfigEnv ?? configuredPath ?? throw new InvalidOperationException("Kubernetes config path is not set"); 
+        return new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(configPath));
     });
 
     builder.Services.AddHostedService<WebsocketsInitializer>();
@@ -118,7 +121,7 @@ try
             return (IRunnable)ctor.Invoke(args);
         });
 
-        container.Register(f => TomlSettings.Create(cfg =>
+        container.Register(_ => TomlSettings.Create(cfg =>
         {
             cfg.ConfigurePropertyMapping(p => p.UseTargetPropertySelector(x => x.IgnoreCase));
         }), new PerContainerLifetime());
@@ -128,15 +131,13 @@ try
 
     builder.Host.ConfigureAppConfiguration((_, b) =>
     {
-        b.AddJsonFile(InstallationDir.AppsettingsJsonPath(), optional: false);
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            b.AddJsonFile(InstallationDir.AppsettingsJsonPath("Windows"), optional: false);
-        }
-        b.AddUserSettingsFile();
-        b.AddJsonFile(Path.Combine(originalWorkingDir, ".ring", "appsettings.json"), optional: true);
-        b.AddInMemoryCollection(new Dictionary<string, string> { ["ring:port"] = options.Port.ToString() });
-        b.AddEnvironmentVariables();
+        b.Sources.Clear();
+        b.AddTomlFile(Directories.Installation.SettingsPath, optional: false);
+        b.AddTomlFile(Directories.Installation.LoggingPath, optional: false);
+        b.AddTomlFile(Directories.User.SettingsPath, optional: true);
+        b.AddTomlFile(Directories.Working(originalWorkingDir).SettingsPath, optional: true);
+        b.AddEnvironmentVariables("RING_");
+        if (options is ServeOptions { Port: var port }) b.AddInMemoryCollection(new Dictionary<string, string> { ["ring:port"] = port.ToString() });
     });
     builder.Host.UseServiceProviderFactory(new LightInjectServiceProviderFactory());
     builder.WebHost.UseLightInject(container);
@@ -154,7 +155,7 @@ try
 
     using (logger.WithHostScope(Phase.INIT))
     {
-        logger.LogInformation("Listening on port {Port}", options.Port);
+        if (options is ServeOptions { Port: var port }) logger.LogInformation("Listening on port {Port}", port);
     }
 
     app.UseWebSockets();

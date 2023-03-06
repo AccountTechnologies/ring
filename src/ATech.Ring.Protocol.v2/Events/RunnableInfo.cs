@@ -6,12 +6,13 @@ using System.Linq;
 
 public class RunnableInfo : IEquatable<RunnableInfo>
 {
-    public RunnableInfo(string id, string[] declaredIn, string type, RunnableState state, IReadOnlyDictionary<string, object> details)
+    public RunnableInfo(string id, string[] declaredIn, string type, RunnableState state, string[] tags, IReadOnlyDictionary<string, object> details)
     {
         Id = id;
         DeclaredIn = declaredIn;
         Type = type;
         State = state;
+        Tags = tags;
         Details = details;
     }
 
@@ -19,6 +20,7 @@ public class RunnableInfo : IEquatable<RunnableInfo>
     public string[] DeclaredIn { get; }
     public string Type { get; }
     public RunnableState State { get; }
+    public string[] Tags { get; }
     public IReadOnlyDictionary<string, object> Details { get; }
 
     public bool Equals(RunnableInfo? other)

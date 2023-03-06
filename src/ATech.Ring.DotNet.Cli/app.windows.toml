@@ -1,0 +1,16 @@
+[git]
+clonePath = "%USERPROFILE%\\.ring\\repos"
+
+[kustomize]
+cachePath = "%USERPROFILE%\\.ring\\kustomize-cache"
+
+[kubernetes]
+configPath = "%USERPROFILE%\\.kube\\config"
+allowedContexts = [
+    "docker-desktop",
+    "rancher-desktop",
+    "minikube"
+]
+
+[workspace]
+startupSpreadFactor = 1500

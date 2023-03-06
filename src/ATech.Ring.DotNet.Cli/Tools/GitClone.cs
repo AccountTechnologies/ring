@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using ATech.Ring.Configuration.Interfaces;
@@ -15,7 +17,7 @@ namespace ATech.Ring.DotNet.Cli.Tools;
 public class GitClone : ITool
 {
     private readonly RingConfiguration _ringCfg;
-    public string ExePath { get; set; } = "git";
+    public string Command { get; set; } = "git";
     public string[] DefaultArgs { get; set; } = Array.Empty<string>();
     public ILogger<ITool> Logger { get; }
     public GitClone(ILogger<GitClone> logger, IOptions<RingConfiguration> ringCfg)
@@ -35,11 +37,17 @@ public class GitClone : ITool
             throw new InvalidOperationException(
                 $"Git Ssh Url is expected to be split by a colon into two parts. {gitCfg.SshRepoUrl}");
 
-        var pathChunks = new List<string> { rootPathOverride ?? _ringCfg.GitCloneRootPath };
+        var pathChunks = new List<string> { rootPathOverride ?? _ringCfg.Git.ClonePath };
         var inRepoPath = chunks[1].Replace(".git", "").Split("/");
         pathChunks.AddRange(inRepoPath);
-        var targetPath = Environment.ExpandEnvironmentVariables(Path.Combine(pathChunks.ToArray()));
+        var targetPath = Path.Combine(pathChunks.ToArray());
+        targetPath = Env.ExpandPath(targetPath);
         return Path.IsPathRooted(targetPath) ? targetPath : Path.GetFullPath(targetPath);
+    }
+
+    private Func<CancellationToken,Task<ExecutionInfo>> Git(params string[] args)
+    {
+        return (token) => this.TryAsync(3, TimeSpan.FromSeconds(10), t => t.RunProcessWaitAsync(args, token), token);
     }
 
     public async Task<ExecutionInfo> CloneOrPullAsync(IFromGit gitCfg, CancellationToken token, bool shallow = false, bool defaultBranchOnly = false, string? rootPathOverride = null)
@@ -47,48 +55,53 @@ public class GitClone : ITool
         using var _ = Logger.WithScope(gitCfg.SshRepoUrl, Phase.GIT);
         var depthArg = shallow ? "--depth=1" : "";
         var singleBranchArg = defaultBranchOnly ? "--single-branch" : "";
-        var cloneFullPath = ResolveFullClonePath(gitCfg, rootPathOverride);
+        var repoFullPath = ResolveFullClonePath(gitCfg, rootPathOverride);
 
         async Task<ExecutionInfo> CloneAsync()
         {
-            Logger.LogDebug("Cloning to {OutputPath}", cloneFullPath);
-
-            return await this.TryAsync(3, TimeSpan.FromSeconds(10),
-                async t =>
-                {
-                    var result = await t.RunProcessWaitAsync(new object[] { "clone", singleBranchArg, depthArg, "--", gitCfg.SshRepoUrl, cloneFullPath }, token);
-                    Logger.LogInformation(result.IsSuccess ? PhaseStatus.OK : PhaseStatus.FAILED);
-                    return result;
-                }, token);
+            Logger.LogDebug("Cloning to {OutputPath}", repoFullPath);
+            var result = await Git("clone", singleBranchArg, depthArg, "--", gitCfg.SshRepoUrl, repoFullPath)(token);
+            Logger.LogInformation(result.IsSuccess ? PhaseStatus.OK : PhaseStatus.FAILED);
+            return result;
         }
 
-        if (!Directory.Exists(cloneFullPath)) return await CloneAsync();
+        if (!Directory.Exists(repoFullPath)) return await CloneAsync();
 
-        var output = await this.RunProcessWaitAsync(new object[] { "-C", cloneFullPath, "status" }, token);
+        var output = await Git("-C", repoFullPath, "status", "--short", "--branch")(token);
+       
         if (output.IsSuccess)
         {
-            Logger.LogInformation("Pulling at {OutputPath}", cloneFullPath);
-            return await this.TryAsync(3, TimeSpan.FromSeconds(10),
-                async t =>
+            Logger.LogInformation("Updating repository at {OutputPath}", repoFullPath);
+
+            if (shallow)
+            {
+                var remoteBranchName = Regex.Match(output.Output, @".*\.\.\.([^\s]+).*");
+                if (remoteBranchName.Success)
                 {
-                    var result = await t.RunProcessWaitAsync(new object[] {"-C", cloneFullPath, "pull", depthArg }, token);
-                    Logger.LogInformation(result.IsSuccess ? PhaseStatus.OK : PhaseStatus.FAILED);
-                    return result;
-                }, token);
+                    await Git("-C", repoFullPath, "fetch", depthArg)(token);
+                    await Git("-C", repoFullPath, "reset", "--hard", remoteBranchName.Groups[1].Value)(token);
+                    return await Git("-C", repoFullPath, "clean", "-fdx")(token);
+                }
+                throw new InvalidOperationException($"Could not get branch name from git status output: {output.Output}");
+            }
+
+            var result = await Git("-C", repoFullPath, "pull", depthArg)(token);
+            Logger.LogInformation(result.IsSuccess ? PhaseStatus.OK : PhaseStatus.FAILED);
+            return result;
         }
 
         var tryLeft = 3;
-        while (Directory.Exists(cloneFullPath) && tryLeft > 0)
+        while (Directory.Exists(repoFullPath) && tryLeft > 0)
         {
             try
             {
-                Logger.LogInformation("Deleting an invalid clone at {OutputPath}", cloneFullPath);
-                SafeDelete(cloneFullPath);
+                Logger.LogInformation("Deleting an invalid clone at {OutputPath}", repoFullPath);
+                SafeDelete(repoFullPath);
                 break;
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "Could not delete {CloneFullPath}", cloneFullPath);
+                Logger.LogError(ex, "Could not delete {CloneFullPath}", repoFullPath);
                 await Task.Delay(TimeSpan.FromSeconds(10), token);
                 tryLeft--;
             }
